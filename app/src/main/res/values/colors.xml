@@ -34,5 +34,8 @@
 
     <!-- 高對比度邊框 -->
     <color name="border_color">#000000</color>
+    
+    <!-- 掃描相關顏色 -->
+    <color name="primary_blue">#0066CC</color>
 
 </resources>
