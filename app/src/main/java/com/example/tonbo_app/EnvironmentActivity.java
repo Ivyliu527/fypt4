@@ -66,6 +66,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_environment);
 
+        Log.d(TAG, "EnvironmentActivity onCreate開始");
+        
         initViews();
         cameraExecutor = Executors.newSingleThreadExecutor();
         
@@ -73,9 +75,12 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         objectDetectorHelper = new ObjectDetectorHelper(this);
 
         // 檢查相機權限
+        Log.d(TAG, "檢查相機權限...");
         if (allPermissionsGranted()) {
+            Log.d(TAG, "相機權限已授予，開始啟動相機");
             startCamera();
         } else {
+            Log.d(TAG, "相機權限未授予，請求權限");
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
     }
@@ -134,70 +139,125 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
 
     private boolean allPermissionsGranted() {
         for (String permission : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            int permissionStatus = ContextCompat.checkSelfPermission(this, permission);
+            Log.d(TAG, "權限檢查: " + permission + " = " + permissionStatus);
+            if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
+                Log.w(TAG, "權限未授予: " + permission);
                 return false;
             }
         }
+        Log.d(TAG, "所有權限已授予");
         return true;
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Log.d(TAG, "權限請求結果: requestCode=" + requestCode);
+        
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            for (int i = 0; i < permissions.length; i++) {
+                Log.d(TAG, "權限結果: " + permissions[i] + " = " + grantResults[i]);
+            }
+            
             if (allPermissionsGranted()) {
+                Log.d(TAG, "權限授予成功，開始啟動相機");
                 startCamera();
             } else {
+                Log.e(TAG, "權限被拒絕");
                 announceError("需要相機權限才能使用環境識別功能");
-                Toast.makeText(this, "需要相機權限", Toast.LENGTH_SHORT).show();
-                finish();
+                Toast.makeText(this, "需要相機權限才能使用此功能", Toast.LENGTH_LONG).show();
+                
+                // 更新UI顯示權限錯誤
+                runOnUiThread(() -> {
+                    updateDetectionStatus("需要相機權限");
+                    updateDetectionResults("請在設置中授予相機權限，然後重新打開此功能");
+                });
+                
+                // 延遲3秒後返回主頁
+                new android.os.Handler().postDelayed(() -> {
+                    finish();
+                }, 3000);
             }
         }
     }
 
     private void startCamera() {
+        Log.d(TAG, "開始啟動相機...");
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
         cameraProviderFuture.addListener(() -> {
             try {
                 cameraProvider = cameraProviderFuture.get();
+                Log.d(TAG, "ProcessCameraProvider獲取成功");
                 bindCameraUseCases();
                 announceSuccess("相機已啟動，開始偵測環境");
             } catch (Exception e) {
                 Log.e(TAG, "相機啟動失敗: " + e.getMessage());
-                announceError("相機啟動失敗");
+                e.printStackTrace();
+                announceError("相機啟動失敗: " + e.getMessage());
+                
+                // 在UI線程顯示錯誤信息
+                runOnUiThread(() -> {
+                    updateDetectionStatus("相機啟動失敗");
+                    updateDetectionResults("錯誤: " + e.getMessage());
+                });
             }
         }, ContextCompat.getMainExecutor(this));
     }
 
     private void bindCameraUseCases() {
-        // Preview
-        Preview preview = new Preview.Builder().build();
-        preview.setSurfaceProvider(cameraPreview.getSurfaceProvider());
-
-        // Image Analysis for YOLO detection
-        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build();
-
-        imageAnalysis.setAnalyzer(cameraExecutor, this::analyzeImage);
-
-        // Camera selector
-        CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
-
+        Log.d(TAG, "開始綁定相機用例...");
+        
+        if (cameraProvider == null) {
+            Log.e(TAG, "cameraProvider為null，無法綁定相機");
+            return;
+        }
+        
+        if (cameraPreview == null) {
+            Log.e(TAG, "cameraPreview為null，無法設置預覽");
+            return;
+        }
+        
         try {
+            // Preview
+            Preview preview = new Preview.Builder().build();
+            preview.setSurfaceProvider(cameraPreview.getSurfaceProvider());
+            Log.d(TAG, "Preview設置完成");
+
+            // Image Analysis for YOLO detection
+            ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build();
+
+            imageAnalysis.setAnalyzer(cameraExecutor, this::analyzeImage);
+            Log.d(TAG, "ImageAnalysis設置完成");
+
+            // Camera selector
+            CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
+            Log.d(TAG, "CameraSelector設置完成");
+
             // Unbind all use cases before rebinding
             cameraProvider.unbindAll();
+            Log.d(TAG, "已解除所有相機綁定");
 
             // Bind use cases to camera
             cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
+            Log.d(TAG, "相機綁定成功");
 
             isDetecting = true;
             updateDetectionStatus("正在偵測環境...");
+            Log.d(TAG, "相機初始化完成，開始檢測");
 
         } catch (Exception e) {
             Log.e(TAG, "綁定相機失敗: " + e.getMessage());
-            announceError("相機設置失敗");
+            e.printStackTrace();
+            announceError("相機設置失敗: " + e.getMessage());
+            
+            runOnUiThread(() -> {
+                updateDetectionStatus("相機綁定失敗");
+                updateDetectionResults("錯誤: " + e.getMessage());
+            });
         }
     }
 
