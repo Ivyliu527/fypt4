@@ -81,11 +81,11 @@ public class DetectionOverlayView extends View {
     }
     
     /**
-     * 清除所有檢測結果
+     * 清除檢測結果
      */
     public void clearDetections() {
         this.detections.clear();
-        postInvalidate();
+        postInvalidate(); // 觸發重繪
     }
     
     @Override
