@@ -92,6 +92,13 @@ public class TTSManager {
         }
     }
     
+    // 靜默設置語言，不播報語言切換信息
+    public void setLanguageSilently(String language) {
+        currentLanguage = language;
+        setLanguage(language);
+        Log.d(TAG, "語言已靜默設置為: " + language);
+    }
+    
     public void speakWelcomeMessage() {
         String welcomeText = "瞳伴應用已啟動。歡迎使用智能視覺助手。" +
                 "當前有四個主要功能：環境識別、閱讀助手、尋找物品、即時協助。" +
