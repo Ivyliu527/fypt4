@@ -25,6 +25,7 @@
         app:layout_constraintBottom_toBottomOf="@id/cameraPreview"
         app:layout_constraintStart_toStartOf="@id/cameraPreview"
         app:layout_constraintEnd_toEndOf="@id/cameraPreview"
+        android:elevation="10dp"
         android:contentDescription="物體檢測結果覆蓋層，顯示檢測框和標籤" />
 
     <!-- Top Control Bar -->
