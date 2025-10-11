@@ -2,11 +2,15 @@ package com.example.tonbo_app;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.nio.ByteBuffer;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.CameraSelector;
@@ -29,21 +33,28 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.CAMERA};
 
     private PreviewView cameraPreview;
+    private DetectionOverlayView detectionOverlay;
     private TextView detectionStatus;
     private TextView detectionResults;
     private Button backButton;
     private Button flashButton;
-    private Button captureButton;
     private Button speakButton;
+    private Button clearButton;
 
     private ExecutorService cameraExecutor;
     private ProcessCameraProvider cameraProvider;
     private boolean isFlashOn = false;
     private boolean isDetecting = false;
 
-    // YOLO 相關變量
+    // 物體檢測相關變量
+    private ObjectDetectorHelper objectDetectorHelper;
     private String lastDetectionResult = "";
     private int detectionCount = 0;
+    private Bitmap currentBitmap;
+    private List<ObjectDetectorHelper.DetectionResult> lastDetections;
+    private long lastDetectionTime = 0;
+    private boolean isAnalyzing = false;
+    private int frameSkipCount = 3; // 每3幀檢測一次，實時響應
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +63,9 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
 
         initViews();
         cameraExecutor = Executors.newSingleThreadExecutor();
+        
+        // 初始化物體檢測器
+        objectDetectorHelper = new ObjectDetectorHelper(this);
 
         // 檢查相機權限
         if (allPermissionsGranted()) {
@@ -63,18 +77,19 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
 
     @Override
     protected void announcePageTitle() {
-        announcePageTitle("環境識別頁面");
-        announceNavigation("請將相機對準周圍物體，系統將自動識別並語音播報");
+        announcePageTitle("實時環境識別頁面");
+        announceNavigation("相機已啟動，系統正在實時分析畫面並顯示檢測框。將相機對準物體即可看到識別結果");
     }
 
     private void initViews() {
         cameraPreview = findViewById(R.id.cameraPreview);
+        detectionOverlay = findViewById(R.id.detectionOverlay);
         detectionStatus = findViewById(R.id.detectionStatus);
         detectionResults = findViewById(R.id.detectionResults);
         backButton = findViewById(R.id.backButton);
         flashButton = findViewById(R.id.flashButton);
-        captureButton = findViewById(R.id.captureButton);
         speakButton = findViewById(R.id.speakButton);
+        clearButton = findViewById(R.id.clearButton);
 
         // 返回按鈕
         backButton.setOnClickListener(v -> {
@@ -89,17 +104,27 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             toggleFlash();
         });
 
-        // 拍照識別按鈕
-        captureButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            captureAndDetect();
-        });
-
         // 語音播報按鈕
         speakButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
             speakDetectionResults();
         });
+        
+        // 清除顯示按鈕
+        clearButton.setOnClickListener(v -> {
+            vibrationManager.vibrateClick();
+            clearDetectionDisplay();
+        });
+    }
+    
+    /**
+     * 清除檢測顯示
+     */
+    private void clearDetectionDisplay() {
+        detectionOverlay.clearDetections();
+        updateDetectionResults("已清除檢測顯示");
+        updateDetectionStatus("實時檢測中...");
+        announceInfo("檢測框已清除，系統繼續實時檢測");
     }
 
     private boolean allPermissionsGranted() {
@@ -172,45 +197,144 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     }
 
     private void analyzeImage(ImageProxy image) {
-        // 這裡將整合 YOLO 模型進行實時物體識別
-        // 目前先實現基礎框架
-        
         try {
-            // TODO: 整合 YOLO 模型
-            // 1. 將 ImageProxy 轉換為 Bitmap
-            // 2. 使用 YOLO 模型進行推理
-            // 3. 解析檢測結果
-            // 4. 更新 UI 和語音播報
-            
             detectionCount++;
             
-            // 模擬檢測結果（實際應該來自 YOLO 模型）
-            if (detectionCount % 30 == 0) { // 每30幀更新一次
-                runOnUiThread(() -> {
-                    String mockResult = "偵測到物體";
-                    updateDetectionResults(mockResult);
-                });
+            // 跳過幀以提高性能，並且避免同時進行多個檢測
+            if (detectionCount % frameSkipCount == 0 && 
+                objectDetectorHelper != null && 
+                !isAnalyzing) {
+                
+                isAnalyzing = true;
+                
+                // 將ImageProxy轉換為Bitmap（在後台線程）
+                Bitmap bitmap = imageProxyToBitmap(image);
+                
+                if (bitmap != null) {
+                    // 保存當前幀
+                    currentBitmap = bitmap;
+                    
+                    // 在後台線程執行檢測，避免阻塞相機預覽
+                    cameraExecutor.execute(() -> {
+                        try {
+                            long startTime = System.currentTimeMillis();
+                            
+                            // 執行物體檢測
+                            List<ObjectDetectorHelper.DetectionResult> results = 
+                                    objectDetectorHelper.detect(bitmap);
+                            
+                            long detectionTime = System.currentTimeMillis() - startTime;
+                            lastDetections = results;
+                            lastDetectionTime = detectionTime;
+                            
+                            // 更新UI
+                            if (!results.isEmpty()) {
+                                String resultText = formatDetailedResults(results);
+                                String speechText = objectDetectorHelper.formatResultsForSpeech(results);
+                                
+                                runOnUiThread(() -> {
+                                    // 更新覆蓋層顯示檢測框
+                                    detectionOverlay.updateDetections(results);
+                                    
+                                    updateDetectionResults(resultText);
+                                    updateDetectionStatus(String.format(
+                                        "實時檢測中 - %d個物體 (%.0fms)", 
+                                        results.size(), 
+                                        (float)detectionTime
+                                    ));
+                                    
+                                    // 只在有新物體時播報（避免重複播報）
+                                    if (!speechText.equals(lastDetectionResult)) {
+                                        lastDetectionResult = speechText;
+                                        // 可選：自動播報
+                                        // speakDetectionResults();
+                                    }
+                                });
+                            } else {
+                                runOnUiThread(() -> {
+                                    // 清除覆蓋層
+                                    detectionOverlay.clearDetections();
+                                    updateDetectionStatus("實時檢測中 - 未發現物體");
+                                });
+                            }
+                            
+                        } catch (Exception e) {
+                            Log.e(TAG, "檢測失敗: " + e.getMessage());
+                        } finally {
+                            isAnalyzing = false;
+                        }
+                    });
+                } else {
+                    isAnalyzing = false;
+                }
             }
             
         } catch (Exception e) {
             Log.e(TAG, "圖像分析失敗: " + e.getMessage());
+            isAnalyzing = false;
         } finally {
             image.close();
         }
     }
-
-    private void captureAndDetect() {
-        announceInfo("正在拍照識別");
-        updateDetectionStatus("正在分析圖像...");
+    
+    /**
+     * 格式化詳細檢測結果
+     */
+    private String formatDetailedResults(List<ObjectDetectorHelper.DetectionResult> results) {
+        if (results.isEmpty()) {
+            return "未偵測到物體";
+        }
         
-        // TODO: 實現拍照和識別邏輯
-        // 目前顯示模擬結果
-        new android.os.Handler().postDelayed(() -> {
-            String result = "偵測到：桌子、椅子、杯子";
-            updateDetectionResults(result);
-            speakDetectionResults();
-        }, 1000);
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("偵測到 %d 個物體：\n\n", results.size()));
+        
+        for (int i = 0; i < Math.min(results.size(), 10); i++) {
+            ObjectDetectorHelper.DetectionResult result = results.get(i);
+            sb.append(String.format("%d. %s (%.0f%%)\n", 
+                i + 1, 
+                result.getLabelZh(), 
+                result.getConfidence() * 100
+            ));
+        }
+        
+        if (results.size() > 10) {
+            sb.append(String.format("\n...還有 %d 個物體", results.size() - 10));
+        }
+        
+        return sb.toString();
     }
+    
+    private Bitmap imageProxyToBitmap(ImageProxy image) {
+        try {
+            ImageProxy.PlaneProxy[] planes = image.getPlanes();
+            ByteBuffer yBuffer = planes[0].getBuffer();
+            ByteBuffer uBuffer = planes[1].getBuffer();
+            ByteBuffer vBuffer = planes[2].getBuffer();
+
+            int ySize = yBuffer.remaining();
+            int uSize = uBuffer.remaining();
+            int vSize = vBuffer.remaining();
+
+            byte[] nv21 = new byte[ySize + uSize + vSize];
+            yBuffer.get(nv21, 0, ySize);
+            vBuffer.get(nv21, ySize, vSize);
+            uBuffer.get(nv21, ySize + vSize, uSize);
+
+            android.graphics.YuvImage yuvImage = new android.graphics.YuvImage(
+                    nv21, android.graphics.ImageFormat.NV21, 
+                    image.getWidth(), image.getHeight(), null);
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            yuvImage.compressToJpeg(
+                    new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 
+                    100, out);
+            byte[] imageBytes = out.toByteArray();
+            return android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+        } catch (Exception e) {
+            Log.e(TAG, "圖像轉換失敗: " + e.getMessage());
+            return null;
+        }
+    }
+
 
     private void speakDetectionResults() {
         if (lastDetectionResult.isEmpty()) {
@@ -265,6 +389,9 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         }
         if (cameraProvider != null) {
             cameraProvider.unbindAll();
+        }
+        if (objectDetectorHelper != null) {
+            objectDetectorHelper.close();
         }
         isDetecting = false;
     }

@@ -4,27 +4,53 @@
     android:height="120dp"
     android:viewportWidth="120"
     android:viewportHeight="120">
-    
-    <!-- 外圈 - 代表視野 -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M60,10 A50,50 0 1,1 60,110 A50,50 0 1,1 60,10 Z
-                         M60,20 A40,40 0 1,0 60,100 A40,40 0 1,0 60,20 Z"/>
-    
-    <!-- 內部眼睛形狀 -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M30,60 Q60,40 90,60 Q60,80 30,60 Z"/>
-    
-    <!-- 瞳孔 -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M60,45 A15,15 0 1,1 60,75 A15,15 0 1,1 60,45 Z"/>
-    
-    <!-- 瞳孔高光 -->
-    <path
-        android:fillColor="#0066CC"
-        android:pathData="M65,50 A5,5 0 1,1 65,60 A5,5 0 1,1 65,50 Z"/>
-        
-</vector>
 
+    <!-- 外圈 -->
+    <group>
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="4"
+            android:fillColor="@android:color/transparent"
+            android:pathData="M60,10 A50,50 0 1,1 60,110 A50,50 0 1,1 60,10" />
+    </group>
+
+    <!-- 內圈（眼睛形狀） -->
+    <group>
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="3"
+            android:fillColor="@android:color/transparent"
+            android:pathData="M60,30 A30,30 0 1,1 60,90 A30,30 0 1,1 60,30" />
+    </group>
+
+    <!-- 瞳孔 -->
+    <group>
+        <path
+            android:fillColor="@android:color/white"
+            android:pathData="M48,48 A12,12 0 1,1 72,48 A12,12 0 1,1 48,48" />
+    </group>
+
+    <!-- 光芒效果 -->
+    <group>
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="2"
+            android:pathData="M60,10 L60,20" />
+
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="2"
+            android:pathData="M60,100 L60,110" />
+
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="2"
+            android:pathData="M10,60 L20,60" />
+
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="2"
+            android:pathData="M100,60 L110,60" />
+    </group>
+
+</vector>
