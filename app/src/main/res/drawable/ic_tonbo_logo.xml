@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- 外圈 -->
+    <group>
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="4"
+            android:fillColor="@android:color/transparent"
+            android:pathData="M60,10 A50,50 0 1,1 60,110 A50,50 0 1,1 60,10" />
+    </group>
+
+    <!-- 內圈（眼睛形狀） -->
+    <group>
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="3"
+            android:fillColor="@android:color/transparent"
+            android:pathData="M60,30 A30,30 0 1,1 60,90 A30,30 0 1,1 60,30" />
+    </group>
+
+    <!-- 瞳孔 -->
+    <group>
+        <path
+            android:fillColor="@android:color/white"
+            android:pathData="M48,48 A12,12 0 1,1 72,48 A12,12 0 1,1 48,48" />
+    </group>
+
+    <!-- 光芒效果 -->
+    <group>
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="2"
+            android:pathData="M60,10 L60,20" />
+
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="2"
+            android:pathData="M60,100 L60,110" />
+
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="2"
+            android:pathData="M10,60 L20,60" />
+
+        <path
+            android:strokeColor="@android:color/white"
+            android:strokeWidth="2"
+            android:pathData="M100,60 L110,60" />
+    </group>
+
+</vector>
