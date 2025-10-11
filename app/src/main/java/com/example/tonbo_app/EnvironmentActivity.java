@@ -56,6 +56,13 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private boolean isAnalyzing = false;
     private int frameSkipCount = 3; // 每3幀檢測一次，實時響應
     
+    // 顏色和光線分析
+    private ColorLightingAnalyzer colorLightingAnalyzer;
+    private ColorLightingAnalyzer.ColorAnalysisResult lastColorAnalysis;
+    private ColorLightingAnalyzer.LightingAnalysisResult lastLightingAnalysis;
+    private long lastColorAnalysisTime = 0;
+    private int colorAnalysisSkipCount = 30; // 每30幀分析一次顏色和光線
+    
     // 記憶體監控
     private long lastMemoryCheck = 0;
     private static final long MEMORY_CHECK_INTERVAL = 10000; // 10秒檢查一次記憶體
@@ -73,6 +80,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         
         // 初始化物體檢測器
         objectDetectorHelper = new ObjectDetectorHelper(this);
+        colorLightingAnalyzer = new ColorLightingAnalyzer();
 
         // 檢查相機權限
         Log.d(TAG, "檢查相機權限...");
@@ -320,6 +328,11 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                         // 可選：自動播報
                                         // speakDetectionResults();
                                     }
+                                    
+                                    // 定期進行顏色和光線分析
+                                    if (detectionCount % colorAnalysisSkipCount == 0) {
+                                        performColorLightingAnalysis(bitmap);
+                                    }
                                 });
                             } else {
                                 runOnUiThread(() -> {
@@ -349,6 +362,90 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             isAnalyzing = false;
         } finally {
             image.close();
+        }
+    }
+    
+    /**
+     * 執行顏色和光線分析
+     */
+    private void performColorLightingAnalysis(Bitmap bitmap) {
+        if (bitmap == null || bitmap.isRecycled() || colorLightingAnalyzer == null) {
+            return;
+        }
+        
+        // 在新線程中執行分析
+        cameraExecutor.execute(() -> {
+            try {
+                // 顏色分析
+                ColorLightingAnalyzer.ColorAnalysisResult colorResult = colorLightingAnalyzer.analyzeColors(bitmap);
+                
+                // 光線分析
+                ColorLightingAnalyzer.LightingAnalysisResult lightingResult = colorLightingAnalyzer.analyzeLighting(bitmap);
+                
+                // 更新UI
+                runOnUiThread(() -> {
+                    lastColorAnalysis = colorResult;
+                    lastLightingAnalysis = lightingResult;
+                    lastColorAnalysisTime = System.currentTimeMillis();
+                    
+                    // 更新檢測結果顯示
+                    updateEnvironmentDescription();
+                    
+                    Log.d(TAG, String.format("顏色分析: %s + %s (%s), 光線: %s", 
+                        colorResult.getPrimaryColor(),
+                        colorResult.getSecondaryColor(),
+                        colorResult.getDominantTone(),
+                        lightingResult.getLightingCondition()));
+                });
+                
+            } catch (Exception e) {
+                Log.e(TAG, "顏色光線分析失敗: " + e.getMessage());
+            }
+        });
+    }
+    
+    /**
+     * 更新環境描述
+     */
+    private void updateEnvironmentDescription() {
+        StringBuilder description = new StringBuilder();
+        
+        // 物體檢測結果
+        if (lastDetections != null && !lastDetections.isEmpty()) {
+            description.append("檢測到物體: ");
+            for (int i = 0; i < Math.min(lastDetections.size(), 3); i++) {
+                if (i > 0) description.append(", ");
+                description.append(lastDetections.get(i).getLabelZh());
+            }
+            description.append("\n");
+        }
+        
+        // 顏色分析結果
+        if (lastColorAnalysis != null) {
+            description.append("主要顏色: ");
+            if (lastColorAnalysis.getPrimaryColor() != null) {
+                description.append(lastColorAnalysis.getPrimaryColor());
+            }
+            if (lastColorAnalysis.getSecondaryColor() != null) {
+                description.append(" + ").append(lastColorAnalysis.getSecondaryColor());
+            }
+            if (lastColorAnalysis.getDominantTone() != null) {
+                description.append(" (").append(lastColorAnalysis.getDominantTone()).append(")");
+            }
+            description.append("\n");
+        }
+        
+        // 光線分析結果
+        if (lastLightingAnalysis != null) {
+            description.append("光線條件: ").append(lastLightingAnalysis.getLightingCondition());
+            if (lastLightingAnalysis.getLightDirection() != null) {
+                description.append(", ").append(lastLightingAnalysis.getLightDirection());
+            }
+        }
+        
+        String finalDescription = description.toString().trim();
+        if (!finalDescription.isEmpty()) {
+            updateDetectionResults(finalDescription);
         }
     }
     
@@ -423,14 +520,82 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
 
 
     private void speakDetectionResults() {
-        if (lastDetectionResult.isEmpty()) {
-            announceInfo("尚未偵測到任何物體");
-        } else {
-            String cantoneseText = "當前偵測結果：" + lastDetectionResult;
-            String englishText = "Current detection: " + translateToEnglish(lastDetectionResult);
-            ttsManager.speak(cantoneseText, englishText, true);
-            vibrationManager.vibrateSuccess();
+        StringBuilder fullDescription = new StringBuilder();
+        
+        // 物體檢測結果
+        if (lastDetectionResult != null && !lastDetectionResult.isEmpty()) {
+            fullDescription.append("偵測到物體：").append(lastDetectionResult).append("。");
         }
+        
+        // 顏色分析結果
+        if (lastColorAnalysis != null) {
+            fullDescription.append("主要顏色是");
+            if (lastColorAnalysis.getPrimaryColor() != null) {
+                fullDescription.append(lastColorAnalysis.getPrimaryColor());
+            }
+            if (lastColorAnalysis.getSecondaryColor() != null) {
+                fullDescription.append("和").append(lastColorAnalysis.getSecondaryColor());
+            }
+            if (lastColorAnalysis.getDominantTone() != null) {
+                fullDescription.append("，整體是").append(lastColorAnalysis.getDominantTone());
+            }
+            fullDescription.append("。");
+        }
+        
+        // 光線分析結果
+        if (lastLightingAnalysis != null) {
+            fullDescription.append("光線條件是").append(lastLightingAnalysis.getLightingCondition());
+            if (lastLightingAnalysis.getLightDirection() != null) {
+                fullDescription.append("，光線來自").append(lastLightingAnalysis.getLightDirection());
+            }
+            fullDescription.append("。");
+        }
+        
+        String cantoneseText = fullDescription.toString();
+        if (cantoneseText.isEmpty()) {
+            cantoneseText = "尚未偵測到任何物體";
+        }
+        
+        String englishText = translateEnvironmentDescriptionToEnglish(cantoneseText);
+        ttsManager.speak(cantoneseText, englishText, true);
+        vibrationManager.vibrateSuccess();
+    }
+
+    /**
+     * 將環境描述翻譯為英文
+     */
+    private String translateEnvironmentDescriptionToEnglish(String cantoneseText) {
+        // 簡化的翻譯映射
+        String englishText = cantoneseText
+            .replace("偵測到物體", "Detected objects")
+            .replace("主要顏色是", "Main colors are")
+            .replace("整體是", "overall tone is")
+            .replace("光線條件是", "lighting condition is")
+            .replace("光線來自", "light comes from")
+            .replace("紅色", "red")
+            .replace("藍色", "blue")
+            .replace("綠色", "green")
+            .replace("黃色", "yellow")
+            .replace("橙色", "orange")
+            .replace("紫色", "purple")
+            .replace("黑色", "black")
+            .replace("白色", "white")
+            .replace("灰色", "gray")
+            .replace("暖色調", "warm tone")
+            .replace("冷色調", "cool tone")
+            .replace("中性色調", "neutral tone")
+            .replace("明亮環境", "bright environment")
+            .replace("昏暗環境", "dark environment")
+            .replace("正常光線", "normal lighting")
+            .replace("高對比", "high contrast")
+            .replace("左側光線", "left side lighting")
+            .replace("右側光線", "right side lighting")
+            .replace("頂部光線", "top lighting")
+            .replace("底部光線", "bottom lighting")
+            .replace("均勻光線", "even lighting")
+            .replace("尚未偵測到任何物體", "No objects detected yet");
+        
+        return englishText;
     }
 
     private void toggleFlash() {
@@ -551,6 +716,15 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         // 清理其他引用
         lastDetections = null;
         lastDetectionResult = "";
+        
+        // 清理顏色光線分析器
+        if (colorLightingAnalyzer != null) {
+            colorLightingAnalyzer = null;
+        }
+        
+        // 清理分析結果
+        lastColorAnalysis = null;
+        lastLightingAnalysis = null;
         
         Log.d(TAG, "資源清理完成");
     }
