@@ -200,6 +200,16 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 Log.d(TAG, "ProcessCameraProvider獲取成功");
                 bindCameraUseCases();
                 announceSuccess("相機已啟動，開始偵測環境");
+            } catch (NoSuchMethodError e) {
+                Log.e(TAG, "相機API兼容性錯誤: " + e.getMessage());
+                e.printStackTrace();
+                announceError("相機API不兼容，請更新Android系統");
+                
+                // 在UI線程顯示錯誤信息
+                runOnUiThread(() -> {
+                    updateDetectionStatus("相機API不兼容");
+                    updateDetectionResults("錯誤: Android版本過舊，請更新系統");
+                });
             } catch (Exception e) {
                 Log.e(TAG, "相機啟動失敗: " + e.getMessage());
                 e.printStackTrace();
@@ -257,6 +267,15 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             updateDetectionStatus("正在偵測環境...");
             Log.d(TAG, "相機初始化完成，開始檢測");
 
+        } catch (NoSuchMethodError e) {
+            Log.e(TAG, "API兼容性錯誤: " + e.getMessage());
+            e.printStackTrace();
+            announceError("相機API不兼容，請更新Android系統");
+            
+            runOnUiThread(() -> {
+                updateDetectionStatus("相機API不兼容");
+                updateDetectionResults("錯誤: Android版本過舊或API不兼容");
+            });
         } catch (Exception e) {
             Log.e(TAG, "綁定相機失敗: " + e.getMessage());
             e.printStackTrace();
