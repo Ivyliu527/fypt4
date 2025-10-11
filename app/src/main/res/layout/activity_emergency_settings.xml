@@ -220,6 +220,18 @@
             android:layout_marginTop="8dp"
             android:contentDescription="測試模式說明" />
 
+        <!-- 設置完成按鈕 -->
+        <Button
+            android:id="@+id/setupCompleteButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="✅ 完成設置"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:background="@drawable/button_square_background"
+            android:layout_marginTop="16dp"
+            android:contentDescription="完成緊急求助設置按鈕" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
