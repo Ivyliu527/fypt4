@@ -28,6 +28,17 @@
             android:focusable="true" />
 
         <Button
+            android:id="@+id/settingsButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:text="⚙"
+            android:textSize="20sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_circle_background"
+            android:contentDescription="設置按鈕，點擊進入設置頁面"
+            android:layout_marginEnd="8dp" />
+
+        <Button
             android:id="@+id/languageButton"
             android:layout_width="60dp"
             android:layout_height="60dp"

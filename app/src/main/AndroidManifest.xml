@@ -61,6 +61,11 @@
         <activity
             android:name=".DocumentCurrencyActivity"
             android:exported="false" />
+            
+        <!-- Emergency Settings Activity - 緊急求助設置 -->
+        <activity
+            android:name=".EmergencySettingsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
