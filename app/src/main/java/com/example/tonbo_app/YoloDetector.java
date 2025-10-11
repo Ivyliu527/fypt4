@@ -208,14 +208,51 @@ public class YoloDetector {
     
     /**
      * 獲取模擬檢測結果（用於測試）
+     * 隨機返回不同的物體組合
      */
     private List<DetectionResult> getMockDetections() {
         List<DetectionResult> results = new ArrayList<>();
         
-        // 模擬一些常見物體
-        results.add(new DetectionResult("chair", "椅子", 0.95f));
-        results.add(new DetectionResult("cup", "杯子", 0.88f));
-        results.add(new DetectionResult("cell phone", "手機", 0.92f));
+        // 隨機選擇3-5個物體
+        java.util.Random random = new java.util.Random();
+        String[][] mockObjects = {
+            {"person", "人"},
+            {"chair", "椅子"},
+            {"cup", "杯子"},
+            {"cell phone", "手機"},
+            {"laptop", "筆記本電腦"},
+            {"book", "書"},
+            {"bottle", "瓶子"},
+            {"clock", "時鐘"},
+            {"keyboard", "鍵盤"},
+            {"mouse", "滑鼠"},
+            {"tv", "電視"},
+            {"remote", "遙控器"},
+            {"dining table", "餐桌"},
+            {"couch", "沙發"},
+            {"potted plant", "盆栽"},
+            {"vase", "花瓶"},
+            {"scissors", "剪刀"},
+            {"backpack", "背包"},
+            {"umbrella", "雨傘"},
+            {"handbag", "手提包"}
+        };
+        
+        // 隨機選擇3-5個不同的物體
+        int numObjects = 3 + random.nextInt(3); // 3到5個物體
+        java.util.Set<Integer> selectedIndices = new java.util.HashSet<>();
+        
+        while (selectedIndices.size() < numObjects && selectedIndices.size() < mockObjects.length) {
+            int index = random.nextInt(mockObjects.length);
+            if (selectedIndices.add(index)) {
+                String[] obj = mockObjects[index];
+                float confidence = 0.75f + random.nextFloat() * 0.24f; // 0.75-0.99
+                results.add(new DetectionResult(obj[0], obj[1], confidence));
+            }
+        }
+        
+        // 按置信度排序
+        results.sort((a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
         
         return results;
     }
