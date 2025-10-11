@@ -2,6 +2,28 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- 震動權限 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <!-- 攝像頭權限 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    
+    <!-- 錄音權限 -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    
+    <!-- 網絡權限 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- 緊急求助權限 -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    
+    <!-- 位置權限（用於緊急求助時發送位置） -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,15 +34,31 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Tonbo_App"
         tools:targetApi="31">
+        <!-- Splash Activity - 啟動頁面 -->
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Tonbo_App.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
+        <!-- Main Activity - 主頁面 -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+            
+        <!-- Environment Activity - 環境識別 -->
+        <activity
+            android:name=".EnvironmentActivity"
+            android:exported="false" />
+            
+        <!-- Document Currency Activity - 閱讀助手 -->
+        <activity
+            android:name=".DocumentCurrencyActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
