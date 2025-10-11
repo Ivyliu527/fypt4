@@ -27,6 +27,7 @@
         android:textSize="14sp"
         android:textColor="@color/white"
         android:background="@drawable/button_square_background"
+        android:backgroundTint="@null"
         android:paddingHorizontal="16dp"
         android:contentDescription="移除聯絡人按鈕" />
 

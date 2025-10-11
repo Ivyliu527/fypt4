@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class MainActivity extends BaseAccessibleActivity {
     private RecyclerView recyclerView;
     private FunctionAdapter adapter;
-    private Button emergencyButton;
+    private LinearLayout emergencyButton;
     private EmergencyManager emergencyManager;
     private final ArrayList<HomeFunction> functionList = new ArrayList<>();
 

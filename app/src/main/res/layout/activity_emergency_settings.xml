@@ -25,6 +25,7 @@
             android:textSize="24sp"
             android:textColor="@color/white"
             android:background="@drawable/button_circle_background"
+            android:backgroundTint="@null"
             android:contentDescription="返回主頁按鈕" />
 
         <TextView
@@ -95,6 +96,7 @@
                 android:textSize="16sp"
                 android:textColor="@color/white"
                 android:background="@drawable/button_square_background"
+                android:backgroundTint="@null"
                 android:layout_marginStart="12dp"
                 android:paddingHorizontal="20dp"
                 android:contentDescription="添加緊急聯絡人按鈕" />
@@ -209,6 +211,7 @@
             android:textSize="16sp"
             android:textColor="@color/white"
             android:background="@drawable/emergency_button_background"
+            android:backgroundTint="@null"
             android:contentDescription="測試緊急求助功能按鈕" />
 
         <TextView
@@ -229,6 +232,7 @@
             android:textSize="16sp"
             android:textColor="@color/white"
             android:background="@drawable/button_square_background"
+            android:backgroundTint="@null"
             android:layout_marginTop="16dp"
             android:contentDescription="完成緊急求助設置按鈕" />
 
