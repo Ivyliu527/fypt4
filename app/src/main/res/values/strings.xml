@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">瞳伴</string>
+    <string name="accessibility_service_description">瞳伴無障礙服務，協助視障用戶使用應用功能</string>
+    <string name="splash_slogan">你的視覺夥伴</string>
+
+    <!-- 功能名稱 -->
+    <string name="function_environment">環境識別</string>
+    <string name="function_scan">閱讀助手</string>
+    <string name="function_search">尋找物品</string>
+    <string name="function_assistance">即時協助</string>
+
+    <!-- 功能描述 -->
+    <string name="description_environment">描述你周圍的環境</string>
+    <string name="description_scan">掃描文件、菜單與鈔票</string>
+    <string name="description_search">尋找已標記的個人物品</string>
+    <string name="description_assistance">連接志工視訊通話</string>
+
+    <!-- 按鈕文字 -->
+    <string name="emergency_button">🆘 緊急求助</string>
+    <string name="back_button">← 返回</string>
+    <string name="analyze_button">分析環境</string>
+    <string name="capture_button">拍攝</string>
+
+    <!-- 語音提示 -->
+    <string name="welcome_message">瞳伴主頁面，請上下滑動瀏覽功能</string>
+    <string name="emergency_sent">緊急求助已發送</string>
+
+    <!-- 語言按鈕 -->
+    <string name="language_cantonese">廣</string>
+    <string name="language_english">EN</string>
+    <string name="language_mandarin">普</string>
+
+    <string name="google_cloud_api_key">YOUR_GOOGLE_CLOUD_API_KEY_HERE</string>
+</resources>

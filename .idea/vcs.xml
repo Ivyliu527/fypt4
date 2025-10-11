@@ -2,6 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+<<<<<<< HEAD
     <mapping directory="$PROJECT_DIR$/Tonbo_App" vcs="Git" />
+=======
+>>>>>>> ab69746f8dd9693b92e4b2c168144cc65b0115b2
   </component>
 </project>
