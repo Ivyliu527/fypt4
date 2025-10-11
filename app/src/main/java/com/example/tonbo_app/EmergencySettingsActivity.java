@@ -59,11 +59,8 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         // 載入設置
         loadSettings();
         
-        // 設置語言
-        ttsManager.changeLanguage(currentLanguage);
-        
-        // 播報頁面信息
-        announcePageInfo();
+        // 設置語言（靜默設置，不播報）
+        ttsManager.setLanguageSilently(currentLanguage);
     }
     
     private void initViews() {
@@ -326,19 +323,6 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         }, 3000);
     }
     
-    private void announcePageInfo() {
-        new android.os.Handler().postDelayed(() -> {
-            if (setupCompleted) {
-                String cantoneseText = "緊急求助已設置完成。當前有" + emergencyContacts.size() + "個緊急聯絡人。可以測試緊急功能。";
-                String englishText = "Emergency setup completed. Currently have " + emergencyContacts.size() + " emergency contacts. You can test emergency function.";
-                announceInfo(cantoneseText);
-            } else {
-                String cantoneseText = "緊急求助設置頁面。當前有" + emergencyContacts.size() + "個緊急聯絡人。請添加聯絡人並完成設置。";
-                String englishText = "Emergency settings page. Currently have " + emergencyContacts.size() + " emergency contacts. Please add contacts and complete setup.";
-                announceInfo(cantoneseText);
-            }
-        }, 1000);
-    }
     
     @Override
     protected void onDestroy() {
@@ -348,6 +332,17 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
     
     @Override
     protected void announcePageTitle() {
-        announceInfo("緊急求助設置頁面");
+        // 延遲播報，確保語言設置生效
+        new android.os.Handler().postDelayed(() -> {
+            if (setupCompleted) {
+                String cantoneseText = "緊急求助已設置完成。當前有" + emergencyContacts.size() + "個緊急聯絡人。可以測試緊急功能。";
+                String englishText = "Emergency setup completed. Currently have " + emergencyContacts.size() + " emergency contacts. You can test emergency function.";
+                ttsManager.speak(cantoneseText, englishText, true);
+            } else {
+                String cantoneseText = "緊急求助設置頁面。當前有" + emergencyContacts.size() + "個緊急聯絡人。請添加聯絡人並完成設置。";
+                String englishText = "Emergency settings page. Currently have " + emergencyContacts.size() + " emergency contacts. Please add contacts and complete setup.";
+                ttsManager.speak(cantoneseText, englishText, true);
+            }
+        }, 500);
     }
 }
