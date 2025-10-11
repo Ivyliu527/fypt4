@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    
+    <!-- 外圈 - 代表視野 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,10 A50,50 0 1,1 60,110 A50,50 0 1,1 60,10 Z
+                         M60,20 A40,40 0 1,0 60,100 A40,40 0 1,0 60,20 Z"/>
+    
+    <!-- 內部眼睛形狀 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,60 Q60,40 90,60 Q60,80 30,60 Z"/>
+    
+    <!-- 瞳孔 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,45 A15,15 0 1,1 60,75 A15,15 0 1,1 60,45 Z"/>
+    
+    <!-- 瞳孔高光 -->
+    <path
+        android:fillColor="#0066CC"
+        android:pathData="M65,50 A5,5 0 1,1 65,60 A5,5 0 1,1 65,50 Z"/>
+        
+</vector>
+
