@@ -3,6 +3,7 @@ package com.example.tonbo_app;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -63,6 +64,10 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private long lastColorAnalysisTime = 0;
     private int colorAnalysisSkipCount = 30; // 每30幀分析一次顏色和光線
     
+    // 備用相機實現
+    private LegacyCameraHelper legacyCameraHelper;
+    private boolean useLegacyCamera = false;
+    
     // 記憶體監控
     private long lastMemoryCheck = 0;
     private static final long MEMORY_CHECK_INTERVAL = 10000; // 10秒檢查一次記憶體
@@ -75,6 +80,15 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
 
         Log.d(TAG, "EnvironmentActivity onCreate開始");
         
+        // 檢查API版本兼容性
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            Log.e(TAG, "Android版本過舊，不支持CameraX");
+            announceError("您的Android版本過舊，請升級到Android 5.0或更高版本");
+            Toast.makeText(this, "Android版本過舊，請升級系統", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+        
         initViews();
         cameraExecutor = Executors.newSingleThreadExecutor();
         
@@ -86,7 +100,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         Log.d(TAG, "檢查相機權限...");
         if (allPermissionsGranted()) {
             Log.d(TAG, "相機權限已授予，開始啟動相機");
-            startCamera();
+            startCameraWithFallback();
         } else {
             Log.d(TAG, "相機權限未授予，請求權限");
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
@@ -170,7 +184,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             
             if (allPermissionsGranted()) {
                 Log.d(TAG, "權限授予成功，開始啟動相機");
-                startCamera();
+                startCameraWithFallback();
             } else {
                 Log.e(TAG, "權限被拒絕");
                 announceError("需要相機權限才能使用環境識別功能");
@@ -190,6 +204,50 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         }
     }
 
+    /**
+     * 帶備用方案的相機啟動
+     */
+    private void startCameraWithFallback() {
+        Log.d(TAG, "開始啟動相機（帶備用方案）...");
+        
+        try {
+            startCamera();
+        } catch (NoSuchMethodError e) {
+            Log.w(TAG, "CameraX不兼容，嘗試使用傳統相機API");
+            startLegacyCamera();
+        } catch (Exception e) {
+            Log.w(TAG, "CameraX啟動失敗，嘗試使用傳統相機API: " + e.getMessage());
+            startLegacyCamera();
+        }
+    }
+    
+    /**
+     * 啟動傳統相機API
+     */
+    private void startLegacyCamera() {
+        Log.d(TAG, "啟動傳統相機API...");
+        
+        try {
+            legacyCameraHelper = new LegacyCameraHelper(this);
+            if (legacyCameraHelper.initializeCamera()) {
+                useLegacyCamera = true;
+                announceSuccess("相機已啟動（兼容模式），開始偵測環境");
+                updateDetectionStatus("相機已啟動（兼容模式）");
+                updateDetectionResults("使用兼容模式相機，功能可能受限");
+                Log.d(TAG, "傳統相機啟動成功");
+            } else {
+                announceError("所有相機模式都無法啟動");
+                updateDetectionStatus("相機啟動失敗");
+                updateDetectionResults("錯誤: 無法啟動任何相機模式");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "傳統相機啟動失敗: " + e.getMessage());
+            announceError("所有相機模式都無法啟動");
+            updateDetectionStatus("相機啟動失敗");
+            updateDetectionResults("錯誤: " + e.getMessage());
+        }
+    }
+
     private void startCamera() {
         Log.d(TAG, "開始啟動相機...");
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
@@ -203,23 +261,16 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             } catch (NoSuchMethodError e) {
                 Log.e(TAG, "相機API兼容性錯誤: " + e.getMessage());
                 e.printStackTrace();
-                announceError("相機API不兼容，請更新Android系統");
                 
-                // 在UI線程顯示錯誤信息
-                runOnUiThread(() -> {
-                    updateDetectionStatus("相機API不兼容");
-                    updateDetectionResults("錯誤: Android版本過舊，請更新系統");
-                });
+                // 嘗試使用傳統相機API
+                runOnUiThread(() -> startLegacyCamera());
+                
             } catch (Exception e) {
                 Log.e(TAG, "相機啟動失敗: " + e.getMessage());
                 e.printStackTrace();
-                announceError("相機啟動失敗: " + e.getMessage());
                 
-                // 在UI線程顯示錯誤信息
-                runOnUiThread(() -> {
-                    updateDetectionStatus("相機啟動失敗");
-                    updateDetectionResults("錯誤: " + e.getMessage());
-                });
+                // 嘗試使用傳統相機API
+                runOnUiThread(() -> startLegacyCamera());
             }
         }, ContextCompat.getMainExecutor(this));
     }
