@@ -69,17 +69,33 @@
         android:layout_marginBottom="24dp" />
 
     <!-- 緊急按鈕 -->
-    <Button
+    <LinearLayout
         android:id="@+id/emergencyButton"
         android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:text="緊急求助\n長按3秒發送"
-        android:textSize="18sp"
-        android:textColor="#FFFFFF"
-        android:background="@drawable/emergency_button_background"
-        android:backgroundTint="@null"
-        android:textAlignment="center"
-        android:contentDescription="緊急求助按鈕，長按三秒發送求助信息" />
+        android:background="@drawable/emergency_button_selector"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="緊急求助按鈕，長按三秒發送求助信息">
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="緊急求助"
+            android:textSize="18sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
+            
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="長按3秒發送"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF" />
+            
+    </LinearLayout>
 
     <!-- 底部指引 -->
     <TextView
