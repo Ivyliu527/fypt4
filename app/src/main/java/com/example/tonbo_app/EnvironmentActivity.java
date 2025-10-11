@@ -55,6 +55,11 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private long lastDetectionTime = 0;
     private boolean isAnalyzing = false;
     private int frameSkipCount = 3; // 每3幀檢測一次，實時響應
+    
+    // 記憶體監控
+    private long lastMemoryCheck = 0;
+    private static final long MEMORY_CHECK_INTERVAL = 10000; // 10秒檢查一次記憶體
+    private static final long MEMORY_WARNING_THRESHOLD = 100 * 1024 * 1024; // 100MB警告閾值
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -200,6 +205,9 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         try {
             detectionCount++;
             
+            // 定期檢查記憶體使用情況
+            checkMemoryUsage();
+            
             // 跳過幀以提高性能，並且避免同時進行多個檢測
             if (detectionCount % frameSkipCount == 0 && 
                 objectDetectorHelper != null && 
@@ -211,7 +219,10 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 Bitmap bitmap = imageProxyToBitmap(image);
                 
                 if (bitmap != null) {
-                    // 保存當前幀
+                    // 保存當前幀並回收舊的bitmap
+                    if (currentBitmap != null && !currentBitmap.isRecycled()) {
+                        currentBitmap.recycle();
+                    }
                     currentBitmap = bitmap;
                     
                     // 在後台線程執行檢測，避免阻塞相機預覽
@@ -261,6 +272,10 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                         } catch (Exception e) {
                             Log.e(TAG, "檢測失敗: " + e.getMessage());
                         } finally {
+                            // 回收處理完的bitmap
+                            if (bitmap != null && !bitmap.isRecycled()) {
+                                bitmap.recycle();
+                            }
                             isAnalyzing = false;
                         }
                     });
@@ -305,6 +320,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     }
     
     private Bitmap imageProxyToBitmap(ImageProxy image) {
+        java.io.ByteArrayOutputStream out = null;
         try {
             ImageProxy.PlaneProxy[] planes = image.getPlanes();
             ByteBuffer yBuffer = planes[0].getBuffer();
@@ -323,15 +339,25 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             android.graphics.YuvImage yuvImage = new android.graphics.YuvImage(
                     nv21, android.graphics.ImageFormat.NV21, 
                     image.getWidth(), image.getHeight(), null);
-            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            
+            out = new java.io.ByteArrayOutputStream();
             yuvImage.compressToJpeg(
                     new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 
-                    100, out);
+                    85, out); // 降低JPEG質量以節省記憶體
             byte[] imageBytes = out.toByteArray();
             return android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
         } catch (Exception e) {
             Log.e(TAG, "圖像轉換失敗: " + e.getMessage());
             return null;
+        } finally {
+            // 確保ByteArrayOutputStream被正確關閉
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (Exception e) {
+                    Log.w(TAG, "關閉ByteArrayOutputStream失敗: " + e.getMessage());
+                }
+            }
         }
     }
 
@@ -380,33 +406,133 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 .replace("電腦", "computer")
                 .replace("人", "person");
     }
+    
+    /**
+     * 檢查記憶體使用情況
+     */
+    private void checkMemoryUsage() {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastMemoryCheck > MEMORY_CHECK_INTERVAL) {
+            lastMemoryCheck = currentTime;
+            
+            // 獲取記憶體信息
+            android.app.ActivityManager activityManager = 
+                (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            android.app.ActivityManager.MemoryInfo memoryInfo = new android.app.ActivityManager.MemoryInfo();
+            activityManager.getMemoryInfo(memoryInfo);
+            
+            long usedMemory = memoryInfo.totalMem - memoryInfo.availMem;
+            
+            Log.d(TAG, String.format("記憶體使用情況: %.1fMB / %.1fMB (%.1f%%)", 
+                usedMemory / (1024.0 * 1024.0),
+                memoryInfo.totalMem / (1024.0 * 1024.0),
+                (double)usedMemory / memoryInfo.totalMem * 100));
+            
+            // 如果記憶體使用過高，觸發垃圾回收
+            if (usedMemory > MEMORY_WARNING_THRESHOLD) {
+                Log.w(TAG, "記憶體使用過高，觸發垃圾回收");
+                System.gc();
+                
+                // 可以選擇性地清理一些資源
+                if (currentBitmap != null && !currentBitmap.isRecycled()) {
+                    currentBitmap.recycle();
+                    currentBitmap = null;
+                }
+            }
+        }
+    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        
+        Log.d(TAG, "開始清理資源...");
+        
+        // 停止檢測
+        isDetecting = false;
+        isAnalyzing = false;
+        
+        // 關閉相機執行器
         if (cameraExecutor != null) {
             cameraExecutor.shutdown();
+            try {
+                if (!cameraExecutor.awaitTermination(2, java.util.concurrent.TimeUnit.SECONDS)) {
+                    cameraExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                cameraExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            cameraExecutor = null;
         }
+        
+        // 解除相機綁定
         if (cameraProvider != null) {
-            cameraProvider.unbindAll();
+            try {
+                cameraProvider.unbindAll();
+                cameraProvider = null;
+            } catch (Exception e) {
+                Log.e(TAG, "解除相機綁定失敗: " + e.getMessage());
+            }
         }
+        
+        // 關閉物體檢測器
         if (objectDetectorHelper != null) {
             objectDetectorHelper.close();
+            objectDetectorHelper = null;
         }
-        isDetecting = false;
+        
+        // 回收bitmap
+        if (currentBitmap != null && !currentBitmap.isRecycled()) {
+            currentBitmap.recycle();
+            currentBitmap = null;
+        }
+        
+        // 清理其他引用
+        lastDetections = null;
+        lastDetectionResult = "";
+        
+        Log.d(TAG, "資源清理完成");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         isDetecting = false;
+        
+        // 暫停相機以節省資源
+        if (cameraProvider != null) {
+            try {
+                cameraProvider.unbindAll();
+                Log.d(TAG, "相機已暫停");
+            } catch (Exception e) {
+                Log.e(TAG, "暫停相機失敗: " + e.getMessage());
+            }
+        }
+        
+        // 回收當前bitmap
+        if (currentBitmap != null && !currentBitmap.isRecycled()) {
+            currentBitmap.recycle();
+            currentBitmap = null;
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (allPermissionsGranted() && cameraProvider != null) {
-            isDetecting = true;
+        if (allPermissionsGranted()) {
+            if (cameraProvider != null) {
+                try {
+                    bindCameraUseCases();
+                    isDetecting = true;
+                    Log.d(TAG, "相機已恢復");
+                } catch (Exception e) {
+                    Log.e(TAG, "恢復相機失敗: " + e.getMessage());
+                }
+            } else {
+                // 如果cameraProvider為null，重新啟動相機
+                startCamera();
+            }
         }
     }
 }

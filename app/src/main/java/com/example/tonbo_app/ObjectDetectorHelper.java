@@ -149,33 +149,49 @@ public class ObjectDetectorHelper {
             return results;
         }
         
+        if (bitmap == null || bitmap.isRecycled()) {
+            Log.w(TAG, "無效的bitmap");
+            return results;
+        }
+        
+        TensorImage tensorImage = null;
         try {
             // 將Bitmap轉換為TensorImage
-            TensorImage tensorImage = TensorImage.fromBitmap(bitmap);
+            tensorImage = TensorImage.fromBitmap(bitmap);
             
             // 執行檢測
             List<Detection> detections = objectDetector.detect(tensorImage);
             
             // 轉換結果
             for (Detection detection : detections) {
-                String label = detection.getCategories().get(0).getLabel();
-                float score = detection.getCategories().get(0).getScore();
-                
-                // 獲取中文標籤
-                String labelZh = LABEL_MAP_ZH.getOrDefault(label, label);
-                
-                results.add(new DetectionResult(
-                        label,
-                        labelZh,
-                        score,
-                        detection.getBoundingBox()
-                ));
+                if (detection.getCategories().size() > 0) {
+                    String label = detection.getCategories().get(0).getLabel();
+                    float score = detection.getCategories().get(0).getScore();
+                    
+                    // 獲取中文標籤
+                    String labelZh = LABEL_MAP_ZH.getOrDefault(label, label);
+                    
+                    results.add(new DetectionResult(
+                            label,
+                            labelZh,
+                            score,
+                            detection.getBoundingBox()
+                    ));
+                }
             }
             
             Log.d(TAG, String.format("檢測到 %d 個物體", results.size()));
             
+        } catch (OutOfMemoryError e) {
+            Log.e(TAG, "記憶體不足，檢測失敗: " + e.getMessage());
+            // 觸發垃圾回收
+            System.gc();
         } catch (Exception e) {
             Log.e(TAG, "檢測失敗: " + e.getMessage());
+        } finally {
+            // TensorImage會自動管理資源，不需要手動關閉
+            // 但我們可以將引用設為null以幫助垃圾回收
+            tensorImage = null;
         }
         
         return results;
