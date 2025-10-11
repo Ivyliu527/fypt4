@@ -39,8 +39,6 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private TextView detectionResults;
     private Button backButton;
     private Button flashButton;
-    private Button speakButton;
-    private Button clearButton;
 
     private ExecutorService cameraExecutor;
     private ProcessCameraProvider cameraProvider;
@@ -120,8 +118,6 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         detectionResults = findViewById(R.id.detectionResults);
         backButton = findViewById(R.id.backButton);
         flashButton = findViewById(R.id.flashButton);
-        speakButton = findViewById(R.id.speakButton);
-        clearButton = findViewById(R.id.clearButton);
 
         // 返回按鈕
         backButton.setOnClickListener(v -> {
@@ -136,28 +132,9 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             toggleFlash();
         });
 
-        // 語音播報按鈕
-        speakButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            speakDetectionResults();
-        });
-        
-        // 清除顯示按鈕
-        clearButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            clearDetectionDisplay();
-        });
+        // 移除了語音播報和清除顯示按鈕，因為已有實時報讀功能
     }
     
-    /**
-     * 清除檢測顯示
-     */
-    private void clearDetectionDisplay() {
-        detectionOverlay.clearDetections();
-        updateDetectionResults("已清除檢測顯示");
-        updateDetectionStatus("實時檢測中...");
-        announceInfo("檢測框已清除，系統繼續實時檢測");
-    }
 
     private boolean allPermissionsGranted() {
         for (String permission : REQUIRED_PERMISSIONS) {
