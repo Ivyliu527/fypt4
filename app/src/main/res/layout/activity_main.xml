@@ -35,6 +35,7 @@
             android:textSize="20sp"
             android:textColor="#FFFFFF"
             android:background="@drawable/button_circle_background"
+            android:backgroundTint="@null"
             android:contentDescription="設置按鈕，點擊進入設置頁面"
             android:layout_marginEnd="8dp" />
 
@@ -46,6 +47,7 @@
             android:textSize="18sp"
             android:textColor="#FFFFFF"
             android:background="@drawable/button_circle_background"
+            android:backgroundTint="@null"
             android:contentDescription="當前語言廣東話，點擊切換語言" />
 
     </LinearLayout>
