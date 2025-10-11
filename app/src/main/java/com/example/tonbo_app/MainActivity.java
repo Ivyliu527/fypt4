@@ -2,6 +2,7 @@ package com.example.tonbo_app;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -72,8 +73,17 @@ public class MainActivity extends BaseAccessibleActivity {
 
         emergencyButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
-            announceInfo("這是緊急求助按鈕，請長按三秒發送求助信息");
+            announceInfo("這是緊急求助按鈕，請長按三秒發送求助信息。點擊右上角設置按鈕可配置緊急聯絡人");
         });
+
+        // 設置按鈕
+        Button settingsButton = findViewById(R.id.settingsButton);
+        if (settingsButton != null) {
+            settingsButton.setOnClickListener(v -> {
+                vibrationManager.vibrateClick();
+                openEmergencySettings();
+            });
+        }
 
         // 語言切換按鈕
         Button languageButton = findViewById(R.id.languageButton);
@@ -265,6 +275,17 @@ public class MainActivity extends BaseAccessibleActivity {
             case "尋找標記的個人物品": return "Find marked personal items";
             case "視訊連線志工協助": return "Video call with volunteers";
             default: return chineseDescription;
+        }
+    }
+    
+    private void openEmergencySettings() {
+        try {
+            Intent intent = new Intent(MainActivity.this, EmergencySettingsActivity.class);
+            intent.putExtra("language", currentLanguage);
+            startActivity(intent);
+        } catch (Exception e) {
+            announceError("無法打開緊急設置頁面");
+            Log.e("MainActivity", "打開緊急設置失敗: " + e.getMessage());
         }
     }
 
