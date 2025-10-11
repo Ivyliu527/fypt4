@@ -24,12 +24,13 @@ public class DetectionOverlayView extends View {
     private Paint backgroundPaint;
     
     // 繪製參數
-    private static final int BOX_COLOR = Color.RED;
+    private static final int BOX_COLOR = Color.BLUE;
+    private static final int BOX_COLOR_ALT = Color.MAGENTA;
     private static final int TEXT_COLOR = Color.WHITE;
     private static final int BACKGROUND_COLOR = Color.BLACK;
-    private static final int BOX_THICKNESS = 4;
-    private static final int TEXT_SIZE = 24;
-    private static final int TEXT_PADDING = 8;
+    private static final int BOX_THICKNESS = 6;
+    private static final int TEXT_SIZE = 28;
+    private static final int TEXT_PADDING = 12;
     
     public DetectionOverlayView(Context context) {
         super(context);
@@ -99,9 +100,11 @@ public class DetectionOverlayView extends View {
         int viewWidth = getWidth();
         int viewHeight = getHeight();
         
-        // 繪製每個檢測結果
-        for (ObjectDetectorHelper.DetectionResult detection : detections) {
-            drawDetection(canvas, detection, viewWidth, viewHeight);
+        // 繪製每個檢測結果，使用不同顏色
+        for (int i = 0; i < detections.size(); i++) {
+            ObjectDetectorHelper.DetectionResult detection = detections.get(i);
+            int color = (i % 2 == 0) ? BOX_COLOR : BOX_COLOR_ALT;
+            drawDetection(canvas, detection, viewWidth, viewHeight, color);
         }
     }
     
@@ -109,7 +112,7 @@ public class DetectionOverlayView extends View {
      * 繪製單個檢測結果
      */
     private void drawDetection(Canvas canvas, ObjectDetectorHelper.DetectionResult detection, 
-                             int viewWidth, int viewHeight) {
+                             int viewWidth, int viewHeight, int boxColor) {
         
         // 獲取邊界框（模型輸出的是0-1的相對座標）
         RectF boundingBox = detection.getBoundingBox();
@@ -123,13 +126,16 @@ public class DetectionOverlayView extends View {
         // 創建邊界框矩形
         RectF rect = new RectF(left, top, right, bottom);
         
+        // 設置邊界框顏色
+        boxPaint.setColor(boxColor);
+        
         // 繪製邊界框
         canvas.drawRect(rect, boxPaint);
         
-        // 準備標籤文字
-        String label = String.format("%s %.0f%%", 
-            detection.getLabelZh(), 
-            detection.getConfidence() * 100);
+        // 準備標籤文字（類似圖片中的格式）
+        String label = String.format("%s %.2f", 
+            detection.getLabel(), 
+            detection.getConfidence());
         
         // 計算文字尺寸
         Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
@@ -158,15 +164,15 @@ public class DetectionOverlayView extends View {
         canvas.drawText(label, textX, textY, textPaint);
         
         // 在邊界框角落繪製小圓點（視覺增強）
-        drawCornerMarkers(canvas, rect);
+        drawCornerMarkers(canvas, rect, boxColor);
     }
     
     /**
      * 繪製邊界框角落標記
      */
-    private void drawCornerMarkers(Canvas canvas, RectF rect) {
+    private void drawCornerMarkers(Canvas canvas, RectF rect, int color) {
         Paint markerPaint = new Paint();
-        markerPaint.setColor(BOX_COLOR);
+        markerPaint.setColor(color);
         markerPaint.setStyle(Paint.Style.FILL);
         markerPaint.setAntiAlias(true);
         
