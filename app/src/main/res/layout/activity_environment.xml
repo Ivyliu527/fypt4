@@ -40,12 +40,16 @@
 
         <Button
             android:id="@+id/backButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:text="←"
-            android:textSize="24sp"
+            android:textSize="28sp"
             android:textColor="@color/white"
-            android:background="@drawable/button_circle_background"
+            android:textStyle="bold"
+            android:background="@drawable/button_simple_background"
+            android:gravity="center"
+            android:padding="8dp"
+            android:includeFontPadding="false"
             android:contentDescription="返回主頁按鈕" />
 
         <TextView
@@ -62,11 +66,15 @@
 
         <Button
             android:id="@+id/flashButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:text="💡"
-            android:textSize="20sp"
-            android:background="@drawable/button_circle_background"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:background="@drawable/button_simple_background"
+            android:gravity="center"
+            android:padding="8dp"
+            android:includeFontPadding="false"
             android:contentDescription="閃光燈開關按鈕" />
 
     </LinearLayout>
