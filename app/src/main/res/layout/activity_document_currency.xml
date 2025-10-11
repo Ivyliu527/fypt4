@@ -60,11 +60,11 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:contentDescription="相機預覽畫面，用於掃描文件和貨幣" />
 
-    <!-- 掃描區域指示器 -->
+    <!-- 掃描區域指示器 - 更大範圍 -->
     <View
         android:id="@+id/scanFrame"
-        android:layout_width="280dp"
-        android:layout_height="200dp"
+        android:layout_width="320dp"
+        android:layout_height="240dp"
         android:background="@drawable/scan_frame_background"
         app:layout_constraintTop_toTopOf="@id/cameraPreview"
         app:layout_constraintBottom_toBottomOf="@id/cameraPreview"
@@ -88,97 +88,108 @@
         android:layout_marginTop="16dp"
         android:contentDescription="掃描提示：將文件或貨幣放在框內" />
 
-    <!-- 信息顯示區域 -->
+    <!-- 信息顯示區域 - 優化布局 -->
     <LinearLayout
         android:id="@+id/infoContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
         android:background="@color/background_dark"
-        android:padding="16dp"
+        android:padding="20dp"
         app:layout_constraintBottom_toTopOf="@id/controlButtons"
         app:layout_constraintTop_toBottomOf="@id/scanHint"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- 狀態顯示 -->
+        <!-- 狀態顯示 - 增強視覺效果 -->
         <TextView
             android:id="@+id/statusText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="準備掃描"
             android:textColor="@color/primary_blue"
-            android:textSize="16sp"
+            android:textSize="18sp"
+            android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/button_simple_background"
+            android:padding="8dp"
             android:contentDescription="當前掃描狀態" />
 
-        <!-- 識別結果顯示 -->
+        <!-- 識別結果顯示 - 優化文字顯示 -->
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@drawable/button_circle_background"
-            android:padding="12dp">
+            android:background="@drawable/result_background"
+            android:padding="16dp">
 
             <TextView
                 android:id="@+id/resultText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="掃描結果將顯示在這裡..."
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:lineSpacingMultiplier="1.2"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:lineSpacingMultiplier="1.3"
+                android:lineSpacingExtra="4dp"
+                android:textIsSelectable="true"
                 android:contentDescription="識別結果文字內容" />
 
         </ScrollView>
 
     </LinearLayout>
 
-    <!-- 底部控制按鈕 -->
+    <!-- 底部控制按鈕 - 改為方形設計 -->
     <LinearLayout
         android:id="@+id/controlButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="@color/background_dark"
-        android:padding="16dp"
+        android:padding="20dp"
         android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <Button
             android:id="@+id/captureButton"
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="80dp"
             android:layout_weight="1"
-            android:text="📷 拍照掃描"
-            android:textSize="16sp"
+            android:text="📷\n拍照掃描"
+            android:textSize="14sp"
             android:textColor="@color/white"
-            android:background="@drawable/menu_button_background"
-            android:layout_marginEnd="8dp"
+            android:textStyle="bold"
+            android:background="@drawable/button_square_background"
+            android:layout_marginEnd="12dp"
+            android:gravity="center"
             android:contentDescription="拍照並掃描文字和貨幣" />
 
         <Button
             android:id="@+id/readButton"
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="80dp"
             android:layout_weight="1"
-            android:text="🎤 語音朗讀"
-            android:textSize="16sp"
+            android:text="🎤\n語音朗讀"
+            android:textSize="14sp"
             android:textColor="@color/white"
-            android:background="@drawable/menu_button_background"
-            android:layout_marginEnd="8dp"
+            android:textStyle="bold"
+            android:background="@drawable/button_square_background"
+            android:layout_marginEnd="12dp"
+            android:gravity="center"
             android:contentDescription="語音朗讀識別結果" />
 
         <Button
             android:id="@+id/clearButton"
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="80dp"
             android:layout_weight="1"
-            android:text="🧹 清除"
-            android:textSize="16sp"
+            android:text="🧹\n清除"
+            android:textSize="14sp"
             android:textColor="@color/white"
-            android:background="@drawable/menu_button_background"
+            android:textStyle="bold"
+            android:background="@drawable/button_square_background"
+            android:gravity="center"
             android:contentDescription="清除掃描結果" />
 
     </LinearLayout>
