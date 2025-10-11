@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -76,8 +77,11 @@ public class DetectionOverlayView extends View {
      * 更新檢測結果
      */
     public void updateDetections(List<ObjectDetectorHelper.DetectionResult> newDetections) {
+        Log.d(TAG, "updateDetections called with " + (newDetections != null ? newDetections.size() : 0) + " detections");
         this.detections = newDetections != null ? new ArrayList<>(newDetections) : new ArrayList<>();
+        Log.d(TAG, "Updated detections list size: " + this.detections.size());
         postInvalidate(); // 觸發重繪
+        Log.d(TAG, "postInvalidate() called");
     }
     
     /**
@@ -92,7 +96,10 @@ public class DetectionOverlayView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         
+        Log.d(TAG, "onDraw called, detections size: " + detections.size());
+        
         if (detections.isEmpty()) {
+            Log.d(TAG, "No detections to draw");
             return;
         }
         
@@ -100,10 +107,13 @@ public class DetectionOverlayView extends View {
         int viewWidth = getWidth();
         int viewHeight = getHeight();
         
+        Log.d(TAG, "View size: " + viewWidth + "x" + viewHeight);
+        
         // 繪製每個檢測結果，使用不同顏色
         for (int i = 0; i < detections.size(); i++) {
             ObjectDetectorHelper.DetectionResult detection = detections.get(i);
             int color = (i % 2 == 0) ? BOX_COLOR : BOX_COLOR_ALT;
+            Log.d(TAG, "Drawing detection " + i + ": " + detection.getLabel() + " at " + detection.getBoundingBox());
             drawDetection(canvas, detection, viewWidth, viewHeight, color);
         }
     }
