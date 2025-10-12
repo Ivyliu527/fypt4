@@ -44,6 +44,9 @@ public class SettingsActivity extends BaseAccessibleActivity {
         // 初始化SharedPreferences
         preferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         
+        // 初始化TTSManager
+        ttsManager = TTSManager.getInstance(this);
+        
         initViews();
         loadSettings();
         setupListeners();
