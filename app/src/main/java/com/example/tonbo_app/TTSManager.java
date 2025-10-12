@@ -130,6 +130,16 @@ public class TTSManager {
         }
     }
     
+    /**
+     * 停止當前語音播報
+     */
+    public void stop() {
+        if (textToSpeech != null) {
+            textToSpeech.stop();
+            Log.d(TAG, "語音播報已停止");
+        }
+    }
+    
     public void speakWelcomeMessage() {
         String welcomeText = "瞳伴應用已啟動。歡迎使用智能視覺助手。" +
                 "當前有四個主要功能：環境識別、閱讀助手、尋找物品、即時協助。" +
