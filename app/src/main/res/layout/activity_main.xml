@@ -1,23 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
-    android:fillViewport="true">
-
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:background="#000000">
 
-    <!-- 頂部標題和按鈕區域 - 增大間距 -->
+    <!-- 頂部標題和按鈕區域 - 固定不動 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="32dp">
+        android:padding="20dp"
+        android:paddingBottom="16dp"
+        android:background="#000000">
 
         <TextView
             android:id="@+id/appTitle"
@@ -79,6 +75,21 @@
 
     </LinearLayout>
 
+    <!-- 滑動區域 - 功能列表、緊急按鈕、操作指引 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="20dp">
+
     <!-- 功能列表標題 - 增大字體和間距 -->
     <TextView
         android:id="@+id/functionSelectionTitle"
@@ -98,7 +109,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
-        android:scrollbars="vertical" />
+        android:nestedScrollingEnabled="false" />
 
     <!-- 緊急按鈕 - 增大尺寸和字體 -->
     <LinearLayout
@@ -162,11 +173,13 @@
 
     </LinearLayout>
 
-    <!-- 底部間距 -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="24dp" />
+            <!-- 底部間距 -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="24dp" />
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </LinearLayout>
-
-</ScrollView>
