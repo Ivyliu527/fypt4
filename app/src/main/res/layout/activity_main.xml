@@ -22,14 +22,14 @@
             android:layout_weight="1"
             android:text="瞳伴"
             android:textColor="#FFFFFF"
-            android:textSize="36sp"
+            android:textSize="45sp"
             android:textStyle="bold"
             android:contentDescription="應用程式名稱，瞳伴，智能視覺助手"
             android:importantForAccessibility="yes"
             android:focusable="true"
             android:minHeight="48dp" />
 
-        <!-- 緊急求助設置按鈕 - 增大尺寸 -->
+        <!-- 緊急求助設置按鈕 - 方形設計 -->
         <Button
             android:id="@+id/emergencySettingsButton"
             android:layout_width="64dp"
@@ -37,14 +37,14 @@
             android:text="🚨"
             android:textSize="20sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/button_circle_background"
+            android:background="@drawable/button_square_background"
             android:backgroundTint="@null"
             android:contentDescription="緊急求助設置，點擊進入緊急聯絡人設置"
             android:layout_marginEnd="12dp"
             android:minHeight="64dp"
             android:minWidth="64dp" />
 
-        <!-- 系統設定按鈕 - 增大尺寸 -->
+        <!-- 系統設定按鈕 - 方形設計 -->
         <Button
             android:id="@+id/systemSettingsButton"
             android:layout_width="64dp"
@@ -52,14 +52,14 @@
             android:text="⚙"
             android:textSize="22sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/button_circle_background"
+            android:background="@drawable/button_square_background"
             android:backgroundTint="@null"
             android:contentDescription="系統設定，點擊進入語音和無障礙設置"
             android:layout_marginEnd="12dp"
             android:minHeight="64dp"
             android:minWidth="64dp" />
 
-        <!-- 語言切換按鈕 - 增大尺寸 -->
+        <!-- 語言切換按鈕 - 方形設計 -->
         <Button
             android:id="@+id/languageButton"
             android:layout_width="72dp"
@@ -67,7 +67,7 @@
             android:text="廣"
             android:textSize="20sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/button_circle_background"
+            android:background="@drawable/button_square_background"
             android:backgroundTint="@null"
             android:contentDescription="當前語言廣東話，點擊切換語言"
             android:minHeight="72dp"
