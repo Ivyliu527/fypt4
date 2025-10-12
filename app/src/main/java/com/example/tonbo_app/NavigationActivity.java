@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -14,7 +15,16 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-// 使用自定義的LatLng類
+
+import org.osmdroid.api.IMapController;
+import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Polyline;
+
+import java.util.List;
 
 public class NavigationActivity extends BaseAccessibleActivity {
     private static final String TAG = "NavigationActivity";
@@ -29,6 +39,7 @@ public class NavigationActivity extends BaseAccessibleActivity {
     private TextView currentLocationText;
     private TextView navigationInstructions;
     private LinearLayout savedDestinationsContainer;
+    private MapView mapView;
     
     // 位置相關
     private Location currentLocation;
@@ -46,6 +57,11 @@ public class NavigationActivity extends BaseAccessibleActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // 配置OSM
+        Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
+        Configuration.getInstance().setUserAgentValue(getPackageName());
+        
         setContentView(R.layout.activity_navigation);
         
         // 初始化管理器
@@ -55,6 +71,7 @@ public class NavigationActivity extends BaseAccessibleActivity {
         permissionHelper = new LocationPermissionHelper(this);
         
         initViews();
+        setupMap();
         checkLocationPermissionAndSetup();
         
         // 頁面標題播報
@@ -92,7 +109,68 @@ public class NavigationActivity extends BaseAccessibleActivity {
         updateUI();
     }
     
-    // 移除了Google Maps相關的設置方法
+    private void setupMap() {
+        mapView = findViewById(R.id.mapView);
+        mapView.setTileSource(TileSourceFactory.MAPNIK); // 使用標準OSM瓦片
+        mapView.setMultiTouchControls(true); // 啟用多點觸控
+        
+        IMapController mapController = mapView.getController();
+        mapController.setZoom(15.0); // 設置默認縮放級別
+        
+        // 設置默認位置（香港中環）
+        GeoPoint startPoint = new GeoPoint(22.2815, 114.1585);
+        mapController.setCenter(startPoint);
+        
+        Log.d(TAG, "OSM地圖已初始化");
+    }
+    
+    private void updateMapLocation(Location location) {
+        if (mapView != null && location != null) {
+            GeoPoint geoPoint = new GeoPoint(location.getLatitude(), location.getLongitude());
+            IMapController mapController = mapView.getController();
+            mapController.animateTo(geoPoint);
+            
+            // 添加當前位置標記
+            mapView.getOverlays().clear();
+            Marker currentMarker = new Marker(mapView);
+            currentMarker.setPosition(geoPoint);
+            currentMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            currentMarker.setTitle("當前位置");
+            mapView.getOverlays().add(currentMarker);
+            mapView.invalidate();
+        }
+    }
+    
+    private void updateMapDestination(LatLng destination, String name) {
+        if (mapView != null && destination != null) {
+            GeoPoint geoPoint = new GeoPoint(destination.latitude, destination.longitude);
+            
+            // 添加目的地標記
+            Marker destMarker = new Marker(mapView);
+            destMarker.setPosition(geoPoint);
+            destMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            destMarker.setTitle(name);
+            mapView.getOverlays().add(destMarker);
+            mapView.invalidate();
+            
+            // 移動地圖到目的地
+            IMapController mapController = mapView.getController();
+            mapController.animateTo(geoPoint);
+        }
+    }
+    
+    private void drawRouteOnMap(List<GeoPoint> routePoints) {
+        if (mapView != null && routePoints != null && routePoints.size() > 0) {
+            Polyline line = new Polyline(mapView);
+            line.setPoints(routePoints);
+            line.setColor(ContextCompat.getColor(this, R.color.primary_blue));
+            line.setWidth(10f);
+            mapView.getOverlayManager().add(line);
+            mapView.invalidate();
+            
+            Log.d(TAG, "路線已繪製到地圖上，共 " + routePoints.size() + " 個點");
+        }
+    }
     
     private void checkLocationPermissionAndSetup() {
         // 檢查權限狀態
@@ -164,6 +242,7 @@ public class NavigationActivity extends BaseAccessibleActivity {
             public void onLocationReceived(Location location) {
                 currentLocation = location;
                 updateCurrentLocationDisplay();
+                updateMapLocation(location); // 更新地圖顯示
                 
                 // 播報位置信息
                 String locationInfo = locationManager.formatLocationInfo(location);
@@ -219,7 +298,8 @@ public class NavigationActivity extends BaseAccessibleActivity {
                 destination = destinationLatLng;
                 updateUI();
                 
-                // 目的地已找到，準備導航
+                // 在地圖上顯示目的地
+                updateMapDestination(destinationLatLng, address);
                 
                 String cantoneseText = "找到目的地：" + address + "。點擊開始導航按鈕開始導航";
                 String englishText = "Destination found: " + address + ". Tap start navigation to begin";
@@ -334,6 +414,9 @@ public class NavigationActivity extends BaseAccessibleActivity {
         if (locationManager != null) {
             locationManager.cleanup();
         }
+        if (mapView != null) {
+            mapView.onDetach();
+        }
     }
     
     @Override
@@ -343,6 +426,9 @@ public class NavigationActivity extends BaseAccessibleActivity {
         if (locationManager != null) {
             locationManager.stopLocationUpdates();
         }
+        if (mapView != null) {
+            mapView.onPause();
+        }
     }
     
     @Override
@@ -351,6 +437,9 @@ public class NavigationActivity extends BaseAccessibleActivity {
         // 恢復位置更新
         if (permissionHelper.canUseLocation() && !isNavigating) {
             startLocationUpdates();
+        }
+        if (mapView != null) {
+            mapView.onResume();
         }
     }
 }

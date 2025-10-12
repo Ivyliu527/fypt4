@@ -41,23 +41,17 @@
 
     </LinearLayout>
 
-    <!-- 狀態顯示區域 (替代地圖) -->
-    <TextView
-        android:id="@+id/mapStatusText"
+    <!-- OpenStreetMap 地圖視圖 -->
+    <org.osmdroid.views.MapView
+        android:id="@+id/mapView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="8dp"
-        android:gravity="center"
-        android:text="📍 純語音導航模式\n\n此模式使用語音指引進行導航\n無需地圖顯示，專為視障人士設計"
-        android:textColor="@color/text_secondary"
-        android:textSize="16sp"
-        android:background="@drawable/result_background"
-        android:padding="20dp"
         app:layout_constraintTop_toBottomOf="@id/topBar"
         app:layout_constraintBottom_toTopOf="@id/controlPanel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:contentDescription="導航模式說明：純語音導航，專為視障人士設計" />
+        android:contentDescription="OpenStreetMap地圖視圖" />
 
     <!-- 控制面板 -->
     <LinearLayout
