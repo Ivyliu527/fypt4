@@ -99,30 +99,105 @@ public class OSRMRoutingService {
     
     /**
      * 地址搜索（使用Nominatim API）
+     * 支持多種搜索策略以提高成功率
      */
     public void searchLocation(String query, SearchCallback callback) {
-        // Nominatim API for geocoding
-        String url = String.format("https://nominatim.openstreetmap.org/search?q=%s&format=json&limit=5&countrycodes=hk",
-                query.replace(" ", "+"));
+        // 優化查詢字符串
+        String optimizedQuery = optimizeSearchQuery(query);
+        
+        // 策略1：精確搜索（限定香港）
+        searchWithStrategy(optimizedQuery, "hk", callback, new Runnable() {
+            @Override
+            public void run() {
+                // 策略2：如果策略1失敗，擴大到整個香港地區搜索
+                searchWithStrategy(optimizedQuery + ", Hong Kong", null, callback, new Runnable() {
+                    @Override
+                    public void run() {
+                        // 策略3：如果還是失敗，只用關鍵詞搜索
+                        String simplifiedQuery = simplifyQuery(query);
+                        searchWithStrategy(simplifiedQuery + ", HK", null, callback, new Runnable() {
+                            @Override
+                            public void run() {
+                                // 所有策略都失敗
+                                runOnMainThread(() -> callback.onError("未找到地點：" + query));
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+    
+    /**
+     * 優化搜索查詢
+     */
+    private String optimizeSearchQuery(String query) {
+        // 移除不必要的字符
+        String optimized = query.trim()
+                .replace("香港", "")
+                .replace("Hong Kong", "")
+                .replace("HK", "")
+                .trim();
+        
+        // 如果是純中文，保持原樣
+        // 如果包含英文，轉換為標準格式
+        return optimized;
+    }
+    
+    /**
+     * 簡化查詢（提取關鍵詞）
+     */
+    private String simplifyQuery(String query) {
+        // 移除常見的後綴詞
+        return query.replace("站", "")
+                   .replace("區", "")
+                   .replace("道", "")
+                   .replace("街", "")
+                   .replace("路", "")
+                   .trim();
+    }
+    
+    /**
+     * 使用特定策略搜索
+     */
+    private void searchWithStrategy(String query, String countryCode, SearchCallback callback, Runnable fallback) {
+        // 構建URL
+        String url;
+        if (countryCode != null) {
+            url = String.format("https://nominatim.openstreetmap.org/search?q=%s&format=json&limit=5&countrycodes=%s&addressdetails=1",
+                    query.replace(" ", "+"), countryCode);
+        } else {
+            url = String.format("https://nominatim.openstreetmap.org/search?q=%s&format=json&limit=5&addressdetails=1",
+                    query.replace(" ", "+"));
+        }
         
         Log.d(TAG, "搜索地址: " + url);
         
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("User-Agent", "TonboApp/1.0")
+                .addHeader("Accept-Language", "zh-HK,zh-CN,en")
                 .build();
         
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.e(TAG, "地址搜索失敗", e);
-                runOnMainThread(() -> callback.onError("網絡請求失敗：" + e.getMessage()));
+                if (fallback != null) {
+                    fallback.run();
+                } else {
+                    runOnMainThread(() -> callback.onError("網絡請求失敗：" + e.getMessage()));
+                }
             }
             
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    runOnMainThread(() -> callback.onError("服務器錯誤：" + response.code()));
+                    if (fallback != null) {
+                        fallback.run();
+                    } else {
+                        runOnMainThread(() -> callback.onError("服務器錯誤：" + response.code()));
+                    }
                     return;
                 }
                 
@@ -133,16 +208,53 @@ public class OSRMRoutingService {
                     SearchResult[] results = gson.fromJson(responseBody, SearchResult[].class);
                     
                     if (results != null && results.length > 0) {
-                        runOnMainThread(() -> callback.onSuccess(results));
+                        // 過濾結果，優先選擇香港的地點
+                        SearchResult[] filteredResults = filterHongKongResults(results);
+                        if (filteredResults.length > 0) {
+                            runOnMainThread(() -> callback.onSuccess(filteredResults));
+                        } else if (results.length > 0) {
+                            // 如果沒有香港地點，但有其他結果，也返回
+                            runOnMainThread(() -> callback.onSuccess(results));
+                        } else if (fallback != null) {
+                            fallback.run();
+                        } else {
+                            runOnMainThread(() -> callback.onError("未找到地點"));
+                        }
+                    } else if (fallback != null) {
+                        // 嘗試下一個策略
+                        fallback.run();
                     } else {
                         runOnMainThread(() -> callback.onError("未找到地點"));
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "解析搜索響應失敗", e);
-                    runOnMainThread(() -> callback.onError("解析搜索數據失敗"));
+                    if (fallback != null) {
+                        fallback.run();
+                    } else {
+                        runOnMainThread(() -> callback.onError("解析搜索數據失敗"));
+                    }
                 }
             }
         });
+    }
+    
+    /**
+     * 過濾出香港的搜索結果
+     */
+    private SearchResult[] filterHongKongResults(SearchResult[] results) {
+        List<SearchResult> filtered = new ArrayList<>();
+        for (SearchResult result : results) {
+            if (result.displayName != null && 
+                (result.displayName.contains("Hong Kong") || 
+                 result.displayName.contains("香港") ||
+                 result.displayName.contains("Kowloon") ||
+                 result.displayName.contains("九龍") ||
+                 result.displayName.contains("New Territories") ||
+                 result.displayName.contains("新界"))) {
+                filtered.add(result);
+            }
+        }
+        return filtered.toArray(new SearchResult[0]);
     }
     
     public interface SearchCallback {
