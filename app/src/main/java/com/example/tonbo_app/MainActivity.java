@@ -39,8 +39,16 @@ public class MainActivity extends BaseAccessibleActivity {
     @Override
     protected void announcePageTitle() {
         // 播報頁面標題和功能列表
-        String cantoneseText = "瞳伴主頁。當前有四個功能：環境識別、閱讀助手、尋找物品、即時協助。";
-        String englishText = "Tonbo Home. Four functions available: Environment Recognition, Document Assistant, Find Items, Live Assistance.";
+        String cantoneseText = "瞳伴主頁。歡迎使用智能視覺助手。" +
+                "當前有四個主要功能：環境識別、閱讀助手、尋找物品、即時協助。" +
+                "右上角有三個按鈕：緊急設置、系統設定、語言切換。" +
+                "底部有緊急求助按鈕，長按三秒發送求助信息。" +
+                "請點擊選擇功能或使用語音導航。";
+        String englishText = "Tonbo Home. Welcome to the smart visual assistant. " +
+                "Four main functions available: Environment Recognition, Document Assistant, Find Items, Live Assistance. " +
+                "Three buttons on top right: Emergency Settings, System Settings, Language Switch. " +
+                "Emergency button at bottom, long press for 3 seconds to send help request. " +
+                "Please tap to select function or use voice navigation.";
         ttsManager.speak(cantoneseText, englishText, true);
     }
     
