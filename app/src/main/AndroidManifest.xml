@@ -74,6 +74,11 @@
             android:name=".EmergencySettingsActivity"
             android:exported="false" />
             
+        <!-- Settings Activity - 系統設定 -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+            
         <!-- Navigation Activity - 智能導航 -->
         <activity
             android:name=".NavigationActivity"
