@@ -40,7 +40,7 @@ public class LocaleManager {
      */
     private void loadSavedLanguage() {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        currentLanguage = prefs.getString(KEY_LANGUAGE, "cantonese");
+        currentLanguage = prefs.getString(KEY_LANGUAGE, "english"); // 預設為英文
         Log.d(TAG, "載入語言設置: " + currentLanguage);
     }
     

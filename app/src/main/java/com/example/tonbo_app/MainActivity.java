@@ -54,19 +54,22 @@ public class MainActivity extends BaseAccessibleActivity {
     
     private void setupAccessibilityContent() {
         // 設置緊急按鈕的無障礙內容
-        emergencyButton.setContentDescription("緊急求助按鈕，長按三秒發送求助信息");
+        emergencyButton.setContentDescription(getString(R.string.emergency_button_long_press_info));
         
         // 設置語言按鈕的無障礙內容
         Button languageButton = findViewById(R.id.languageButton);
-        languageButton.setContentDescription("當前語言廣東話，點擊切換語言");
+        if (languageButton != null) {
+            String languageDesc = getLanguageDescription(currentLanguage);
+            languageButton.setContentDescription(getString(R.string.language_button_desc_prefix) + languageDesc + getString(R.string.language_button_desc_suffix));
+        }
         
         // 設置應用標題的無障礙內容
         TextView appTitle = findViewById(R.id.appTitle);
-        appTitle.setContentDescription("應用程式名稱，瞳伴");
+        appTitle.setContentDescription(getString(R.string.app_title_accessibility));
         
         // 設置功能選擇標題的無障礙內容
         TextView functionTitle = findViewById(R.id.functionSelectionTitle);
-        functionTitle.setContentDescription("功能選擇區域");
+        functionTitle.setContentDescription(getString(R.string.function_selection_accessibility));
     }
 
     private void initViews() {
@@ -152,10 +155,10 @@ public class MainActivity extends BaseAccessibleActivity {
     
     private String getLanguageDescription(String language) {
         switch (language) {
-            case "cantonese": return "廣東話";
-            case "english": return "英文";
-            case "mandarin": return "普通話";
-            default: return "廣東話";
+            case "cantonese": return getString(R.string.language_cantonese_desc);
+            case "english": return getString(R.string.language_english_desc);
+            case "mandarin": return getString(R.string.language_mandarin_desc);
+            default: return getString(R.string.language_english_desc);
         }
     }
 
@@ -171,16 +174,16 @@ public class MainActivity extends BaseAccessibleActivity {
         Button languageButton = findViewById(R.id.languageButton);
         if (languageButton != null) {
             String languageDesc = getLanguageDescription(currentLanguage);
-            languageButton.setContentDescription("當前語言" + languageDesc + "，點擊切換語言");
+            languageButton.setContentDescription(getString(R.string.language_button_desc_prefix) + languageDesc + getString(R.string.language_button_desc_suffix));
         }
     }
     
     private String getLanguageButtonText(String language) {
         switch (language) {
-            case "cantonese": return "廣";
-            case "english": return "EN";
-            case "mandarin": return "普";
-            default: return "廣";
+            case "cantonese": return getString(R.string.language_button_cantonese);
+            case "english": return getString(R.string.language_button_english);
+            case "mandarin": return getString(R.string.language_button_mandarin);
+            default: return getString(R.string.language_button_cantonese);
         }
     }
     
@@ -192,7 +195,7 @@ public class MainActivity extends BaseAccessibleActivity {
             languageButton.setText(buttonText);
             
             String languageDesc = getLanguageDescription(currentLanguage);
-            languageButton.setContentDescription("當前語言" + languageDesc + "，點擊切換語言");
+            languageButton.setContentDescription(getString(R.string.language_button_desc_prefix) + languageDesc + getString(R.string.language_button_desc_suffix));
         }
     }
 
