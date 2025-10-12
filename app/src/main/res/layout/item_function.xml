@@ -4,49 +4,50 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/function_item_background"
-    android:elevation="4dp"
-    android:padding="16dp"
+    android:elevation="3dp"
+    android:padding="15dp"
     android:layout_marginBottom="12dp"
     android:clickable="true"
     android:focusable="true"
     android:focusableInTouchMode="true"
     android:minHeight="60dp">
 
-    <!-- 圖標 - 縮小尺寸配合文字 -->
+    <!-- 圖標 - 向上調整位置 -->
     <ImageView
         android:id="@+id/iconImageView"
         android:layout_width="32dp"
         android:layout_height="32dp"
+        android:layout_marginTop="8dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 功能名稱 - 配合你設置的32sp字體，居中對齊 -->
+    <!-- 功能名稱 - 向上調整位置 -->
     <TextView
         android:id="@+id/nameTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="8dp"
-        android:textColor="@color/text_card"
-        android:textSize="32sp"
-        android:textStyle="bold"
+        android:layout_marginTop="8dp"
         android:fontFamily="sans-serif-medium"
         android:gravity="center"
         android:textAlignment="center"
-        app:layout_constraintStart_toEndOf="@id/iconImageView"
+        android:textColor="@color/text_card"
+        android:textSize="32sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@id/arrowIndicator"
-        app:layout_constraintTop_toTopOf="@id/iconImageView"
-        app:layout_constraintHorizontal_bias="0.5" />
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/iconImageView"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 功能描述 - 配合你設置的20sp字體，居中對齊 -->
+    <!-- 功能描述 - 向上調整位置 -->
     <TextView
         android:id="@+id/descriptionTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
         android:textColor="@color/text_card"
         android:textSize="20sp"
         android:fontFamily="sans-serif"
@@ -59,7 +60,7 @@
         app:layout_constraintTop_toBottomOf="@id/nameTextView"
         app:layout_constraintHorizontal_bias="0.5" />
 
-    <!-- 右側箭頭指示器 - 縮小尺寸 -->
+    <!-- 右側箭頭指示器 - 向上調整位置 -->
     <TextView
         android:id="@+id/arrowIndicator"
         android:layout_width="wrap_content"
@@ -69,8 +70,8 @@
         android:textColor="@color/text_card"
         android:textStyle="bold"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
