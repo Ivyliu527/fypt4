@@ -73,13 +73,22 @@ public class MainActivity extends BaseAccessibleActivity {
 
         emergencyButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
-            announceInfo("這是緊急求助按鈕，請長按三秒發送求助信息。點擊右上角設置按鈕可配置緊急聯絡人");
+            announceInfo("這是緊急求助按鈕，請長按三秒發送求助信息。點擊右上角紅色緊急按鈕可配置緊急聯絡人");
         });
 
-        // 設置按鈕
-        Button settingsButton = findViewById(R.id.settingsButton);
-        if (settingsButton != null) {
-            settingsButton.setOnClickListener(v -> {
+        // 緊急求助設置按鈕
+        Button emergencySettingsButton = findViewById(R.id.emergencySettingsButton);
+        if (emergencySettingsButton != null) {
+            emergencySettingsButton.setOnClickListener(v -> {
+                vibrationManager.vibrateClick();
+                openEmergencySettings();
+            });
+        }
+
+        // 系統設定按鈕
+        Button systemSettingsButton = findViewById(R.id.systemSettingsButton);
+        if (systemSettingsButton != null) {
+            systemSettingsButton.setOnClickListener(v -> {
                 vibrationManager.vibrateClick();
                 openSettings();
             });
