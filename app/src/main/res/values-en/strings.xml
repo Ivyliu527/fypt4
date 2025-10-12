@@ -24,6 +24,11 @@
     <string name="language_english_desc">English</string>
     <string name="language_mandarin_desc">Mandarin</string>
     
+    <!-- Accessibility Descriptions -->
+    <string name="emergency_button_long_press_info">Emergency help button, long press for 3 seconds to send help request</string>
+    <string name="app_title_accessibility">App name, Tonbo</string>
+    <string name="function_selection_accessibility">Function selection area, with five main functions</string>
+    
     <!-- Function Names -->
     <string name="function_environment">Environment Recognition</string>
     <string name="function_document">Document Assistant</string>

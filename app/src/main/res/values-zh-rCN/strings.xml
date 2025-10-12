@@ -24,6 +24,11 @@
     <string name="language_english_desc">英文</string>
     <string name="language_mandarin_desc">普通话</string>
     
+    <!-- 无障碍描述 -->
+    <string name="emergency_button_long_press_info">紧急求助按钮，长按三秒发送求助信息</string>
+    <string name="app_title_accessibility">应用程序名称，瞳伴</string>
+    <string name="function_selection_accessibility">功能选择区域，共有五个主要功能</string>
+    
     <!-- 功能名称 -->
     <string name="function_environment">环境识别</string>
     <string name="function_document">阅读助手</string>
