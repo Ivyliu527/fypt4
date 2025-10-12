@@ -116,19 +116,25 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 if (fromUser) {
                     float rate = progress / 100.0f;
                     ttsManager.setSpeechRate(rate);
-                    preferences.edit().putFloat("speech_rate", rate).apply();
                     updateSpeechTexts();
-                    announceSettingChange("語速已調整為 " + progress + "%");
+                    // 不在這裡播報，避免連續播報
                 }
             }
             
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 vibrationManager.vibrateClick();
+                ttsManager.stop(); // 停止當前播報
             }
             
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // 停止調整時才播報和保存
+                int progress = seekBar.getProgress();
+                float rate = progress / 100.0f;
+                preferences.edit().putFloat("speech_rate", rate).apply();
+                announceSettingChange("語速已調整為 " + progress + "%");
+            }
         });
         
         // 音調調整
@@ -138,19 +144,25 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 if (fromUser) {
                     float pitch = progress / 100.0f;
                     ttsManager.setSpeechPitch(pitch);
-                    preferences.edit().putFloat("speech_pitch", pitch).apply();
                     updateSpeechTexts();
-                    announceSettingChange("音調已調整為 " + progress + "%");
+                    // 不在這裡播報，避免連續播報
                 }
             }
             
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 vibrationManager.vibrateClick();
+                ttsManager.stop(); // 停止當前播報
             }
             
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // 停止調整時才播報和保存
+                int progress = seekBar.getProgress();
+                float pitch = progress / 100.0f;
+                preferences.edit().putFloat("speech_pitch", pitch).apply();
+                announceSettingChange("音調已調整為 " + progress + "%");
+            }
         });
         
         // 音量調整
@@ -160,19 +172,25 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 if (fromUser) {
                     float volume = progress / 100.0f;
                     ttsManager.setSpeechVolume(volume);
-                    preferences.edit().putFloat("speech_volume", volume).apply();
                     updateSpeechTexts();
-                    announceSettingChange("音量已調整為 " + progress + "%");
+                    // 不在這裡播報，避免連續播報
                 }
             }
             
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 vibrationManager.vibrateClick();
+                ttsManager.stop(); // 停止當前播報
             }
             
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // 停止調整時才播報和保存
+                int progress = seekBar.getProgress();
+                float volume = progress / 100.0f;
+                preferences.edit().putFloat("speech_volume", volume).apply();
+                announceSettingChange("音量已調整為 " + progress + "%");
+            }
         });
         
         // 震動反饋切換
