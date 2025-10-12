@@ -34,6 +34,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
     private TextView resultText;
     private Button backButton;
     private Button flashButton;
+    private Button languageButton;
     private Button captureButton;
     private Button readButton;
     private Button clearButton;
@@ -83,6 +84,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
         resultText = findViewById(R.id.resultText);
         backButton = findViewById(R.id.backButton);
         flashButton = findViewById(R.id.flashButton);
+        languageButton = findViewById(R.id.languageButton);
         captureButton = findViewById(R.id.captureButton);
         readButton = findViewById(R.id.readButton);
         clearButton = findViewById(R.id.clearButton);
@@ -98,6 +100,12 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
         flashButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
             toggleFlash();
+        });
+
+        // 語言切換按鈕
+        languageButton.setOnClickListener(v -> {
+            vibrationManager.vibrateClick();
+            toggleLanguage();
         });
 
         // 拍照掃描按鈕
@@ -398,6 +406,61 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
         super.onResume();
         if (allPermissionsGranted()) {
             startCamera();
+        }
+    }
+
+    private void toggleLanguage() {
+        switch (currentLanguage) {
+            case "cantonese":
+                currentLanguage = "english";
+                break;
+            case "english":
+                currentLanguage = "mandarin";
+                break;
+            case "mandarin":
+            default:
+                currentLanguage = "cantonese";
+                break;
+        }
+
+        // 保存語言設置
+        localeManager.setLanguage(this, currentLanguage);
+
+        // 更新TTS語言
+        ttsManager.changeLanguage(currentLanguage);
+
+        // 更新語言按鈕
+        updateLanguageButton();
+
+        // 重新創建Activity以應用新語言
+        recreate();
+    }
+
+    private void updateLanguageButton() {
+        if (languageButton != null) {
+            String buttonText = getLanguageButtonText(currentLanguage);
+            languageButton.setText(buttonText);
+            
+            String languageDesc = getLanguageDescription(currentLanguage);
+            languageButton.setContentDescription(getString(R.string.language_button_desc_prefix) + languageDesc + getString(R.string.language_button_desc_suffix));
+        }
+    }
+
+    private String getLanguageButtonText(String language) {
+        switch (language) {
+            case "cantonese": return getString(R.string.language_button_cantonese);
+            case "english": return getString(R.string.language_button_english);
+            case "mandarin": return getString(R.string.language_button_mandarin);
+            default: return getString(R.string.language_button_cantonese);
+        }
+    }
+
+    private String getLanguageDescription(String language) {
+        switch (language) {
+            case "cantonese": return getString(R.string.language_cantonese_desc);
+            case "english": return getString(R.string.language_english_desc);
+            case "mandarin": return getString(R.string.language_mandarin_desc);
+            default: return getString(R.string.language_cantonese_desc);
         }
     }
 }

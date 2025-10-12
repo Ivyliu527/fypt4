@@ -6,8 +6,23 @@
     <string name="home_title">瞳伴</string>
     <string name="function_selection">功能選擇</string>
     <string name="emergency_button_text">緊急求助\n長按3秒發送</string>
-    <string name="operation_guide">操作指引</string>
+    <string name="emergency_help_text">緊急求助</string>
+    <string name="long_press_send_text">長按3秒發送</string>
+    <string name="operation_guide_title">操作指引</string>
     <string name="operation_guide_content">• 點擊功能項目進入對應功能\n• 右上角按鈕：緊急設置🚨、系統設定⚙、語言切換廣\n• 緊急求助：長按底部紅色按鈕3秒</string>
+    
+    <!-- 通用按鈕 -->
+    <string name="back_button_desc">返回按鈕</string>
+    
+    <!-- 語言按鈕 -->
+    <string name="language_button_cantonese">廣</string>
+    <string name="language_button_english">EN</string>
+    <string name="language_button_mandarin">普</string>
+    <string name="language_button_desc_prefix">當前語言</string>
+    <string name="language_button_desc_suffix">，點擊切換語言</string>
+    <string name="language_cantonese_desc">廣東話</string>
+    <string name="language_english_desc">英文</string>
+    <string name="language_mandarin_desc">普通話</string>
     
     <!-- 功能名稱 -->
     <string name="function_environment">環境識別</string>

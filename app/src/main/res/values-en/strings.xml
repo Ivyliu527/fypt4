@@ -6,8 +6,23 @@
     <string name="home_title">Tonbo</string>
     <string name="function_selection">Function Selection</string>
     <string name="emergency_button_text">Emergency Help\nLong press 3 sec</string>
-    <string name="operation_guide">Operation Guide</string>
+    <string name="emergency_help_text">Emergency Help</string>
+    <string name="long_press_send_text">Long press 3 sec</string>
+    <string name="operation_guide_title">Operation Guide</string>
     <string name="operation_guide_content">• Tap function items to enter\n• Top right buttons: Emergency Settings🚨, System Settings⚙, Language Switch\n• Emergency: Long press red button for 3 seconds</string>
+    
+    <!-- Common Buttons -->
+    <string name="back_button_desc">Back Button</string>
+    
+    <!-- Language Buttons -->
+    <string name="language_button_cantonese">廣</string>
+    <string name="language_button_english">EN</string>
+    <string name="language_button_mandarin">普</string>
+    <string name="language_button_desc_prefix">Current language</string>
+    <string name="language_button_desc_suffix">, tap to switch language</string>
+    <string name="language_cantonese_desc">Cantonese</string>
+    <string name="language_english_desc">English</string>
+    <string name="language_mandarin_desc">Mandarin</string>
     
     <!-- Function Names -->
     <string name="function_environment">Environment Recognition</string>
