@@ -185,13 +185,13 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         isListening = listening;
         if (listening) {
             listenButton.setText("⏸️");
-            listenButton.setContentDescription("停止監聽");
-            statusText.setText("正在監聽...");
+            listenButton.setContentDescription(getString(R.string.listening_active));
+            statusText.setText(getString(R.string.listening_active));
             statusText.setTextColor(getResources().getColor(android.R.color.holo_green_light));
         } else {
             listenButton.setText("🎤");
-            listenButton.setContentDescription("開始監聽");
-            statusText.setText("點擊開始");
+            listenButton.setContentDescription(getString(R.string.listening_status));
+            statusText.setText(getString(R.string.listening_status));
             statusText.setTextColor(getResources().getColor(android.R.color.white));
         }
     }

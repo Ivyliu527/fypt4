@@ -197,11 +197,32 @@ public class MainActivity extends BaseAccessibleActivity {
     }
 
     private void setupFunctionList() {
-        functionList.add(new HomeFunction("環境識別", "描述周圍環境和物體", R.drawable.ic_environment));
-        functionList.add(new HomeFunction("閱讀助手", "掃描文件和識別貨幣", R.drawable.ic_scan));
-        functionList.add(new HomeFunction("語音命令", "語音控制應用功能", R.drawable.ic_voice_command));
-        functionList.add(new HomeFunction("尋找物品", "尋找標記的個人物品", R.drawable.ic_search));
-        functionList.add(new HomeFunction("即時協助", "視訊連線志工協助", R.drawable.ic_assistance));
+        functionList.clear(); // 清空列表，避免重複添加
+        functionList.add(new HomeFunction(
+            "environment",
+            getString(R.string.function_environment), 
+            getString(R.string.desc_environment), 
+            R.drawable.ic_environment));
+        functionList.add(new HomeFunction(
+            "document",
+            getString(R.string.function_document), 
+            getString(R.string.desc_document), 
+            R.drawable.ic_scan));
+        functionList.add(new HomeFunction(
+            "voice_command",
+            getString(R.string.function_voice_command), 
+            getString(R.string.desc_voice_command), 
+            R.drawable.ic_voice_command));
+        functionList.add(new HomeFunction(
+            "find_items",
+            getString(R.string.function_find_items), 
+            getString(R.string.desc_find_items), 
+            R.drawable.ic_search));
+        functionList.add(new HomeFunction(
+            "live_assistance",
+            getString(R.string.function_live_assistance), 
+            getString(R.string.desc_live_assistance), 
+            R.drawable.ic_assistance));
     }
 
     private void setupRecyclerView() {
@@ -210,20 +231,19 @@ public class MainActivity extends BaseAccessibleActivity {
             public void onItemClick(HomeFunction function) {
                 vibrationManager.vibrateClick();
 
-                String cantoneseText = "正在啟動" + function.getName();
-                String englishText = "Starting " + getEnglishFunctionName(function.getName());
-                ttsManager.speak(cantoneseText, englishText, true);
+                // 使用當前語言播報（名稱已經是正確語言）
+                String announcement = (currentLanguage.equals("english") ? "Starting " : "正在啟動") + function.getName();
+                ttsManager.speak(announcement, announcement, true);
 
-                // 根據功能啟動相應頁面
-                handleFunctionClick(function.getName());
+                // 根據功能ID啟動相應頁面
+                handleFunctionClick(function.getId());
             }
 
             @Override
             public void onItemFocus(HomeFunction function) {
                 vibrationManager.vibrateFocus();
                 String cantoneseText = "當前焦點：" + function.getName() + "，" + function.getDescription();
-                String englishText = "Current focus: " + getEnglishFunctionName(function.getName()) + ", " +
-                        getEnglishDescription(function.getDescription());
+                String englishText = "Current focus: " + function.getName() + ", " + function.getDescription();
                 ttsManager.speak(cantoneseText, englishText);
             }
         });
@@ -233,22 +253,22 @@ public class MainActivity extends BaseAccessibleActivity {
         recyclerView.setAdapter(adapter);
     }
 
-    private void handleFunctionClick(String functionName) {
-        switch (functionName) {
-            case "環境識別":
+    private void handleFunctionClick(String functionId) {
+        switch (functionId) {
+            case "environment":
                 startEnvironmentActivity();
                 break;
-            case "閱讀助手":
+            case "document":
                 startDocumentCurrencyActivity();
                 break;
-            case "語音命令":
+            case "voice_command":
                 startVoiceCommandActivity();
                 break;
-            case "尋找物品":
-                announceInfo("尋找物品功能開發中");
+            case "find_items":
+                announceInfo(getString(R.string.function_find_items) + "功能開發中");
                 break;
-            case "即時協助":
-                announceInfo("即時協助功能開發中");
+            case "live_assistance":
+                announceInfo(getString(R.string.function_live_assistance) + "功能開發中");
                 break;
         }
     }

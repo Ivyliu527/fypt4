@@ -35,13 +35,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="系統設定"
+                android:text="@string/system_settings_title"
                 android:textColor="@color/text_primary"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_marginHorizontal="16dp"
-                android:contentDescription="頁面標題：系統設定" />
+                android:contentDescription="@string/system_settings_title" />
 
             <!-- 佔位符，保持標題居中 -->
             <View

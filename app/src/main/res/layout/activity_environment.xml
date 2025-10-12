@@ -59,9 +59,9 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_weight="1"
-            android:contentDescription="環境識別頁面標題"
+            android:contentDescription="@string/environment_title"
             android:gravity="center"
-            android:text="環境識別"
+            android:text="@string/environment_title"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold" />
