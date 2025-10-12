@@ -32,23 +32,23 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="語音命令"
+        android:text="@string/voice_command_title"
         android:textColor="#4FC3F7"
         android:textSize="36sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp"
-        android:contentDescription="語音命令頁面標題" />
+        android:contentDescription="@string/voice_command_title" />
 
     <!-- 狀態文字 -->
     <TextView
         android:id="@+id/statusText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="點擊開始"
+        android:text="@string/listening_status"
         android:textColor="#FFFFFF"
         android:textSize="24sp"
         android:layout_marginBottom="32dp"
-        android:contentDescription="狀態文字" />
+        android:contentDescription="@string/listening_status" />
 
     <!-- 監聽按鈕 -->
     <Button
@@ -85,17 +85,33 @@
         android:layout_weight="1"
         android:fillViewport="true">
 
-        <TextView
-            android:id="@+id/hintText"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="可用指令：\n\n• 打開環境識別\n• 打開閱讀助手\n• 尋找物品\n• 即時協助\n• 緊急求助\n• 返回主頁\n• 切換語言\n• 打開設定\n• 現在幾點\n• 停止"
-            android:textColor="#CCCCCC"
-            android:textSize="16sp"
-            android:lineSpacingExtra="4dp"
+            android:orientation="vertical"
             android:background="@drawable/guidance_background"
-            android:padding="16dp"
-            android:contentDescription="可用指令列表" />
+            android:padding="16dp">
+            
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/available_commands"
+                android:textColor="#4FC3F7"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+            
+            <TextView
+                android:id="@+id/hintText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/commands_list"
+                android:textColor="#CCCCCC"
+                android:textSize="16sp"
+                android:lineSpacingExtra="4dp"
+                android:contentDescription="@string/commands_list" />
+                
+        </LinearLayout>
 
     </ScrollView>
 
