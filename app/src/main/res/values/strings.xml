@@ -44,6 +44,8 @@
     <string name="detection_status_format">實時檢測中 - %1$d個物體 (%2$dms)</string>
     <string name="detection_no_objects">實時檢測中 - 未發現物體</string>
     <string name="detection_status_prefix">偵測狀態：</string>
+    <string name="detection_results_prefix">偵測結果：</string>
+    <string name="camera_started_message">相機已啟動，系統正在實時分析畫面並顯示檢測框。將相機對準物體即可看到識別結果</string>
     <string name="emergency_button_long_press_info">緊急求助按鈕，長按三秒發送求助信息</string>
     <string name="app_title_accessibility">應用程式名稱，瞳伴</string>
     <string name="function_selection_accessibility">功能選擇區域，共有五個主要功能</string>
