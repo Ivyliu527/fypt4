@@ -14,18 +14,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
+// 使用自定義的LatLng類
 
-public class NavigationActivity extends BaseAccessibleActivity implements OnMapReadyCallback {
+public class NavigationActivity extends BaseAccessibleActivity {
     private static final String TAG = "NavigationActivity";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     
@@ -39,8 +30,7 @@ public class NavigationActivity extends BaseAccessibleActivity implements OnMapR
     private TextView navigationInstructions;
     private LinearLayout savedDestinationsContainer;
     
-    // 地圖和位置相關
-    private GoogleMap googleMap;
+    // 位置相關
     private Location currentLocation;
     private LatLng destination;
     private boolean isNavigating = false;
@@ -65,7 +55,6 @@ public class NavigationActivity extends BaseAccessibleActivity implements OnMapR
         permissionHelper = new LocationPermissionHelper(this);
         
         initViews();
-        setupMapFragment();
         checkLocationPermissionAndSetup();
         
         // 頁面標題播報
@@ -103,13 +92,7 @@ public class NavigationActivity extends BaseAccessibleActivity implements OnMapR
         updateUI();
     }
     
-    private void setupMapFragment() {
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.mapFragment);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
-        }
-    }
+    // 移除了Google Maps相關的設置方法
     
     private void checkLocationPermissionAndSetup() {
         // 檢查權限狀態
@@ -236,16 +219,7 @@ public class NavigationActivity extends BaseAccessibleActivity implements OnMapR
                 destination = destinationLatLng;
                 updateUI();
                 
-                // 在地圖上顯示目的地
-                if (googleMap != null) {
-                    googleMap.clear();
-                    googleMap.addMarker(new MarkerOptions()
-                            .position(destination)
-                            .title("目的地: " + address));
-                    
-                    // 移動地圖到目的地
-                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destination, 15));
-                }
+                // 目的地已找到，準備導航
                 
                 String cantoneseText = "找到目的地：" + address + "。點擊開始導航按鈕開始導航";
                 String englishText = "Destination found: " + address + ". Tap start navigation to begin";
@@ -301,8 +275,7 @@ public class NavigationActivity extends BaseAccessibleActivity implements OnMapR
             }
         });
         
-        // 繪製路線
-        drawRoute();
+        // 路線規劃完成
         
         announceInfo("導航已開始，請按照語音指引行走");
         statusText.setText("導航進行中...");
@@ -317,21 +290,7 @@ public class NavigationActivity extends BaseAccessibleActivity implements OnMapR
         statusText.setText("導航已停止");
     }
     
-    private void drawRoute() {
-        if (googleMap != null && currentLocation != null && destination != null) {
-            LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-            
-            // 這裡應該使用Directions API獲取實際路線
-            // 現在先畫一條直線作為示例
-            PolylineOptions polylineOptions = new PolylineOptions()
-                    .add(currentLatLng)
-                    .add(destination)
-                    .width(5)
-                    .color(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
-            
-            googleMap.addPolyline(polylineOptions);
-        }
-    }
+    // 移除了地圖路線繪製功能
     
     private void updateCurrentLocationDisplay() {
         if (currentLocation != null) {
@@ -355,21 +314,7 @@ public class NavigationActivity extends BaseAccessibleActivity implements OnMapR
         destinationInput.setEnabled(!isNavigating);
     }
     
-    @Override
-    public void onMapReady(GoogleMap map) {
-        googleMap = map;
-        
-        // 啟用位置圖層
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            googleMap.setMyLocationEnabled(true);
-        }
-        
-        // 設置地圖類型
-        googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        
-        Log.d(TAG, "地圖已準備就緒");
-    }
+    // 移除了Google Maps相關的回調方法
     
     @Override
     protected void announcePageTitle() {

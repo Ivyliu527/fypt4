@@ -3,16 +3,7 @@ package com.example.tonbo_app;
 import android.content.Context;
 import android.location.Location;
 import android.util.Log;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.maps.DirectionsApi;
-import com.google.maps.GeoApiContext;
-import com.google.maps.GeocodingApi;
-import com.google.maps.errors.ApiException;
-import com.google.maps.model.DirectionsResult;
-import com.google.maps.model.DirectionsRoute;
-import com.google.maps.model.DirectionsStep;
-import com.google.maps.model.GeocodingResult;
+// 使用自定義的LatLng類
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,7 +13,6 @@ public class NavigationManager {
     private static final String TAG = "NavigationManager";
     private static NavigationManager instance;
     private Context context;
-    private GeoApiContext geoApiContext;
     private boolean isNavigating = false;
     private List<NavigationStep> navigationSteps;
     private int currentStepIndex = 0;
@@ -61,7 +51,7 @@ public class NavigationManager {
     
     private NavigationManager(Context context) {
         this.context = context.getApplicationContext();
-        initGeoApiContext();
+        // 不再需要Google Maps API初始化
     }
     
     public static synchronized NavigationManager getInstance(Context context) {
@@ -71,55 +61,13 @@ public class NavigationManager {
         return instance;
     }
     
-    private void initGeoApiContext() {
-        // 初始化Google Maps API上下文
-        // 注意：需要在Google Cloud Console獲取API Key
-        // 暫時使用模擬數據，避免API Key錯誤
-        try {
-            geoApiContext = new GeoApiContext.Builder()
-                    .apiKey("DEMO_API_KEY") // 使用模擬API Key
-                    .build();
-        } catch (Exception e) {
-            Log.w(TAG, "Google Maps API未配置，將使用模擬數據");
-            geoApiContext = null;
-        }
-    }
+    // 不再需要Google Maps API初始化，直接使用模擬數據
     
     public void searchDestination(String query, OnDestinationFoundListener listener) {
         new Thread(() -> {
-            try {
-                // 檢查API是否可用
-                if (geoApiContext == null) {
-                    Log.d(TAG, "使用模擬數據搜索目的地: " + query);
-                    // 使用模擬數據
-                    simulateDestinationSearch(query, listener);
-                    return;
-                }
-                
-                GeocodingResult[] results = GeocodingApi.geocode(geoApiContext, query).await();
-                
-                if (results != null && results.length > 0) {
-                    GeocodingResult result = results[0];
-                    LatLng destination = new LatLng(
-                            result.geometry.location.lat,
-                            result.geometry.location.lng
-                    );
-                    String address = result.formattedAddress;
-                    
-                    // 在主線程中調用回調
-                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                        listener.onDestinationFound(destination, address);
-                    });
-                } else {
-                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                        listener.onDestinationNotFound("找不到指定地點");
-                    });
-                }
-            } catch (ApiException | InterruptedException | IOException e) {
-                Log.e(TAG, "搜索目的地失敗，使用模擬數據", e);
-                // 如果API失敗，使用模擬數據
-                simulateDestinationSearch(query, listener);
-            }
+            Log.d(TAG, "使用模擬數據搜索目的地: " + query);
+            // 直接使用模擬數據
+            simulateDestinationSearch(query, listener);
         }).start();
     }
     
@@ -162,39 +110,9 @@ public class NavigationManager {
         this.currentStepIndex = 0;
         
         new Thread(() -> {
-            try {
-                // 檢查API是否可用
-                if (geoApiContext == null) {
-                    Log.d(TAG, "使用模擬路線數據");
-                    // 使用模擬路線數據
-                    simulateRouteGeneration(startLocation, destination);
-                    return;
-                }
-                
-                // 計算路線
-                LatLng startLatLng = new LatLng(startLocation.getLatitude(), startLocation.getLongitude());
-                DirectionsResult result = DirectionsApi.newRequest(geoApiContext)
-                        .origin(new com.google.maps.model.LatLng(startLatLng.latitude, startLatLng.longitude))
-                        .destination(new com.google.maps.model.LatLng(destination.latitude, destination.longitude))
-                        .mode(com.google.maps.model.TravelMode.WALKING)
-                        .await();
-                
-                if (result.routes != null && result.routes.length > 0) {
-                    DirectionsRoute route = result.routes[0];
-                    navigationSteps = parseRouteSteps(route);
-                    
-                    // 開始導航
-                    startNavigationLoop();
-                } else {
-                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                        listener.onNavigationError("無法計算路線");
-                    });
-                }
-            } catch (ApiException | InterruptedException | IOException e) {
-                Log.e(TAG, "開始導航失敗，使用模擬路線", e);
-                // 如果API失敗，使用模擬路線
-                simulateRouteGeneration(startLocation, destination);
-            }
+            Log.d(TAG, "使用模擬路線數據");
+            // 直接使用模擬路線數據
+            simulateRouteGeneration(startLocation, destination);
         }).start();
     }
     
@@ -263,40 +181,9 @@ public class NavigationManager {
         else return "向西北";
     }
     
-    private List<NavigationStep> parseRouteSteps(DirectionsRoute route) {
-        List<NavigationStep> steps = new ArrayList<>();
-        
-        for (DirectionsStep step : route.legs[0].steps) {
-            String instruction = cleanInstruction(step.htmlInstructions);
-            double distance = step.distance.inMeters;
-            String direction = getDirectionFromBearing(step.startLocation, step.endLocation);
-            
-            LatLng startLatLng = new LatLng(step.startLocation.lat, step.startLocation.lng);
-            LatLng endLatLng = new LatLng(step.endLocation.lat, step.endLocation.lng);
-            
-            steps.add(new NavigationStep(instruction, distance, direction, startLatLng, endLatLng));
-        }
-        
-        return steps;
-    }
+    // 移除了Google Maps相關的解析方法，直接使用模擬數據
     
-    private String cleanInstruction(String htmlInstruction) {
-        // 移除HTML標籤
-        return htmlInstruction.replaceAll("<[^>]*>", "");
-    }
-    
-    private String getDirectionFromBearing(com.google.maps.model.LatLng start, com.google.maps.model.LatLng end) {
-        double bearing = calculateBearing(start.lat, start.lng, end.lat, end.lng);
-        
-        if (bearing >= 337.5 || bearing < 22.5) return "向北";
-        else if (bearing >= 22.5 && bearing < 67.5) return "向東北";
-        else if (bearing >= 67.5 && bearing < 112.5) return "向東";
-        else if (bearing >= 112.5 && bearing < 157.5) return "向東南";
-        else if (bearing >= 157.5 && bearing < 202.5) return "向南";
-        else if (bearing >= 202.5 && bearing < 247.5) return "向西南";
-        else if (bearing >= 247.5 && bearing < 292.5) return "向西";
-        else return "向西北";
-    }
+    // 移除了Google Maps相關的解析方法，直接使用模擬數據
     
     private double calculateBearing(double lat1, double lng1, double lat2, double lng2) {
         double dLng = Math.toRadians(lng2 - lng1);
