@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tonbo</string>
+    
+    <!-- Home Page -->
+    <string name="home_title">Tonbo</string>
+    <string name="function_selection">Function Selection</string>
+    <string name="emergency_button_text">Emergency Help\nLong press 3 sec</string>
+    <string name="operation_guide">Operation Guide</string>
+    <string name="operation_guide_content">• Tap function items to enter\n• Top right buttons: Emergency Settings🚨, System Settings⚙, Language Switch\n• Emergency: Long press red button for 3 seconds</string>
+    
+    <!-- Function Names -->
+    <string name="function_environment">Environment Recognition</string>
+    <string name="function_document">Document Assistant</string>
+    <string name="function_voice_command">Voice Command</string>
+    <string name="function_find_items">Find Items</string>
+    <string name="function_live_assistance">Live Assistance</string>
+    
+    <!-- Function Descriptions -->
+    <string name="desc_environment">Describe surroundings and objects</string>
+    <string name="desc_document">Scan documents and recognize currency</string>
+    <string name="desc_voice_command">Voice control app functions</string>
+    <string name="desc_find_items">Find marked personal items</string>
+    <string name="desc_live_assistance">Video call with volunteers</string>
+    
+    <!-- Environment Recognition Page -->
+    <string name="environment_title">Environment Recognition</string>
+    <string name="camera_switch">Switch Camera</string>
+    <string name="flash_toggle">Flash</string>
+    <string name="detection_status">Detection Status</string>
+    <string name="color_light_info">Color &amp; Light</string>
+    
+    <!-- Document Assistant Page -->
+    <string name="document_title">Document Assistant</string>
+    <string name="text_recognition">Text Recognition</string>
+    <string name="currency_recognition">Currency Recognition</string>
+    <string name="scan_area">Scan Area</string>
+    <string name="recognition_result">Recognition Result</string>
+    
+    <!-- Voice Command Page -->
+    <string name="voice_command_title">Voice Command</string>
+    <string name="listening_status">Tap to Start</string>
+    <string name="listening_active">Listening...</string>
+    <string name="available_commands">Available Commands:</string>
+    <string name="commands_list">• open environment\n• open document\n• find items\n• live assistance\n• emergency\n• go home\n• switch language\n• open settings\n• what time is it\n• stop</string>
+    
+    <!-- Emergency Settings Page -->
+    <string name="emergency_settings_title">Emergency Settings</string>
+    <string name="emergency_contacts">Emergency Contacts</string>
+    <string name="add_contact">Add Contact</string>
+    <string name="contact_name">Contact Name</string>
+    <string name="contact_phone">Phone Number</string>
+    <string name="emergency_message">Emergency Message</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    
+    <!-- System Settings Page -->
+    <string name="system_settings_title">System Settings</string>
+    <string name="voice_settings">Voice Settings</string>
+    <string name="speech_rate">Speech Rate (50% - 200%)</string>
+    <string name="speech_pitch">Speech Pitch (50% - 200%)</string>
+    <string name="speech_volume">Speech Volume (0% - 200%)</string>
+    <string name="test_voice">Test Voice</string>
+    <string name="accessibility_settings">Accessibility Settings</string>
+    <string name="vibration_feedback">Vibration Feedback</string>
+    <string name="screen_reader_support">Screen Reader Support</string>
+    <string name="gesture_operations">Gesture Operations</string>
+    <string name="other_settings">Other Settings</string>
+    <string name="reset_settings">Reset Settings</string>
+    
+    <!-- Common Buttons -->
+    <string name="back">Back</string>
+    <string name="confirm">Confirm</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    
+    <!-- Language Switch -->
+    <string name="language_cantonese">廣</string>
+    <string name="language_english">EN</string>
+    <string name="language_mandarin">普</string>
+    
+    <!-- Splash Screen -->
+    <string name="splash_slogan">Your Visual Partner</string>
+    
+    <!-- Accessibility Description -->
+    <string name="accessibility_service_description">Tonbo accessibility service to assist visually impaired users</string>
+</resources>
+

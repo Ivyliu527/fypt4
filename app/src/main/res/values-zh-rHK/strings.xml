@@ -84,6 +84,5 @@
     
     <!-- 無障礙描述 -->
     <string name="accessibility_service_description">瞳伴無障礙服務，協助視障用戶使用應用功能</string>
-    
-    <string name="google_cloud_api_key">YOUR_GOOGLE_CLOUD_API_KEY_HERE</string>
 </resources>
+
