@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
+
+    <!-- 頂部導航欄 -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background_dark"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Button
+            android:id="@+id/backButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:text="←"
+            android:textSize="24sp"
+            android:textColor="@color/white"
+            android:background="@drawable/button_circle_background"
+            android:backgroundTint="@null"
+            android:contentDescription="返回主頁按鈕" />
+
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="智能導航"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:contentDescription="頁面標題：智能導航" />
+
+    </LinearLayout>
+
+    <!-- 地圖區域 -->
+    <fragment
+        android:id="@+id/mapFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        app:layout_constraintTop_toBottomOf="@id/topBar"
+        app:layout_constraintBottom_toTopOf="@id/controlPanel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        class="com.google.android.gms.maps.SupportMapFragment" />
+
+    <!-- 控制面板 -->
+    <LinearLayout
+        android:id="@+id/controlPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background_dark"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- 目的地搜索區域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <EditText
+                android:id="@+id/destinationInput"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:hint="輸入目的地"
+                android:textSize="16sp"
+                android:textColor="@color/white"
+                android:textColorHint="@color/text_secondary"
+                android:background="@drawable/edit_text_background"
+                android:padding="12dp"
+                android:inputType="text"
+                android:contentDescription="輸入目的地搜索框" />
+
+            <Button
+                android:id="@+id/searchButton"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:text="🔍"
+                android:textSize="18sp"
+                android:textColor="@color/white"
+                android:background="@drawable/button_square_background"
+                android:backgroundTint="@null"
+                android:layout_marginStart="8dp"
+                android:paddingHorizontal="16dp"
+                android:contentDescription="搜索目的地按鈕" />
+
+        </LinearLayout>
+
+        <!-- 當前位置顯示 -->
+        <TextView
+            android:id="@+id/currentLocationText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="正在獲取位置..."
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp"
+            android:contentDescription="當前位置信息" />
+
+        <!-- 狀態顯示 -->
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="準備就緒"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp"
+            android:contentDescription="導航狀態" />
+
+        <!-- 導航指令顯示 -->
+        <TextView
+            android:id="@+id/navigationInstructions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/primary_blue"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:minHeight="40dp"
+            android:gravity="center"
+            android:background="@drawable/result_background"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="當前導航指令" />
+
+        <!-- 導航控制按鈕 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/startNavigationButton"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:text="🚀\n開始導航"
+                android:textSize="14sp"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:background="@drawable/button_square_background"
+                android:backgroundTint="@null"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:enabled="false"
+                android:contentDescription="開始導航按鈕" />
+
+            <Button
+                android:id="@+id/stopNavigationButton"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:text="⏹️\n停止導航"
+                android:textSize="14sp"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:background="@drawable/emergency_button_background"
+                android:backgroundTint="@null"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:enabled="false"
+                android:contentDescription="停止導航按鈕" />
+
+        </LinearLayout>
+
+        <!-- 常用目的地 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="常用目的地"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:contentDescription="常用目的地標題" />
+
+        <LinearLayout
+            android:id="@+id/savedDestinationsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/homeButton"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:text="🏠\n家"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:background="@drawable/button_square_background"
+                android:backgroundTint="@null"
+                android:layout_marginEnd="4dp"
+                android:gravity="center"
+                android:contentDescription="回家按鈕" />
+
+            <Button
+                android:id="@+id/workButton"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:text="🏢\n公司"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:background="@drawable/button_square_background"
+                android:backgroundTint="@null"
+                android:layout_marginHorizontal="4dp"
+                android:gravity="center"
+                android:contentDescription="去公司按鈕" />
+
+            <Button
+                android:id="@+id/hospitalButton"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:text="🏥\n醫院"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:background="@drawable/button_square_background"
+                android:backgroundTint="@null"
+                android:layout_marginHorizontal="4dp"
+                android:gravity="center"
+                android:contentDescription="去醫院按鈕" />
+
+            <Button
+                android:id="@+id/marketButton"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:text="🛒\n超市"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:background="@drawable/button_square_background"
+                android:backgroundTint="@null"
+                android:layout_marginStart="4dp"
+                android:gravity="center"
+                android:contentDescription="去超市按鈕" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

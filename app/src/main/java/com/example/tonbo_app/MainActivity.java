@@ -39,8 +39,8 @@ public class MainActivity extends BaseAccessibleActivity {
     @Override
     protected void announcePageTitle() {
         // 播報頁面標題和功能列表
-        String cantoneseText = "瞳伴主頁。當前有四個功能：環境識別、閱讀助手、尋找物品、即時協助。";
-        String englishText = "Tonbo Home. Four functions available: Environment Recognition, Document Assistant, Find Items, Live Assistance.";
+        String cantoneseText = "瞳伴主頁。當前有五個功能：環境識別、閱讀助手、智能導航、尋找物品、即時協助。";
+        String englishText = "Tonbo Home. Five functions available: Environment Recognition, Document Assistant, Smart Navigation, Find Items, Live Assistance.";
         ttsManager.speak(cantoneseText, englishText, true);
     }
     
@@ -186,6 +186,7 @@ public class MainActivity extends BaseAccessibleActivity {
     private void setupFunctionList() {
         functionList.add(new HomeFunction("環境識別", "描述周圍環境和物體", R.drawable.ic_environment));
         functionList.add(new HomeFunction("閱讀助手", "掃描文件和識別貨幣", R.drawable.ic_scan));
+        functionList.add(new HomeFunction("智能導航", "語音導航和路線規劃", R.drawable.ic_navigation));
         functionList.add(new HomeFunction("尋找物品", "尋找標記的個人物品", R.drawable.ic_search));
         functionList.add(new HomeFunction("即時協助", "視訊連線志工協助", R.drawable.ic_assistance));
     }
@@ -227,6 +228,9 @@ public class MainActivity extends BaseAccessibleActivity {
             case "閱讀助手":
                 startDocumentCurrencyActivity();
                 break;
+            case "智能導航":
+                startNavigationActivity();
+                break;
             case "尋找物品":
                 announceInfo("尋找物品功能開發中");
                 break;
@@ -257,11 +261,23 @@ public class MainActivity extends BaseAccessibleActivity {
             announceError("閱讀助手功能暫不可用");
         }
     }
+    
+    private void startNavigationActivity() {
+        try {
+            Intent intent = new Intent(MainActivity.this, NavigationActivity.class);
+            intent.putExtra("language", currentLanguage);
+            announceNavigation("正在進入智能導航頁面");
+            startActivity(intent);
+        } catch (Exception e) {
+            announceError("智能導航功能暫不可用");
+        }
+    }
 
     private String getEnglishFunctionName(String chineseName) {
         switch (chineseName) {
             case "環境識別": return "Environment Recognition";
             case "閱讀助手": return "Document Assistant";
+            case "智能導航": return "Smart Navigation";
             case "尋找物品": return "Find Items";
             case "即時協助": return "Live Assistance";
             default: return chineseName;
@@ -272,6 +288,7 @@ public class MainActivity extends BaseAccessibleActivity {
         switch (chineseDescription) {
             case "描述周圍環境和物體": return "Describe surroundings and objects";
             case "掃描文件和識別貨幣": return "Scan documents and recognize currency";
+            case "語音導航和路線規劃": return "Voice navigation and route planning";
             case "尋找標記的個人物品": return "Find marked personal items";
             case "視訊連線志工協助": return "Video call with volunteers";
             default: return chineseDescription;

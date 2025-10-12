@@ -66,6 +66,16 @@
         <activity
             android:name=".EmergencySettingsActivity"
             android:exported="false" />
+            
+        <!-- Navigation Activity - 智能導航 -->
+        <activity
+            android:name=".NavigationActivity"
+            android:exported="false" />
+            
+        <!-- Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_GOOGLE_MAPS_API_KEY" />
     </application>
 
 </manifest>
