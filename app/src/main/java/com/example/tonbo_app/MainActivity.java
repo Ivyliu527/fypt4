@@ -40,15 +40,15 @@ public class MainActivity extends BaseAccessibleActivity {
     protected void announcePageTitle() {
         // 播報頁面標題和功能列表
         String cantoneseText = "瞳伴主頁。歡迎使用智能視覺助手。" +
-                "當前有四個主要功能：環境識別、閱讀助手、尋找物品、即時協助。" +
+                "當前有五個主要功能：環境識別、閱讀助手、語音命令、尋找物品、即時協助。" +
                 "右上角有三個按鈕：緊急設置、系統設定、語言切換。" +
                 "底部有緊急求助按鈕，長按三秒發送求助信息。" +
-                "請點擊選擇功能或使用語音導航。";
+                "請點擊選擇功能或使用語音命令控制。";
         String englishText = "Tonbo Home. Welcome to the smart visual assistant. " +
-                "Four main functions available: Environment Recognition, Document Assistant, Find Items, Live Assistance. " +
+                "Five main functions available: Environment Recognition, Document Assistant, Voice Command, Find Items, Live Assistance. " +
                 "Three buttons on top right: Emergency Settings, System Settings, Language Switch. " +
                 "Emergency button at bottom, long press for 3 seconds to send help request. " +
-                "Please tap to select function or use voice navigation.";
+                "Please tap to select function or use voice command control.";
         ttsManager.speak(cantoneseText, englishText, true);
     }
     
@@ -203,7 +203,7 @@ public class MainActivity extends BaseAccessibleActivity {
     private void setupFunctionList() {
         functionList.add(new HomeFunction("環境識別", "描述周圍環境和物體", R.drawable.ic_environment));
         functionList.add(new HomeFunction("閱讀助手", "掃描文件和識別貨幣", R.drawable.ic_scan));
-        // functionList.add(new HomeFunction("智能導航", "語音導航和路線規劃", R.drawable.ic_navigation));
+        functionList.add(new HomeFunction("語音命令", "語音控制應用功能", R.drawable.ic_voice_command));
         functionList.add(new HomeFunction("尋找物品", "尋找標記的個人物品", R.drawable.ic_search));
         functionList.add(new HomeFunction("即時協助", "視訊連線志工協助", R.drawable.ic_assistance));
     }
@@ -245,9 +245,9 @@ public class MainActivity extends BaseAccessibleActivity {
             case "閱讀助手":
                 startDocumentCurrencyActivity();
                 break;
-            // case "智能導航":
-            //     startNavigationActivity();
-            //     break;
+            case "語音命令":
+                startVoiceCommandActivity();
+                break;
             case "尋找物品":
                 announceInfo("尋找物品功能開發中");
                 break;
@@ -279,22 +279,23 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
     
-    // private void startNavigationActivity() {
-    //     try {
-    //         Intent intent = new Intent(MainActivity.this, NavigationActivity.class);
-    //         intent.putExtra("language", currentLanguage);
-    //         announceNavigation("正在進入智能導航頁面");
-    //         startActivity(intent);
-    //     } catch (Exception e) {
-    //         announceError("智能導航功能暫不可用");
-    //     }
-    // }
+    private void startVoiceCommandActivity() {
+        try {
+            Intent intent = new Intent(MainActivity.this, VoiceCommandActivity.class);
+            intent.putExtra("language", currentLanguage);
+            announceNavigation("正在進入語音命令頁面");
+            startActivity(intent);
+        } catch (Exception e) {
+            announceError("語音命令功能暫不可用");
+            Log.e("MainActivity", "打開語音命令失敗: " + e.getMessage());
+        }
+    }
 
     private String getEnglishFunctionName(String chineseName) {
         switch (chineseName) {
             case "環境識別": return "Environment Recognition";
             case "閱讀助手": return "Document Assistant";
-            // case "智能導航": return "Smart Navigation";
+            case "語音命令": return "Voice Command";
             case "尋找物品": return "Find Items";
             case "即時協助": return "Live Assistance";
             default: return chineseName;
@@ -305,7 +306,7 @@ public class MainActivity extends BaseAccessibleActivity {
         switch (chineseDescription) {
             case "描述周圍環境和物體": return "Describe surroundings and objects";
             case "掃描文件和識別貨幣": return "Scan documents and recognize currency";
-            case "語音導航和路線規劃": return "Voice navigation and route planning";
+            case "語音控制應用功能": return "Voice control app functions";
             case "尋找標記的個人物品": return "Find marked personal items";
             case "視訊連線志工協助": return "Video call with volunteers";
             default: return chineseDescription;
