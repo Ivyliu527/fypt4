@@ -39,7 +39,6 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private TextView detectionResults;
     private Button backButton;
     private Button flashButton;
-    private Button languageButton;
 
     private ExecutorService cameraExecutor;
     private ProcessCameraProvider cameraProvider;
@@ -108,8 +107,9 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
 
     @Override
     protected void announcePageTitle() {
-        announcePageTitle("實時環境識別頁面");
-        announceNavigation("相機已啟動，系統正在實時分析畫面並顯示檢測框。將相機對準物體即可看到識別結果");
+        String pageTitle = getString(R.string.environment_title);
+        announcePageTitle(pageTitle);
+        announceNavigation(getString(R.string.camera_started_message));
     }
 
     private void initViews() {
@@ -119,7 +119,6 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         detectionResults = findViewById(R.id.detectionResults);
         backButton = findViewById(R.id.backButton);
         flashButton = findViewById(R.id.flashButton);
-        languageButton = findViewById(R.id.languageButton);
 
         // 返回按鈕
         backButton.setOnClickListener(v -> {
@@ -134,11 +133,6 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             toggleFlash();
         });
 
-        // 語言切換按鈕
-        languageButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            toggleLanguage();
-        });
 
         // 移除了語音播報和清除顯示按鈕，因為已有實時報讀功能
     }
@@ -661,60 +655,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         flashButton.setText(isFlashOn ? "🔦" : "💡");
     }
 
-    private void toggleLanguage() {
-        switch (currentLanguage) {
-            case "cantonese":
-                currentLanguage = "english";
-                break;
-            case "english":
-                currentLanguage = "mandarin";
-                break;
-            case "mandarin":
-            default:
-                currentLanguage = "cantonese";
-                break;
-        }
 
-        // 保存語言設置
-        localeManager.setLanguage(this, currentLanguage);
 
-        // 更新TTS語言
-        ttsManager.changeLanguage(currentLanguage);
-
-        // 更新語言按鈕
-        updateLanguageButton();
-
-        // 重新創建Activity以應用新語言
-        recreate();
-    }
-
-    private void updateLanguageButton() {
-        if (languageButton != null) {
-            String buttonText = getLanguageButtonText(currentLanguage);
-            languageButton.setText(buttonText);
-            
-            String languageDesc = getLanguageDescription(currentLanguage);
-            languageButton.setContentDescription(getString(R.string.language_button_desc_prefix) + languageDesc + getString(R.string.language_button_desc_suffix));
-        }
-    }
-
-    private String getLanguageButtonText(String language) {
-        switch (language) {
-            case "cantonese": return getString(R.string.language_button_cantonese);
-            case "english": return getString(R.string.language_button_english);
-            case "mandarin": return getString(R.string.language_button_mandarin);
-            default: return getString(R.string.language_button_cantonese);
-        }
-    }
-
-    private String getLanguageDescription(String language) {
-        switch (language) {
-            case "cantonese": return getString(R.string.language_cantonese_desc);
-            case "english": return getString(R.string.language_english_desc);
-            case "mandarin": return getString(R.string.language_mandarin_desc);
-            default: return getString(R.string.language_cantonese_desc);
-        }
-    }
 
     private void updateDetectionStatus(String status) {
         runOnUiThread(() -> {
@@ -727,7 +669,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         lastDetectionResult = results;
         runOnUiThread(() -> {
             detectionResults.setText(results);
-            detectionResults.setContentDescription("偵測結果：" + results);
+            detectionResults.setContentDescription(getString(R.string.detection_results_prefix) + results);
         });
     }
 

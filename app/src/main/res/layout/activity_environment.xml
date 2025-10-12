@@ -81,21 +81,6 @@
             android:textStyle="bold"
             android:layout_marginEnd="8dp" />
 
-        <!-- 語言切換按鈕 -->
-        <Button
-            android:id="@+id/languageButton"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:background="@drawable/button_simple_background"
-            android:backgroundTint="@null"
-            android:contentDescription="@string/language_button_desc_prefix"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:padding="8dp"
-            android:text="@string/language_button_cantonese"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
 
     </LinearLayout>
 
