@@ -3,9 +3,7 @@ package com.example.tonbo_app;
 import android.content.Context;
 import android.location.Location;
 import android.util.Log;
-// 使用自定義的LatLng類
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +15,7 @@ public class NavigationManager {
     private List<NavigationStep> navigationSteps;
     private int currentStepIndex = 0;
     private OnNavigationUpdateListener navigationListener;
+    private OSRMRoutingService routingService;
     
     // 導航步驟類
     public static class NavigationStep {
@@ -51,7 +50,7 @@ public class NavigationManager {
     
     private NavigationManager(Context context) {
         this.context = context.getApplicationContext();
-        // 不再需要Google Maps API初始化
+        this.routingService = new OSRMRoutingService();
     }
     
     public static synchronized NavigationManager getInstance(Context context) {
@@ -64,11 +63,34 @@ public class NavigationManager {
     // 不再需要Google Maps API初始化，直接使用模擬數據
     
     public void searchDestination(String query, OnDestinationFoundListener listener) {
-        new Thread(() -> {
-            Log.d(TAG, "使用模擬數據搜索目的地: " + query);
-            // 直接使用模擬數據
-            simulateDestinationSearch(query, listener);
-        }).start();
+        Log.d(TAG, "使用Nominatim API搜索目的地: " + query);
+        
+        routingService.searchLocation(query, new OSRMRoutingService.SearchCallback() {
+            @Override
+            public void onSuccess(OSRMRoutingService.SearchResult[] results) {
+                if (results.length > 0) {
+                    OSRMRoutingService.SearchResult result = results[0];
+                    try {
+                        double lat = Double.parseDouble(result.lat);
+                        double lon = Double.parseDouble(result.lon);
+                        LatLng destination = new LatLng(lat, lon);
+                        listener.onDestinationFound(destination, result.displayName);
+                    } catch (NumberFormatException e) {
+                        Log.e(TAG, "解析坐標失敗", e);
+                        listener.onDestinationNotFound("坐標解析失敗");
+                    }
+                } else {
+                    listener.onDestinationNotFound("未找到地點");
+                }
+            }
+            
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "搜索失敗: " + error);
+                // 如果API失敗，回退到模擬數據
+                simulateDestinationSearch(query, listener);
+            }
+        });
     }
     
     private void simulateDestinationSearch(String query, OnDestinationFoundListener listener) {
@@ -109,11 +131,141 @@ public class NavigationManager {
         this.isNavigating = true;
         this.currentStepIndex = 0;
         
-        new Thread(() -> {
-            Log.d(TAG, "使用模擬路線數據");
-            // 直接使用模擬路線數據
-            simulateRouteGeneration(startLocation, destination);
-        }).start();
+        Log.d(TAG, "使用OSRM API計算路線");
+        
+        routingService.getRoute(
+            startLocation.getLatitude(), 
+            startLocation.getLongitude(),
+            destination.latitude,
+            destination.longitude,
+            new OSRMRoutingService.RoutingCallback() {
+                @Override
+                public void onSuccess(OSRMRoutingService.RouteResponse routeResponse) {
+                    if (routeResponse.routes != null && routeResponse.routes.size() > 0) {
+                        OSRMRoutingService.Route route = routeResponse.routes.get(0);
+                        navigationSteps = parseOSRMRoute(route);
+                        startNavigationLoop();
+                        Log.d(TAG, "路線計算成功，共 " + navigationSteps.size() + " 個步驟");
+                    } else {
+                        listener.onNavigationError("未找到路線");
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "路線計算失敗: " + error + "，使用模擬路線");
+                    // 如果API失敗，回退到模擬數據
+                    simulateRouteGeneration(startLocation, destination);
+                }
+            }
+        );
+    }
+    
+    private List<NavigationStep> parseOSRMRoute(OSRMRoutingService.Route route) {
+        List<NavigationStep> steps = new ArrayList<>();
+        
+        if (route.legs != null && route.legs.size() > 0) {
+            for (OSRMRoutingService.Leg leg : route.legs) {
+                if (leg.steps != null) {
+                    for (OSRMRoutingService.Step step : leg.steps) {
+                        String instruction = getChineseInstruction(step);
+                        String direction = getDirectionFromModifier(step.maneuver.modifier);
+                        
+                        // 獲取步驟的起點和終點坐標
+                        LatLng startLatLng = null;
+                        LatLng endLatLng = null;
+                        
+                        if (step.maneuver.location != null && step.maneuver.location.size() >= 2) {
+                            startLatLng = new LatLng(
+                                step.maneuver.location.get(1), 
+                                step.maneuver.location.get(0)
+                            );
+                        }
+                        
+                        if (step.geometry != null && step.geometry.coordinates != null 
+                                && step.geometry.coordinates.size() > 0) {
+                            List<Double> lastCoord = step.geometry.coordinates.get(
+                                step.geometry.coordinates.size() - 1
+                            );
+                            if (lastCoord.size() >= 2) {
+                                endLatLng = new LatLng(lastCoord.get(1), lastCoord.get(0));
+                            }
+                        }
+                        
+                        steps.add(new NavigationStep(
+                            instruction,
+                            step.distance,
+                            direction,
+                            startLatLng != null ? startLatLng : new LatLng(0, 0),
+                            endLatLng != null ? endLatLng : new LatLng(0, 0)
+                        ));
+                    }
+                }
+            }
+        }
+        
+        return steps;
+    }
+    
+    private String getChineseInstruction(OSRMRoutingService.Step step) {
+        String type = step.maneuver.type;
+        String modifier = step.maneuver.modifier != null ? step.maneuver.modifier : "";
+        String name = step.name != null && !step.name.isEmpty() ? step.name : "前方";
+        
+        switch (type) {
+            case "depart":
+                return "出發，沿" + name + "行走";
+            case "arrive":
+                return "到達目的地";
+            case "turn":
+                if (modifier.contains("left")) {
+                    return "左轉進入" + name;
+                } else if (modifier.contains("right")) {
+                    return "右轉進入" + name;
+                }
+                return "轉彎進入" + name;
+            case "new name":
+                return "繼續直行進入" + name;
+            case "continue":
+                return "繼續沿" + name + "行走";
+            case "roundabout":
+                return "進入環島";
+            case "rotary":
+                return "進入迴旋處";
+            case "end of road":
+                if (modifier.contains("left")) {
+                    return "道路盡頭左轉";
+                } else if (modifier.contains("right")) {
+                    return "道路盡頭右轉";
+                }
+                return "道路盡頭轉彎";
+            default:
+                return step.maneuver.instruction != null ? 
+                       step.maneuver.instruction : "繼續行走";
+        }
+    }
+    
+    private String getDirectionFromModifier(String modifier) {
+        if (modifier == null) return "直行";
+        
+        switch (modifier) {
+            case "left":
+            case "sharp left":
+                return "向左";
+            case "right":
+            case "sharp right":
+                return "向右";
+            case "straight":
+                return "直行";
+            case "slight left":
+                return "稍微向左";
+            case "slight right":
+                return "稍微向右";
+            case "uturn":
+                return "掉頭";
+            default:
+                return "直行";
+        }
     }
     
     private void simulateRouteGeneration(Location startLocation, LatLng destination) {
