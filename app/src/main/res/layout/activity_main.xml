@@ -128,7 +128,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="緊急求助"
+            android:text="@string/emergency_help_text"
             android:textSize="22sp"
             android:textColor="#FFFFFF"
             android:textStyle="bold" />
@@ -136,7 +136,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="長按3秒發送"
+            android:text="@string/long_press_send_text"
             android:textSize="16sp"
             android:textColor="#FFFFFF"
             android:layout_marginTop="4dp" />
@@ -155,21 +155,21 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="操作指引"
+            android:text="@string/operation_guide_title"
             android:textColor="#4FC3F7"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginBottom="8dp"
-            android:contentDescription="操作指引標題" />
+            android:contentDescription="@string/operation_guide_title" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="• 點擊功能項目進入對應功能\n• 右上角按鈕：緊急設置🚨、系統設定⚙、語言切換廣\n• 緊急求助：長按底部紅色按鈕3秒"
+            android:text="@string/operation_guide_content"
             android:textColor="#CCCCCC"
             android:textSize="16sp"
             android:lineSpacingExtra="4dp"
-            android:contentDescription="操作指引：點擊功能項目進入對應功能，右上角按鈕包括緊急設置、系統設定、語言切換，緊急求助長按底部紅色按鈕3秒" />
+            android:contentDescription="@string/operation_guide_content" />
 
     </LinearLayout>
 

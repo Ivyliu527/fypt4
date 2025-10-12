@@ -33,17 +33,25 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="緊急求助設置"
+            android:text="@string/emergency_settings_title"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:textStyle="bold"
             android:gravity="center"
             android:layout_marginHorizontal="16dp"
-            android:contentDescription="頁面標題：緊急求助設置" />
+            android:contentDescription="@string/emergency_settings_title" />
 
-        <View
+        <!-- 語言切換按鈕 -->
+        <Button
+            android:id="@+id/languageButton"
             android:layout_width="60dp"
-            android:layout_height="60dp" />
+            android:layout_height="60dp"
+            android:text="@string/language_button_cantonese"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:background="@drawable/button_circle_background"
+            android:backgroundTint="@null"
+            android:contentDescription="@string/language_button_desc_prefix" />
 
     </LinearLayout>
 
