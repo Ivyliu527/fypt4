@@ -40,7 +40,7 @@
     <string name="camera_api_error">Error: Android version too old or API incompatible</string>
     <string name="camera_bind_failed">Camera bind failed</string>
     <string name="camera_bind_error">Error: %1$s</string>
-    <string name="detection_status_format">Real-time detection - %1$d objects (%.0fms)</string>
+    <string name="detection_status_format">Real-time detection - %1$d objects (%2$dms)</string>
     <string name="detection_no_objects">Real-time detection - No objects found</string>
     <string name="detection_status_prefix">Detection status: </string>
     <string name="emergency_button_long_press_info">Emergency help button, long press for 3 seconds to send help request</string>

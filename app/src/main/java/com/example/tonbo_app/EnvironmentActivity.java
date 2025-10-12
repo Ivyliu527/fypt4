@@ -374,7 +374,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                     updateDetectionStatus(String.format(
                                         getString(R.string.detection_status_format), 
                                         results.size(), 
-                                        (float)detectionTime
+                                        (int)detectionTime
                                     ));
                                     
                                     // 只在有新物體時播報（避免重複播報）
