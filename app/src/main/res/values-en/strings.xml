@@ -22,9 +22,27 @@
     <string name="language_button_desc_suffix">, tap to switch language</string>
     <string name="language_cantonese_desc">Cantonese</string>
     <string name="language_english_desc">English</string>
-    <string name="language_mandarin_desc">Mandarin</string>
-    
-    <!-- Accessibility Descriptions -->
+    <!-- Environment Recognition -->
+    <string name="flash_on">Flash: On</string>
+    <string name="flash_off">Flash: Off</string>
+    <string name="clear_display">Clear Display</string>
+    <string name="voice_broadcast">Voice Broadcast</string>
+    <string name="no_objects_detected">No objects detected</string>
+    <string name="analyzing_environment">Analyzing environment…</string>
+    <string name="camera_permission_needed">Camera permission needed</string>
+    <string name="camera_permission_message">Please grant camera permission in settings, then reopen this function</string>
+    <string name="camera_started_compatibility">Camera started (compatibility mode)</string>
+    <string name="camera_compatibility_message">Using compatibility mode camera, features may be limited</string>
+    <string name="camera_start_failed">Camera start failed</string>
+    <string name="camera_start_error">Error: Unable to start any camera mode</string>
+    <string name="detecting_environment">Detecting environment…</string>
+    <string name="camera_api_incompatible">Camera API incompatible</string>
+    <string name="camera_api_error">Error: Android version too old or API incompatible</string>
+    <string name="camera_bind_failed">Camera bind failed</string>
+    <string name="camera_bind_error">Error: %1$s</string>
+    <string name="detection_status_format">Real-time detection - %1$d objects (%.0fms)</string>
+    <string name="detection_no_objects">Real-time detection - No objects found</string>
+    <string name="detection_status_prefix">Detection status: </string>
     <string name="emergency_button_long_press_info">Emergency help button, long press for 3 seconds to send help request</string>
     <string name="app_title_accessibility">App name, Tonbo</string>
     <string name="function_selection_accessibility">Function selection area, with five main functions</string>

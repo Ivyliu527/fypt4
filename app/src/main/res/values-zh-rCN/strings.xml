@@ -22,9 +22,27 @@
     <string name="language_button_desc_suffix">，点击切换语言</string>
     <string name="language_cantonese_desc">粤语</string>
     <string name="language_english_desc">英文</string>
-    <string name="language_mandarin_desc">普通话</string>
-    
-    <!-- 无障碍描述 -->
+    <!-- 环境识别 -->
+    <string name="flash_on">闪光灯：开</string>
+    <string name="flash_off">闪光灯：关</string>
+    <string name="clear_display">清除显示</string>
+    <string name="voice_broadcast">语音播报</string>
+    <string name="no_objects_detected">未检测到物体</string>
+    <string name="analyzing_environment">正在分析环境…</string>
+    <string name="camera_permission_needed">需要相机权限</string>
+    <string name="camera_permission_message">请在设置中授予相机权限，然后重新打开此功能</string>
+    <string name="camera_started_compatibility">相机已启动（兼容模式）</string>
+    <string name="camera_compatibility_message">使用兼容模式相机，功能可能受限</string>
+    <string name="camera_start_failed">相机启动失败</string>
+    <string name="camera_start_error">错误: 无法启动任何相机模式</string>
+    <string name="detecting_environment">正在侦测环境…</string>
+    <string name="camera_api_incompatible">相机API不兼容</string>
+    <string name="camera_api_error">错误: Android版本过旧或API不兼容</string>
+    <string name="camera_bind_failed">相机绑定失败</string>
+    <string name="camera_bind_error">错误: %1$s</string>
+    <string name="detection_status_format">实时检测中 - %1$d个物体 (%.0fms)</string>
+    <string name="detection_no_objects">实时检测中 - 未发现物体</string>
+    <string name="detection_status_prefix">侦测状态：</string>
     <string name="emergency_button_long_press_info">紧急求助按钮，长按三秒发送求助信息</string>
     <string name="app_title_accessibility">应用程序名称，瞳伴</string>
     <string name="function_selection_accessibility">功能选择区域，共有五个主要功能</string>

@@ -177,8 +177,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 
                 // 更新UI顯示權限錯誤
                 runOnUiThread(() -> {
-                    updateDetectionStatus("需要相機權限");
-                    updateDetectionResults("請在設置中授予相機權限，然後重新打開此功能");
+                    updateDetectionStatus(getString(R.string.camera_permission_needed));
+                    updateDetectionResults(getString(R.string.camera_permission_message));
                 });
                 
                 // 延遲3秒後返回主頁
@@ -217,19 +217,19 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             if (legacyCameraHelper.initializeCamera()) {
                 useLegacyCamera = true;
                 announceSuccess("相機已啟動（兼容模式），開始偵測環境");
-                updateDetectionStatus("相機已啟動（兼容模式）");
-                updateDetectionResults("使用兼容模式相機，功能可能受限");
+                updateDetectionStatus(getString(R.string.camera_started_compatibility));
+                updateDetectionResults(getString(R.string.camera_compatibility_message));
                 Log.d(TAG, "傳統相機啟動成功");
             } else {
                 announceError("所有相機模式都無法啟動");
-                updateDetectionStatus("相機啟動失敗");
-                updateDetectionResults("錯誤: 無法啟動任何相機模式");
+                updateDetectionStatus(getString(R.string.camera_start_failed));
+                updateDetectionResults(getString(R.string.camera_start_error));
             }
         } catch (Exception e) {
             Log.e(TAG, "傳統相機啟動失敗: " + e.getMessage());
             announceError("所有相機模式都無法啟動");
-            updateDetectionStatus("相機啟動失敗");
-            updateDetectionResults("錯誤: " + e.getMessage());
+            updateDetectionStatus(getString(R.string.camera_start_failed));
+            updateDetectionResults(getString(R.string.camera_bind_error, e.getMessage()));
         }
     }
 
@@ -300,7 +300,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             Log.d(TAG, "相機綁定成功");
 
             isDetecting = true;
-            updateDetectionStatus("正在偵測環境...");
+            updateDetectionStatus(getString(R.string.detecting_environment));
             Log.d(TAG, "相機初始化完成，開始檢測");
 
         } catch (NoSuchMethodError e) {
@@ -309,8 +309,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             announceError("相機API不兼容，請更新Android系統");
             
             runOnUiThread(() -> {
-                updateDetectionStatus("相機API不兼容");
-                updateDetectionResults("錯誤: Android版本過舊或API不兼容");
+                updateDetectionStatus(getString(R.string.camera_api_incompatible));
+                updateDetectionResults(getString(R.string.camera_api_error));
             });
         } catch (Exception e) {
             Log.e(TAG, "綁定相機失敗: " + e.getMessage());
@@ -318,8 +318,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             announceError("相機設置失敗: " + e.getMessage());
             
             runOnUiThread(() -> {
-                updateDetectionStatus("相機綁定失敗");
-                updateDetectionResults("錯誤: " + e.getMessage());
+                updateDetectionStatus(getString(R.string.camera_bind_failed));
+                updateDetectionResults(getString(R.string.camera_bind_error, e.getMessage()));
             });
         }
     }
@@ -372,7 +372,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                     
                                     updateDetectionResults(resultText);
                                     updateDetectionStatus(String.format(
-                                        "實時檢測中 - %d個物體 (%.0fms)", 
+                                        getString(R.string.detection_status_format), 
                                         results.size(), 
                                         (float)detectionTime
                                     ));
@@ -393,7 +393,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                 runOnUiThread(() -> {
                                     // 清除覆蓋層
                                     detectionOverlay.clearDetections();
-                                    updateDetectionStatus("實時檢測中 - 未發現物體");
+                                    updateDetectionStatus(getString(R.string.detection_no_objects));
                                 });
                             }
                             
@@ -608,7 +608,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         
         String cantoneseText = fullDescription.toString();
         if (cantoneseText.isEmpty()) {
-            cantoneseText = "尚未偵測到任何物體";
+            cantoneseText = getString(R.string.no_objects_detected);
         }
         
         String englishText = translateEnvironmentDescriptionToEnglish(cantoneseText);
@@ -656,7 +656,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private void toggleFlash() {
         isFlashOn = !isFlashOn;
         // TODO: 實現閃光燈控制
-        String status = isFlashOn ? "閃光燈已開啟" : "閃光燈已關閉";
+        String status = isFlashOn ? getString(R.string.flash_on) : getString(R.string.flash_off);
         announceInfo(status);
         flashButton.setText(isFlashOn ? "🔦" : "💡");
     }
@@ -719,7 +719,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private void updateDetectionStatus(String status) {
         runOnUiThread(() -> {
             detectionStatus.setText(status);
-            detectionStatus.setContentDescription("偵測狀態：" + status);
+            detectionStatus.setContentDescription(getString(R.string.detection_status_prefix) + status);
         });
     }
 
