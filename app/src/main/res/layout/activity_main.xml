@@ -27,18 +27,33 @@
             android:importantForAccessibility="yes"
             android:focusable="true" />
 
+        <!-- 緊急求助設置按鈕 -->
         <Button
-            android:id="@+id/settingsButton"
+            android:id="@+id/emergencySettingsButton"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:text="⚙"
-            android:textSize="20sp"
+            android:text="🚨"
+            android:textSize="16sp"
             android:textColor="#FFFFFF"
             android:background="@drawable/button_circle_background"
             android:backgroundTint="@null"
-            android:contentDescription="設置按鈕，點擊進入設置頁面"
+            android:contentDescription="緊急求助設置，點擊進入緊急聯絡人設置"
             android:layout_marginEnd="8dp" />
 
+        <!-- 系統設定按鈕 -->
+        <Button
+            android:id="@+id/systemSettingsButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:text="⚙"
+            android:textSize="18sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_circle_background"
+            android:backgroundTint="@null"
+            android:contentDescription="系統設定，點擊進入語音和無障礙設置"
+            android:layout_marginEnd="8dp" />
+
+        <!-- 語言切換按鈕 -->
         <Button
             android:id="@+id/languageButton"
             android:layout_width="60dp"
