@@ -25,13 +25,6 @@
     <!-- 位置權限（用於緊急求助時發送位置） -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    
-    <!-- OpenStreetMap 權限 -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"
-        tools:ignore="ScopedStorage" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
 
     <application
         android:allowBackup="true"
@@ -77,11 +70,6 @@
         <!-- Settings Activity - 系統設定 -->
         <activity
             android:name=".SettingsActivity"
-            android:exported="false" />
-            
-        <!-- Navigation Activity - 智能導航 -->
-        <activity
-            android:name=".NavigationActivity"
             android:exported="false" />
     </application>
 

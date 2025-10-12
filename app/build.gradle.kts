@@ -55,17 +55,8 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.0")
     implementation("com.google.mlkit:text-recognition-chinese:16.0.0")
     
-    // OpenStreetMap - 免費開源地圖
-    implementation("org.osmdroid:osmdroid-android:6.1.18")
-    
-    // Google Location Services (僅用於GPS定位)
+    // Google Location Services (僅用於緊急求助時發送位置)
     implementation("com.google.android.gms:play-services-location:21.0.1")
-    
-    // OkHttp for network requests (路線規劃API)
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    
-    // Gson for JSON parsing
-    implementation("com.google.code.gson:gson:2.10.1")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
