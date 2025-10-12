@@ -16,6 +16,8 @@ public class NavigationManager {
     private int currentStepIndex = 0;
     private OnNavigationUpdateListener navigationListener;
     private OSRMRoutingService routingService;
+    private VoiceGuidanceManager voiceGuidanceManager;
+    private android.location.Location lastKnownLocation;
     
     // 導航步驟類
     public static class NavigationStep {
@@ -51,6 +53,7 @@ public class NavigationManager {
     private NavigationManager(Context context) {
         this.context = context.getApplicationContext();
         this.routingService = new OSRMRoutingService();
+        this.voiceGuidanceManager = VoiceGuidanceManager.getInstance(context);
     }
     
     public static synchronized NavigationManager getInstance(Context context) {
@@ -130,8 +133,12 @@ public class NavigationManager {
         this.navigationListener = listener;
         this.isNavigating = true;
         this.currentStepIndex = 0;
+        this.lastKnownLocation = startLocation;
         
         Log.d(TAG, "使用OSRM API計算路線");
+        
+        // 播報開始計算路線
+        voiceGuidanceManager.speakRouteCalculating();
         
         routingService.getRoute(
             startLocation.getLatitude(), 
@@ -144,7 +151,16 @@ public class NavigationManager {
                     if (routeResponse.routes != null && routeResponse.routes.size() > 0) {
                         OSRMRoutingService.Route route = routeResponse.routes.get(0);
                         navigationSteps = parseOSRMRoute(route);
-                        startNavigationLoop();
+                        
+                        // 播報路線計算完成
+                        voiceGuidanceManager.speakRouteFound();
+                        
+                        // 延遲1秒後開始導航，讓用戶聽完語音
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                            voiceGuidanceManager.speakNavigationStarted();
+                            startNavigationLoop();
+                        }, 1000);
+                        
                         Log.d(TAG, "路線計算成功，共 " + navigationSteps.size() + " 個步驟");
                     } else {
                         listener.onNavigationError("未找到路線");
@@ -355,6 +371,14 @@ public class NavigationManager {
             NavigationStep currentStep = navigationSteps.get(currentStepIndex);
             
             new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                // 播報導航指令
+                voiceGuidanceManager.speakNavigationInstruction(
+                    currentStep.instruction,
+                    currentStep.distance,
+                    currentStep.direction
+                );
+                
+                // 通知監聽器
                 if (navigationListener != null) {
                     navigationListener.onNavigationUpdate(
                             currentStep.instruction,
@@ -364,12 +388,21 @@ public class NavigationManager {
                 }
             });
             
+            // 如果接近最後一步，提前播報到達提示
+            if (currentStepIndex == navigationSteps.size() - 2) {
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                    voiceGuidanceManager.speakArrivalAlert();
+                }, 5000); // 5秒後播報即將到達
+            }
+            
             // 模擬導航進度（實際應用中應該根據GPS位置更新）
             new android.os.Handler().postDelayed(() -> {
                 currentStepIndex++;
                 if (currentStepIndex >= navigationSteps.size()) {
                     // 導航完成
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                        voiceGuidanceManager.speakDestinationReached();
+                        
                         if (navigationListener != null) {
                             navigationListener.onNavigationComplete();
                         }
@@ -388,6 +421,42 @@ public class NavigationManager {
         navigationSteps = null;
         currentStepIndex = 0;
         navigationListener = null;
+        
+        // 播報導航停止
+        voiceGuidanceManager.speakNavigationStopped();
+    }
+    
+    /**
+     * 更新當前位置（用於實時導航）
+     */
+    public void updateLocation(Location location) {
+        this.lastKnownLocation = location;
+        
+        if (!isNavigating || navigationSteps == null || currentStepIndex >= navigationSteps.size()) {
+            return;
+        }
+        
+        // 計算到下一個轉向點的距離
+        NavigationStep currentStep = navigationSteps.get(currentStepIndex);
+        if (currentStep.endLocation != null) {
+            float[] results = new float[1];
+            android.location.Location.distanceBetween(
+                location.getLatitude(), location.getLongitude(),
+                currentStep.endLocation.latitude, currentStep.endLocation.longitude,
+                results
+            );
+            
+            double distanceToNext = results[0];
+            
+            // 如果接近轉向點（50米內），準備進入下一步
+            if (distanceToNext < 50 && currentStepIndex < navigationSteps.size() - 1) {
+                Log.d(TAG, "接近轉向點，距離: " + distanceToNext + "米");
+                // 可以在這裡提前播報下一步指令
+            }
+            
+            // 如果已經過了轉向點（距離開始變大），進入下一步
+            // 這裡的邏輯需要更複雜的實現，暫時保持定時更新
+        }
     }
     
     public boolean isNavigating() {

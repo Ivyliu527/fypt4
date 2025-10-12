@@ -266,10 +266,11 @@ public class NavigationActivity extends BaseAccessibleActivity {
             public void onLocationUpdate(Location location) {
                 currentLocation = location;
                 updateCurrentLocationDisplay();
+                updateMapLocation(location); // 更新地圖上的當前位置
                 
-                // 在導航過程中更新位置
-                if (isNavigating) {
-                    // 這裡可以添加導航過程中的位置更新邏輯
+                // 在導航過程中更新位置給NavigationManager
+                if (isNavigating && navigationManager != null) {
+                    navigationManager.updateLocation(location);
                     Log.d(TAG, "導航中位置更新: " + locationManager.formatLocationInfo(location));
                 }
             }
