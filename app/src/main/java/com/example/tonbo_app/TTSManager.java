@@ -19,6 +19,7 @@ public class TTSManager {
     private Locale cantoneseLocale;
     private boolean isInitialized = false;
     private boolean isSpeaking = false;
+    private boolean isInitializing = false;
     
     // 語音隊列管理
     private ConcurrentLinkedQueue<String> speechQueue = new ConcurrentLinkedQueue<>();
@@ -27,7 +28,13 @@ public class TTSManager {
     private TTSManager(Context context) {
         this.context = context.getApplicationContext();
         cantoneseLocale = new Locale("zh", "HK");
-        initTTS();
+        // 不在構造函數中初始化TTS，等待第一次使用時初始化
+    }
+    
+    private void ensureTTSInitialized() {
+        if (textToSpeech == null && !isInitializing) {
+            initTTS();
+        }
     }
     
     public static synchronized TTSManager getInstance(Context context) {
@@ -38,15 +45,23 @@ public class TTSManager {
     }
     
     private void initTTS() {
+        if (isInitializing) {
+            Log.d(TAG, "TTS正在初始化中...");
+            return;
+        }
+        
+        isInitializing = true;
+        Log.d(TAG, "開始初始化TTS引擎...");
+        
         textToSpeech = new TextToSpeech(context, status -> {
+            isInitializing = false;
             if (status == TextToSpeech.SUCCESS) {
                 setLanguage(currentLanguage);
                 isInitialized = true;
                 Log.d(TAG, "✅ TTS初始化成功");
-                // 播放歡迎語音
-                speakWelcomeMessage();
             } else {
                 Log.e(TAG, "❌ TTS初始化失敗");
+                isInitialized = false;
             }
         });
     }
@@ -159,8 +174,13 @@ public class TTSManager {
     }
     
     public void speak(String cantoneseText, String englishText, boolean priority) {
+        // 確保TTS已初始化
+        ensureTTSInitialized();
+        
         if (!isInitialized || textToSpeech == null) {
-            Log.w(TAG, "TTS未初始化，無法播放語音");
+            Log.w(TAG, "TTS未初始化，語音將在初始化後播放");
+            // 延遲播放，等待TTS初始化
+            handler.postDelayed(() -> speak(cantoneseText, englishText, priority), 500);
             return;
         }
         
@@ -203,19 +223,29 @@ public class TTSManager {
     
     public void changeLanguage(String language) {
         currentLanguage = language;
-        setLanguage(language);
         
-        // 播放語言切換確認
-        switch (language) {
-            case "cantonese":
-                speak("已切換到廣東話", "Switched to Cantonese", true);
-                break;
-            case "english":
-                speak("已切換到英文", "Switched to English", true);
-                break;
-            case "mandarin":
-                speak("已切換到普通話", "Switched to Mandarin", true);
-                break;
+        // 確保TTS已初始化
+        ensureTTSInitialized();
+        
+        if (isInitialized && textToSpeech != null) {
+            setLanguage(language);
+            
+            // 延遲播放語言切換確認，確保語言已切換
+            handler.postDelayed(() -> {
+                switch (language) {
+                    case "cantonese":
+                        speak("已切換到廣東話", "Switched to Cantonese", true);
+                        break;
+                    case "english":
+                        speak("已切換到英文", "Switched to English", true);
+                        break;
+                    case "mandarin":
+                        speak("已切換到普通話", "Switched to Mandarin", true);
+                        break;
+                }
+            }, 300);
+        } else {
+            Log.w(TAG, "TTS未初始化，無法切換語言");
         }
     }
     
@@ -272,12 +302,27 @@ public class TTSManager {
     }
     
     public void shutdown() {
+        // 不再完全關閉TTS，只停止播放
+        // 保留TTS實例以便Activity重新創建時可以繼續使用
+        if (textToSpeech != null) {
+            textToSpeech.stop();
+        }
+        speechQueue.clear();
+        isSpeaking = false;
+        Log.d(TAG, "TTS播放已停止");
+    }
+    
+    public void forceShutdown() {
+        // 只在應用真正退出時才調用此方法
         if (textToSpeech != null) {
             textToSpeech.stop();
             textToSpeech.shutdown();
+            textToSpeech = null;
         }
         speechQueue.clear();
         isInitialized = false;
+        isInitializing = false;
         isSpeaking = false;
+        Log.d(TAG, "TTS已完全關閉");
     }
 }
