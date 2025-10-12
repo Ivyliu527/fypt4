@@ -99,6 +99,37 @@ public class TTSManager {
         Log.d(TAG, "語言已靜默設置為: " + language);
     }
     
+    /**
+     * 設置語音速度
+     */
+    public void setSpeechRate(float rate) {
+        if (textToSpeech != null) {
+            textToSpeech.setSpeechRate(rate);
+            Log.d(TAG, "語音速度已設置為: " + rate);
+        }
+    }
+    
+    /**
+     * 設置語音音調
+     */
+    public void setSpeechPitch(float pitch) {
+        if (textToSpeech != null) {
+            textToSpeech.setPitch(pitch);
+            Log.d(TAG, "語音音調已設置為: " + pitch);
+        }
+    }
+    
+    /**
+     * 設置語音音量（注意：Android TTS沒有直接的音量控制）
+     */
+    public void setSpeechVolume(float volume) {
+        if (textToSpeech != null) {
+            // Android TTS音量是相對於系統媒體音量的比例
+            // 這裡記錄設定，實際音量控制需要通過系統音量實現
+            Log.d(TAG, "語音音量已設置為: " + volume + "（需要調整系統媒體音量）");
+        }
+    }
+    
     public void speakWelcomeMessage() {
         String welcomeText = "瞳伴應用已啟動。歡迎使用智能視覺助手。" +
                 "當前有四個主要功能：環境識別、閱讀助手、尋找物品、即時協助。" +

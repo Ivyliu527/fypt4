@@ -81,7 +81,7 @@ public class MainActivity extends BaseAccessibleActivity {
         if (settingsButton != null) {
             settingsButton.setOnClickListener(v -> {
                 vibrationManager.vibrateClick();
-                openEmergencySettings();
+                openSettings();
             });
         }
 
@@ -292,6 +292,18 @@ public class MainActivity extends BaseAccessibleActivity {
             case "尋找標記的個人物品": return "Find marked personal items";
             case "視訊連線志工協助": return "Video call with volunteers";
             default: return chineseDescription;
+        }
+    }
+    
+    private void openSettings() {
+        try {
+            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            intent.putExtra("language", currentLanguage);
+            announceNavigation("正在進入系統設定頁面");
+            startActivity(intent);
+        } catch (Exception e) {
+            announceError("系統設定功能暫不可用");
+            Log.e("MainActivity", "打開系統設定失敗: " + e.getMessage());
         }
     }
     

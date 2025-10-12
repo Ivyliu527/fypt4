@@ -38,5 +38,8 @@
     <!-- 掃描相關顏色 -->
     <color name="primary_blue">#0066CC</color>
     <color name="primary_blue_dark">#004499</color>
+    
+    <!-- 設定頁面顏色 -->
+    <color name="background_primary">#FF000000</color>
 
 </resources>
