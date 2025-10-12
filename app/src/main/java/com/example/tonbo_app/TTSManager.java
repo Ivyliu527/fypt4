@@ -15,7 +15,7 @@ public class TTSManager {
     
     private TextToSpeech textToSpeech;
     private Context context;
-    private String currentLanguage = "cantonese";
+    private String currentLanguage = "english";
     private Locale cantoneseLocale;
     private boolean isInitialized = false;
     private boolean isSpeaking = false;
