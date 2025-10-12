@@ -23,8 +23,27 @@
     <string name="language_cantonese_desc">廣東話</string>
     <string name="language_english_desc">英文</string>
     <string name="language_mandarin_desc">普通話</string>
-    
-    <!-- 無障礙描述 -->
+    <!-- 環境識別 -->
+    <string name="flash_on">閃光燈：開</string>
+    <string name="flash_off">閃光燈：關</string>
+    <string name="clear_display">清除顯示</string>
+    <string name="voice_broadcast">語音播報</string>
+    <string name="no_objects_detected">未檢測到物體</string>
+    <string name="analyzing_environment">正在分析環境…</string>
+    <string name="camera_permission_needed">需要相機權限</string>
+    <string name="camera_permission_message">請在設置中授予相機權限，然後重新打開此功能</string>
+    <string name="camera_started_compatibility">相機已啟動（兼容模式）</string>
+    <string name="camera_compatibility_message">使用兼容模式相機，功能可能受限</string>
+    <string name="camera_start_failed">相機啟動失敗</string>
+    <string name="camera_start_error">錯誤: 無法啟動任何相機模式</string>
+    <string name="detecting_environment">正在偵測環境…</string>
+    <string name="camera_api_incompatible">相機API不兼容</string>
+    <string name="camera_api_error">錯誤: Android版本過舊或API不兼容</string>
+    <string name="camera_bind_failed">相機綁定失敗</string>
+    <string name="camera_bind_error">錯誤: %1$s</string>
+    <string name="detection_status_format">實時檢測中 - %1$d個物體 (%.0fms)</string>
+    <string name="detection_no_objects">實時檢測中 - 未發現物體</string>
+    <string name="detection_status_prefix">偵測狀態：</string>
     <string name="emergency_button_long_press_info">緊急求助按鈕，長按三秒發送求助信息</string>
     <string name="app_title_accessibility">應用程式名稱，瞳伴</string>
     <string name="function_selection_accessibility">功能選擇區域，共有五個主要功能</string>
