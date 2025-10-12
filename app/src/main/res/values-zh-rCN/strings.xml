@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">瞳伴</string>
+    
+    <!-- 主页 -->
+    <string name="home_title">瞳伴</string>
+    <string name="function_selection">功能选择</string>
+    <string name="emergency_button_text">紧急求助\n长按3秒发送</string>
+    <string name="operation_guide">操作指引</string>
+    <string name="operation_guide_content">• 点击功能项目进入对应功能\n• 右上角按钮：紧急设置🚨、系统设定⚙、语言切换\n• 紧急求助：长按底部红色按钮3秒</string>
+    
+    <!-- 功能名称 -->
+    <string name="function_environment">环境识别</string>
+    <string name="function_document">阅读助手</string>
+    <string name="function_voice_command">语音命令</string>
+    <string name="function_find_items">寻找物品</string>
+    <string name="function_live_assistance">即时协助</string>
+    
+    <!-- 功能描述 -->
+    <string name="desc_environment">描述周围环境和物体</string>
+    <string name="desc_document">扫描文件和识别货币</string>
+    <string name="desc_voice_command">语音控制应用功能</string>
+    <string name="desc_find_items">寻找标记的个人物品</string>
+    <string name="desc_live_assistance">视频连线志工协助</string>
+    
+    <!-- 环境识别页面 -->
+    <string name="environment_title">环境识别</string>
+    <string name="camera_switch">切换镜头</string>
+    <string name="flash_toggle">闪光灯</string>
+    <string name="detection_status">检测状态</string>
+    <string name="color_light_info">颜色与光度</string>
+    
+    <!-- 阅读助手页面 -->
+    <string name="document_title">阅读助手</string>
+    <string name="text_recognition">文字识别</string>
+    <string name="currency_recognition">货币识别</string>
+    <string name="scan_area">扫描区域</string>
+    <string name="recognition_result">识别结果</string>
+    
+    <!-- 语音命令页面 -->
+    <string name="voice_command_title">语音命令</string>
+    <string name="listening_status">点击开始</string>
+    <string name="listening_active">正在监听...</string>
+    <string name="available_commands">可用指令：</string>
+    <string name="commands_list">• 打开环境识别\n• 打开阅读助手\n• 寻找物品\n• 即时协助\n• 紧急求助\n• 返回主页\n• 切换语言\n• 打开设置\n• 现在几点\n• 停止</string>
+    
+    <!-- 紧急设置页面 -->
+    <string name="emergency_settings_title">紧急求助设置</string>
+    <string name="emergency_contacts">紧急联络人</string>
+    <string name="add_contact">新增联络人</string>
+    <string name="contact_name">联络人姓名</string>
+    <string name="contact_phone">电话号码</string>
+    <string name="emergency_message">紧急求助讯息</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    
+    <!-- 系统设定页面 -->
+    <string name="system_settings_title">系统设定</string>
+    <string name="voice_settings">语音设定</string>
+    <string name="speech_rate">语速 (50% - 200%)</string>
+    <string name="speech_pitch">音调 (50% - 200%)</string>
+    <string name="speech_volume">音量 (0% - 200%)</string>
+    <string name="test_voice">测试语音</string>
+    <string name="accessibility_settings">无障碍设定</string>
+    <string name="vibration_feedback">震动反馈</string>
+    <string name="screen_reader_support">读屏支援</string>
+    <string name="gesture_operations">手势操作</string>
+    <string name="other_settings">其他设定</string>
+    <string name="reset_settings">重置设定</string>
+    
+    <!-- 通用按钮 -->
+    <string name="back">返回</string>
+    <string name="confirm">确定</string>
+    <string name="delete">删除</string>
+    <string name="edit">编辑</string>
+    
+    <!-- 语言切换 -->
+    <string name="language_cantonese">廣</string>
+    <string name="language_english">EN</string>
+    <string name="language_mandarin">普</string>
+    
+    <!-- 启动画面 -->
+    <string name="splash_slogan">你的视觉伙伴</string>
+    
+    <!-- 无障碍描述 -->
+    <string name="accessibility_service_description">瞳伴无障碍服务，协助视障用户使用应用功能</string>
+</resources>
+

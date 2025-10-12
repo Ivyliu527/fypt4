@@ -1,5 +1,6 @@
 package com.example.tonbo_app;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -11,7 +12,16 @@ import androidx.appcompat.app.AppCompatActivity;
 public abstract class BaseAccessibleActivity extends AppCompatActivity {
     protected TTSManager ttsManager;
     protected VibrationManager vibrationManager;
+    protected LocaleManager localeManager;
     protected String currentLanguage;
+    
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        // 在Activity創建前應用語言設置
+        LocaleManager localeManager = LocaleManager.getInstance(newBase);
+        Context context = localeManager.updateResources(newBase, localeManager.getCurrentLanguage());
+        super.attachBaseContext(context);
+    }
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,11 +30,12 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
         // 初始化管理器
         ttsManager = TTSManager.getInstance(this);
         vibrationManager = VibrationManager.getInstance(this);
+        localeManager = LocaleManager.getInstance(this);
         
         // 獲取語言設置
         currentLanguage = getIntent().getStringExtra("language");
         if (currentLanguage == null) {
-            currentLanguage = "cantonese"; // 默認語言
+            currentLanguage = localeManager.getCurrentLanguage(); // 使用保存的語言
         }
         
         // 設置無障礙支持

@@ -140,18 +140,14 @@ public class MainActivity extends BaseAccessibleActivity {
                 break;
         }
         
-        // 播報當前語言
-        String languageDesc = getLanguageDescription(currentLanguage);
-        announceInfo("當前語言：" + languageDesc);
+        // 保存語言設置
+        localeManager.setLanguage(this, currentLanguage);
         
         // 更新TTS語言
         ttsManager.changeLanguage(currentLanguage);
         
-        // 更新按鈕文字
-        updateLanguageButton();
-        
-        // 更新按鈕的無障礙內容
-        updateLanguageButtonDescription();
+        // 重新創建Activity以應用新語言
+        recreate();
     }
     
     private String getLanguageDescription(String language) {
