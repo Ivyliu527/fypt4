@@ -167,7 +167,7 @@
             android:id="@+id/messagePreviewText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="緊急求助！我在使用瞳伴應用時遇到緊急情況，需要立即協助。請盡快聯繫我。"
+            android:text="@string/emergency_message_content"
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:lineSpacingMultiplier="1.3"

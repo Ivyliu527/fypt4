@@ -199,6 +199,13 @@
     <string name="test_mode_warning">注意：測試模式不會發送實際的求助信息，只會測試語音和震動功能</string>
     <string name="complete_setup">完成設置</string>
     
+    <!-- Emergency Message Content -->
+    <string name="emergency_message_content">緊急求助！我在使用瞳伴應用時遇到緊急情況，需要立即協助。請盡快聯繫我。</string>
+    <string name="emergency_message_preview_format">預設訊息：\n%s</string>
+    <string name="test_emergency_confirmation">即將測試緊急求助功能，這不會發送實際的求助信息，只是測試語音和震動。是否繼續？</string>
+    <string name="test_emergency_button_complete">✅ 測試緊急求助</string>
+    <string name="test_emergency_button_incomplete">🚨 測試緊急求助</string>
+    
     <!-- 通用按鈕 -->
     <string name="back">返回</string>
     <string name="confirm">確定</string>
