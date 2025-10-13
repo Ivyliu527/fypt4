@@ -134,7 +134,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 int progress = seekBar.getProgress();
                 float rate = progress / 100.0f;
                 preferences.edit().putFloat("speech_rate", rate).apply();
-                announceSettingChange("語速已調整為 " + progress + "%");
+                announceSettingChange(String.format(getString(R.string.speech_rate_changed_to), progress));
             }
         });
         
@@ -162,7 +162,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 int progress = seekBar.getProgress();
                 float pitch = progress / 100.0f;
                 preferences.edit().putFloat("speech_pitch", pitch).apply();
-                announceSettingChange("音調已調整為 " + progress + "%");
+                announceSettingChange(String.format(getString(R.string.speech_pitch_changed_to), progress));
             }
         });
         
@@ -190,7 +190,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 int progress = seekBar.getProgress();
                 float volume = progress / 100.0f;
                 preferences.edit().putFloat("speech_volume", volume).apply();
-                announceSettingChange("音量已調整為 " + progress + "%");
+                announceSettingChange(String.format(getString(R.string.speech_volume_changed_to), progress));
             }
         });
         
@@ -255,7 +255,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
         // 更新VibrationManager狀態
         vibrationManager.setEnabled(newState);
         
-        String message = newState ? getString(R.string.vibration_enabled) : getString(R.string.vibration_disabled);
+        String message = newState ? getString(R.string.vibration_feedback_status_on) : getString(R.string.vibration_feedback_status_off);
         announceSettingChange(message);
         
         if (newState) {
@@ -270,7 +270,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
         preferences.edit().putBoolean("screen_reader_enabled", newState).apply();
         updateToggleButton(screenReaderToggleButton, newState, getString(R.string.screen_reader_support));
         
-        String message = newState ? getString(R.string.screen_reader_enabled) : getString(R.string.screen_reader_disabled);
+        String message = newState ? getString(R.string.screen_reader_status_on) : getString(R.string.screen_reader_status_off);
         announceSettingChange(message);
         
         // 這裡可以添加讀屏相關的設定邏輯
@@ -286,7 +286,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
         preferences.edit().putBoolean("gesture_enabled", newState).apply();
         updateToggleButton(gestureToggleButton, newState, getString(R.string.gesture_operations));
         
-        String message = newState ? getString(R.string.gesture_enabled) : getString(R.string.gesture_disabled);
+        String message = newState ? getString(R.string.gesture_operations_status_on) : getString(R.string.gesture_operations_status_off);
         announceSettingChange(message);
         
         if (newState) {
@@ -303,7 +303,32 @@ public class SettingsActivity extends BaseAccessibleActivity {
         
         new android.os.Handler().postDelayed(() -> {
             ttsManager.speak(testText, null, true);
+            
+            // 再延遲播報詳細設定狀態
+            new android.os.Handler().postDelayed(() -> {
+                announceCurrentSettings();
+            }, 3000);
         }, 1000);
+    }
+    
+    private void announceCurrentSettings() {
+        // 播報當前所有設定狀態
+        String currentSettings = String.format(getString(R.string.current_speech_rate), speechRateSeekBar.getProgress()) + "。";
+        currentSettings += String.format(getString(R.string.current_speech_pitch), speechPitchSeekBar.getProgress()) + "。";
+        currentSettings += String.format(getString(R.string.current_speech_volume), speechVolumeSeekBar.getProgress()) + "。";
+        
+        boolean vibrationEnabled = preferences.getBoolean("vibration_enabled", true);
+        boolean screenReaderEnabled = preferences.getBoolean("screen_reader_enabled", true);
+        boolean gestureEnabled = preferences.getBoolean("gesture_enabled", false);
+        
+        currentSettings += String.format(getString(R.string.current_vibration_status), 
+            vibrationEnabled ? getString(R.string.status_enabled) : getString(R.string.status_disabled)) + "。";
+        currentSettings += String.format(getString(R.string.current_screen_reader_status), 
+            screenReaderEnabled ? getString(R.string.status_enabled) : getString(R.string.status_disabled)) + "。";
+        currentSettings += String.format(getString(R.string.current_gesture_status), 
+            gestureEnabled ? getString(R.string.status_enabled) : getString(R.string.status_disabled)) + "。";
+        
+        ttsManager.speak(currentSettings, null, true);
     }
     
     private void showResetDialog() {

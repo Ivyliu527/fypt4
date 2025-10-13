@@ -207,6 +207,25 @@
     <string name="test_emergency_button_complete">✅ Test Emergency Assistance</string>
     <string name="test_emergency_button_incomplete">🚨 Test Emergency Assistance</string>
     
+    <!-- Settings Detailed Voice Feedback -->
+    <string name="speech_rate_changed_to">Speech rate adjusted to %d%%</string>
+    <string name="speech_pitch_changed_to">Pitch adjusted to %d%%</string>
+    <string name="speech_volume_changed_to">Volume adjusted to %d%%</string>
+    <string name="vibration_feedback_status_on">Vibration feedback enabled</string>
+    <string name="vibration_feedback_status_off">Vibration feedback disabled</string>
+    <string name="screen_reader_status_on">Screen reader support enabled, will optimize voice announcements and content descriptions</string>
+    <string name="screen_reader_status_off">Screen reader support disabled</string>
+    <string name="gesture_operations_status_on">Gesture operations enabled</string>
+    <string name="gesture_operations_status_off">Gesture operations disabled</string>
+    <string name="current_speech_rate">Current speech rate is set to %d%%</string>
+    <string name="current_speech_pitch">Current pitch is set to %d%%</string>
+    <string name="current_speech_volume">Current volume is set to %d%%</string>
+    <string name="current_vibration_status">Vibration feedback is currently %s</string>
+    <string name="current_screen_reader_status">Screen reader support is currently %s</string>
+    <string name="current_gesture_status">Gesture operations are currently %s</string>
+    <string name="status_enabled">enabled</string>
+    <string name="status_disabled">disabled</string>
+    
     <!-- Common Buttons -->
     <string name="back">Back</string>
     <string name="confirm">Confirm</string>
