@@ -9,6 +9,20 @@
     <string name="operation_guide">操作指引</string>
     <string name="operation_guide_content">• 點擊功能項目進入對應功能\n• 右上角按鈕：緊急設置🚨、系統設定⚙、語言切換廣\n• 緊急求助：長按底部紅色按鈕3秒</string>
     
+    <!-- 功能名稱 -->
+    <string name="function_environment">環境識別</string>
+    <string name="function_document">閱讀助手</string>
+    <string name="function_voice_command">語音命令</string>
+    <string name="function_find_items">尋找物品</string>
+    <string name="function_live_assistance">即時協助</string>
+    
+    <!-- 功能描述 -->
+    <string name="desc_environment">描述周圍環境和物體</string>
+    <string name="desc_document">掃描文件和識別貨幣</string>
+    <string name="desc_voice_command">語音控制應用功能</string>
+    <string name="desc_find_items">尋找標記的個人物品</string>
+    <string name="desc_live_assistance">視訊連線志工協助</string>
+    
     <!-- 通用按鈕 -->
     <string name="back_button_desc">返回按鈕</string>
     
