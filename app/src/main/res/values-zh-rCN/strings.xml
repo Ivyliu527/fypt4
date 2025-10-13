@@ -157,6 +157,7 @@
     
     <!-- Emergency Settings Activity Strings -->
     <string name="emergency_settings_page_title">紧急求助设置</string>
+    <string name="settings_page_title">系统设定</string>
     <string name="emergency_settings_page_desc">紧急求助设置页面标题</string>
     <string name="emergency_setup_complete_title">紧急求助已设置</string>
     <string name="emergency_setup_complete_desc">紧急求助已设置完成</string>

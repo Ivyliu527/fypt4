@@ -158,6 +158,7 @@
     
     <!-- Emergency Settings Activity Strings -->
     <string name="emergency_settings_page_title">Emergency Settings</string>
+    <string name="settings_page_title">System Settings</string>
     <string name="emergency_settings_page_desc">Emergency settings page title</string>
     <string name="emergency_setup_complete_title">Emergency Setup Complete</string>
     <string name="emergency_setup_complete_desc">Emergency setup completed</string>

@@ -82,7 +82,6 @@
     <string name="flash_not_supported">此設備不支持閃光燈</string>
     
     <!-- 設定頁面 -->
-    <string name="settings_page_title">系統設定</string>
     <string name="voice_settings">語音設定</string>
     <string name="accessibility_settings">無障礙設定</string>
     <string name="vibration_feedback">震動反饋</string>
