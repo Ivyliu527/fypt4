@@ -38,6 +38,9 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
             currentLanguage = localeManager.getCurrentLanguage(); // 使用保存的語言
         }
         
+        // 設定TTSManager的語言
+        ttsManager.setLanguageSilently(currentLanguage);
+        
         // 設置無障礙支持
         setupAccessibility();
         
