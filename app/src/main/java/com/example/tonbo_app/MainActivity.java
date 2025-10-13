@@ -153,13 +153,30 @@ public class MainActivity extends BaseAccessibleActivity {
         // 保存語言設置
         localeManager.setLanguage(this, currentLanguage);
         
+        // 更新TTS語言
+        ttsManager.changeLanguage(currentLanguage);
+        
+        // 立即播放語言切換確認語音（使用新語言）
+        announceLanguageChange(currentLanguage);
+        
         // 重新創建Activity以應用新語言
         recreate();
-        
-        // 延遲更新TTS語言，確保Activity重新創建完成後再切換
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            ttsManager.changeLanguage(currentLanguage);
-        }, 500);
+    }
+    
+    private void announceLanguageChange(String language) {
+        // 立即播放語言切換確認語音，使用當前語言
+        String currentLang = localeManager.getCurrentLanguage();
+        switch (language) {
+            case "cantonese":
+                ttsManager.speak("已切換到廣東話", "Switched to Cantonese", true);
+                break;
+            case "english":
+                ttsManager.speak("已切換到英文", "Switched to English", true);
+                break;
+            case "mandarin":
+                ttsManager.speak("已切換到普通話", "Switched to Mandarin", true);
+                break;
+        }
     }
     
     private String getLanguageDescription(String language) {

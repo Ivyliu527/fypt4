@@ -232,19 +232,7 @@ public class TTSManager {
         
         if (isInitialized && textToSpeech != null) {
             setLanguage(language);
-            
-            // 立即播放語言切換確認，不使用延遲
-            switch (language) {
-                case "cantonese":
-                    speak("已切換到廣東話", "Switched to Cantonese", true);
-                    break;
-                case "english":
-                    speak("已切換到英文", "Switched to English", true);
-                    break;
-                case "mandarin":
-                    speak("已切換到普通話", "Switched to Mandarin", true);
-                    break;
-            }
+            Log.d(TAG, "語言已切換到: " + language);
         } else {
             Log.w(TAG, "TTS未初始化，無法切換語言");
         }
