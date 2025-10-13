@@ -52,6 +52,8 @@
     <string name="scan_results_placeholder">Scan results will be displayed here...</string>
     <string name="ready_to_scan">Ready to scan</string>
     <string name="results_cleared">Results cleared</string>
+    <string name="document_assistant_announcement">Entering document assistant page</string>
+    <string name="document_assistant_unavailable">Document assistant feature temporarily unavailable</string>
     <string name="camera_started_message">Camera started, system is analyzing the scene in real-time and displaying detection boxes. Point the camera at objects to see recognition results</string>
     <string name="emergency_button_long_press_info">Emergency help button, long press for 3 seconds to send help request</string>
     <string name="app_title_accessibility">App name, Tonbo</string>
