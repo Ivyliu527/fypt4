@@ -200,6 +200,13 @@
     <string name="test_mode_warning">Note: Test mode will not send actual assistance messages, only tests voice and vibration functions</string>
     <string name="complete_setup">Complete Setup</string>
     
+    <!-- Emergency Message Content -->
+    <string name="emergency_message_content">Emergency! I\'m using Tonbo app and need immediate assistance. Please contact me as soon as possible.</string>
+    <string name="emergency_message_preview_format">Default Message:\n%s</string>
+    <string name="test_emergency_confirmation">About to test emergency assistance function. This will not send actual assistance messages, only tests voice and vibration. Continue?</string>
+    <string name="test_emergency_button_complete">✅ Test Emergency Assistance</string>
+    <string name="test_emergency_button_incomplete">🚨 Test Emergency Assistance</string>
+    
     <!-- Common Buttons -->
     <string name="back">Back</string>
     <string name="confirm">Confirm</string>

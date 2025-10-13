@@ -150,7 +150,7 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         updateEmergencyManager();
         
         // 載入訊息設置
-        String message = prefs.getString(KEY_MESSAGE, "緊急求助！我在使用瞳伴應用時遇到緊急情況，需要立即協助。請盡快聯繫我。");
+        String message = prefs.getString(KEY_MESSAGE, getString(R.string.emergency_message_content));
         String messageEn = prefs.getString(KEY_MESSAGE_EN, "Emergency! I'm using Tonbo app and need immediate assistance. Please contact me as soon as possible.");
         
         emergencyManager.setEmergencyMessage(message, messageEn);
@@ -180,11 +180,9 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
     
     private void updateMessagePreview() {
         String currentLang = ttsManager.getCurrentLanguage();
-        String message = currentLang.equals("english") ? 
-            "Emergency! I'm using Tonbo app and need immediate assistance. Please contact me as soon as possible." :
-            "緊急求助！我在使用瞳伴應用時遇到緊急情況，需要立即協助。請盡快聯繫我。";
+        String message = getString(R.string.emergency_message_content);
         
-        messagePreviewText.setText("預設訊息：\n" + message);
+        messagePreviewText.setText(String.format(getString(R.string.emergency_message_preview_format), message));
         messagePreviewText.setContentDescription("緊急求助訊息預覽：" + message);
     }
     
@@ -237,7 +235,7 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         vibrationManager.vibrateClick();
         
         // 顯示確認對話框
-        String cantoneseText = "即將測試緊急求助功能，這不會發送實際的求助信息，只是測試語音和震動。是否繼續？";
+        String cantoneseText = getString(R.string.test_emergency_confirmation);
         String englishText = "About to test emergency function, this will not send actual help request, just test voice and vibration. Continue?";
         
         announceInfo(cantoneseText);
@@ -276,7 +274,7 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
             titleText.setContentDescription(getString(R.string.emergency_setup_complete_desc));
             
             // 更新測試按鈕文字
-            testEmergencyButton.setText("✅ 測試緊急求助");
+            testEmergencyButton.setText(getString(R.string.test_emergency_button_complete));
             
         } else {
             // 設置未完成，顯示完整設置界面
@@ -289,7 +287,7 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
             titleText.setContentDescription(getString(R.string.emergency_settings_page_desc));
             
             // 更新測試按鈕文字
-            testEmergencyButton.setText("🚨 測試緊急求助");
+            testEmergencyButton.setText(getString(R.string.test_emergency_button_incomplete));
         }
     }
     
