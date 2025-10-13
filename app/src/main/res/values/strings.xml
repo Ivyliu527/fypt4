@@ -173,6 +173,20 @@
     <string name="settings_saved">設定已保存</string>
     <string name="emergency_settings_saved">緊急設置已保存</string>
     
+    <!-- Settings Activity Layout Strings -->
+    <string name="test_and_reset">測試與重置</string>
+    
+    <!-- Emergency Contact Item Strings -->
+    <string name="contact_phone_placeholder">聯絡人電話號碼</string>
+    <string name="remove_button">移除</string>
+    
+    <!-- Emergency Settings Layout Strings -->
+    <string name="add_emergency_contact_title">添加緊急聯絡人</string>
+    <string name="add_button">添加</string>
+    <string name="emergency_contacts_list_title">緊急聯絡人列表</string>
+    <string name="emergency_message_preview">緊急訊息預覽</string>
+    <string name="test_emergency_function">測試緊急功能</string>
+    
     <!-- 通用按鈕 -->
     <string name="back">返回</string>
     <string name="confirm">確定</string>
