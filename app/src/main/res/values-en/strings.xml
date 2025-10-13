@@ -44,6 +44,9 @@
     <string name="detection_no_objects">Real-time detection - No objects found</string>
     <string name="detection_status_prefix">Detection status: </string>
     <string name="detection_results_prefix">Detection results: </string>
+    <string name="detection_results_format">Detected %1$d objects:\n\n</string>
+    <string name="more_objects_format">...and %1$d more objects</string>
+    <string name="go_home_announcement">Going to home page</string>
     <string name="camera_started_message">Camera started, system is analyzing the scene in real-time and displaying detection boxes. Point the camera at objects to see recognition results</string>
     <string name="emergency_button_long_press_info">Emergency help button, long press for 3 seconds to send help request</string>
     <string name="app_title_accessibility">App name, Tonbo</string>

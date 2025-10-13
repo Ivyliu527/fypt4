@@ -123,7 +123,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         // 返回按鈕
         backButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
-            announceNavigation("返回主頁");
+            announceNavigation(getString(R.string.go_home_announcement));
             finish();
         });
 
@@ -503,26 +503,40 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
      */
     private String formatDetailedResults(List<ObjectDetectorHelper.DetectionResult> results) {
         if (results.isEmpty()) {
-            return "未偵測到物體";
+            return getString(R.string.no_objects_detected);
         }
         
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("偵測到 %d 個物體：\n\n", results.size()));
+        sb.append(String.format(getString(R.string.detection_results_format), results.size()));
         
         for (int i = 0; i < Math.min(results.size(), 10); i++) {
             ObjectDetectorHelper.DetectionResult result = results.get(i);
+            String label = getObjectLabel(result);
             sb.append(String.format("%d. %s (%.0f%%)\n", 
                 i + 1, 
-                result.getLabelZh(), 
+                label, 
                 result.getConfidence() * 100
             ));
         }
         
         if (results.size() > 10) {
-            sb.append(String.format("\n...還有 %d 個物體", results.size() - 10));
+            sb.append(String.format("\n" + getString(R.string.more_objects_format), results.size() - 10));
         }
         
         return sb.toString();
+    }
+    
+    private String getObjectLabel(ObjectDetectorHelper.DetectionResult result) {
+        // 根據當前語言選擇對應的標籤
+        switch (currentLanguage) {
+            case "english":
+                return result.getLabel() != null ? result.getLabel() : result.getLabelZh();
+            case "mandarin":
+                return result.getLabelZh() != null ? result.getLabelZh() : result.getLabel();
+            case "cantonese":
+            default:
+                return result.getLabelZh() != null ? result.getLabelZh() : result.getLabel();
+        }
     }
     
     private Bitmap imageProxyToBitmap(ImageProxy image) {
@@ -600,14 +614,69 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             fullDescription.append("。");
         }
         
-        String cantoneseText = fullDescription.toString();
-        if (cantoneseText.isEmpty()) {
-            cantoneseText = getString(R.string.no_objects_detected);
+        String descriptionText = fullDescription.toString();
+        if (descriptionText.isEmpty()) {
+            descriptionText = getString(R.string.no_objects_detected);
         }
         
-        String englishText = translateEnvironmentDescriptionToEnglish(cantoneseText);
+        // 根據當前語言選擇對應的描述文字
+        String cantoneseText = currentLanguage.equals("english") ? translateToChinese(descriptionText) : descriptionText;
+        String englishText = currentLanguage.equals("english") ? descriptionText : translateEnvironmentDescriptionToEnglish(descriptionText);
         ttsManager.speak(cantoneseText, englishText, true);
         vibrationManager.vibrateSuccess();
+    }
+
+    /**
+     * 將英文描述翻譯為中文
+     */
+    private String translateToChinese(String english) {
+        // 簡單的翻譯映射
+        return english
+                .replace("table", "桌子")
+                .replace("chair", "椅子")
+                .replace("person", "人")
+                .replace("keyboard", "鍵盤")
+                .replace("mouse", "滑鼠")
+                .replace("monitor", "螢幕")
+                .replace("laptop", "筆記本電腦")
+                .replace("phone", "手機")
+                .replace("cup", "杯子")
+                .replace("bottle", "瓶子")
+                .replace("book", "書")
+                .replace("desk", "桌子")
+                .replace("window", "窗戶")
+                .replace("door", "門")
+                .replace("wall", "牆")
+                .replace("floor", "地板")
+                .replace("light", "燈")
+                .replace("lamp", "燈")
+                .replace("detected", "偵測到")
+                .replace("objects", "物體")
+                .replace("object", "物體")
+                .replace("No objects detected", "未偵測到物體")
+                .replace("confidence", "信心度")
+                .replace("location", "位置")
+                .replace("center", "中央")
+                .replace("left", "左邊")
+                .replace("right", "右邊")
+                .replace("top", "上方")
+                .replace("bottom", "下方")
+                .replace("front", "前方")
+                .replace("back", "後方")
+                .replace("large", "大型")
+                .replace("small", "小型")
+                .replace("bright", "明亮")
+                .replace("dark", "黑暗")
+                .replace("wooden", "木製")
+                .replace("plastic", "塑膠")
+                .replace("metal", "金屬")
+                .replace("glass", "玻璃")
+                .replace("red", "紅色")
+                .replace("blue", "藍色")
+                .replace("green", "綠色")
+                .replace("yellow", "黃色")
+                .replace("black", "黑色")
+                .replace("white", "白色");
     }
 
     /**
