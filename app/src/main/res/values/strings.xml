@@ -206,6 +206,25 @@
     <string name="test_emergency_button_complete">✅ 測試緊急求助</string>
     <string name="test_emergency_button_incomplete">🚨 測試緊急求助</string>
     
+    <!-- Settings Detailed Voice Feedback -->
+    <string name="speech_rate_changed_to">語速已調整為 %d%%</string>
+    <string name="speech_pitch_changed_to">音調已調整為 %d%%</string>
+    <string name="speech_volume_changed_to">音量已調整為 %d%%</string>
+    <string name="vibration_feedback_status_on">震動反饋已開啟</string>
+    <string name="vibration_feedback_status_off">震動反饋已關閉</string>
+    <string name="screen_reader_status_on">讀屏支援已開啟，將優化語音播報和內容描述</string>
+    <string name="screen_reader_status_off">讀屏支援已關閉</string>
+    <string name="gesture_operations_status_on">手勢操作已開啟</string>
+    <string name="gesture_operations_status_off">手勢操作已關閉</string>
+    <string name="current_speech_rate">當前語速設定為 %d%%</string>
+    <string name="current_speech_pitch">當前音調設定為 %d%%</string>
+    <string name="current_speech_volume">當前音量設定為 %d%%</string>
+    <string name="current_vibration_status">震動反饋目前為 %s</string>
+    <string name="current_screen_reader_status">讀屏支援目前為 %s</string>
+    <string name="current_gesture_status">手勢操作目前為 %s</string>
+    <string name="status_enabled">開啟</string>
+    <string name="status_disabled">關閉</string>
+    
     <!-- 通用按鈕 -->
     <string name="back">返回</string>
     <string name="confirm">確定</string>
