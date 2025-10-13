@@ -52,6 +52,25 @@
     <string name="scan_results_placeholder">Scan results will be displayed here...</string>
     <string name="ready_to_scan">Ready to scan</string>
     <string name="results_cleared">Results cleared</string>
+    
+    <!-- Document Currency Activity UI Strings -->
+    <string name="back_to_home">Back to home button</string>
+    <string name="flash_button_desc">Turn on flash button</string>
+    <string name="scan_area_desc">Scan area indicator box</string>
+    <string name="scan_instruction">Place document or currency in frame</string>
+    <string name="status_desc">Current scan status</string>
+    <string name="result_content_desc">Recognition result text content</string>
+    <string name="capture_button">📷\nCapture Scan</string>
+    <string name="capture_button_desc">Capture and scan text and currency</string>
+    <string name="read_button">🎤\nRead Aloud</string>
+    <string name="read_button_desc">Read recognition results aloud</string>
+    <string name="clear_button">🧹\nClear</string>
+    <string name="clear_button_desc">Clear scan results</string>
+    <string name="go_back_home">Go back home</string>
+    <string name="capturing_analyzing">Capturing and analyzing</string>
+    <string name="items_detected">%d items</string>
+    <string name="not_scanned_yet">No scan performed yet</string>
+    
     <string name="document_assistant_announcement">Entering document assistant page</string>
     <string name="document_assistant_unavailable">Document assistant feature temporarily unavailable</string>
     <string name="settings_announcement">Entering system settings page</string>
