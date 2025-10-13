@@ -224,26 +224,27 @@ public class TTSManager {
     public void changeLanguage(String language) {
         currentLanguage = language;
         
+        // 清除當前語音隊列，避免延誤
+        stopSpeaking();
+        
         // 確保TTS已初始化
         ensureTTSInitialized();
         
         if (isInitialized && textToSpeech != null) {
             setLanguage(language);
             
-            // 延遲播放語言切換確認，確保語言已切換
-            handler.postDelayed(() -> {
-                switch (language) {
-                    case "cantonese":
-                        speak("已切換到廣東話", "Switched to Cantonese", true);
-                        break;
-                    case "english":
-                        speak("已切換到英文", "Switched to English", true);
-                        break;
-                    case "mandarin":
-                        speak("已切換到普通話", "Switched to Mandarin", true);
-                        break;
-                }
-            }, 300);
+            // 立即播放語言切換確認，不使用延遲
+            switch (language) {
+                case "cantonese":
+                    speak("已切換到廣東話", "Switched to Cantonese", true);
+                    break;
+                case "english":
+                    speak("已切換到英文", "Switched to English", true);
+                    break;
+                case "mandarin":
+                    speak("已切換到普通話", "Switched to Mandarin", true);
+                    break;
+            }
         } else {
             Log.w(TAG, "TTS未初始化，無法切換語言");
         }
