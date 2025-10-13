@@ -226,6 +226,17 @@
     <string name="status_enabled">开启</string>
     <string name="status_disabled">关闭</string>
     
+    <!-- Content Descriptions -->
+    <string name="emergency_settings_desc">紧急求助设置，点击进入紧急联络人设置</string>
+    <string name="system_settings_desc">系统设定，点击进入语音和无障碍设置</string>
+    <string name="function_selection_area_desc">功能选择区域，共有四个主要功能</string>
+    <string name="emergency_button_desc">紧急求助按钮，长按三秒发送求助信息</string>
+    <string name="camera_preview_desc">相机预览画面</string>
+    <string name="object_detection_overlay_desc">物体检测结果覆盖层，显示检测框和标签</string>
+    <string name="detection_status_desc">侦测状态提示</string>
+    <string name="detection_results_desc">侦测结果显示</string>
+    <string name="point_to_objects_instruction">指向周围物体以开始识别</string>
+    
     <!-- 通用按钮 -->
     <string name="back">返回</string>
     <string name="confirm">确定</string>
