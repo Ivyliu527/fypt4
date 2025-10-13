@@ -54,6 +54,9 @@
     <string name="results_cleared">结果已清除</string>
     <string name="document_assistant_announcement">正在进入阅读助手页面</string>
     <string name="document_assistant_unavailable">阅读助手功能暂不可用</string>
+    <string name="settings_announcement">正在进入系统设定页面</string>
+    <string name="settings_unavailable">系统设定功能暂不可用</string>
+    <string name="emergency_settings_unavailable">无法打开紧急设置页面</string>
     <string name="camera_started_message">相机已启动，系统正在实时分析画面并显示检测框。将相机对准物体即可看到识别结果</string>
     <string name="emergency_button_long_press_info">紧急求助按钮，长按三秒发送求助信息</string>
     <string name="app_title_accessibility">应用程序名称，瞳伴</string>

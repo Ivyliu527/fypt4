@@ -44,18 +44,6 @@
                 android:layout_marginHorizontal="16dp"
                 android:contentDescription="@string/system_settings_title" />
 
-            <!-- 語言切換按鈕 -->
-            <Button
-                android:id="@+id/languageButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:text="@string/language_button_cantonese"
-                android:textSize="14sp"
-                android:textColor="@color/text_primary"
-                android:background="@drawable/button_circle_background"
-                android:backgroundTint="@null"
-                android:contentDescription="@string/language_button_desc_prefix" />
-
             <!-- 佔位符，保持標題居中 -->
             <View
                 android:layout_width="48dp"

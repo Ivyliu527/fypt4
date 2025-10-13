@@ -336,10 +336,10 @@ public class MainActivity extends BaseAccessibleActivity {
         try {
             Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
             intent.putExtra("language", currentLanguage);
-            announceNavigation("正在進入系統設定頁面");
+            announceNavigation(getString(R.string.settings_announcement));
             startActivity(intent);
         } catch (Exception e) {
-            announceError("系統設定功能暫不可用");
+            announceError(getString(R.string.settings_unavailable));
             Log.e("MainActivity", "打開系統設定失敗: " + e.getMessage());
         }
     }
@@ -350,7 +350,7 @@ public class MainActivity extends BaseAccessibleActivity {
             intent.putExtra("language", currentLanguage);
             startActivity(intent);
         } catch (Exception e) {
-            announceError("無法打開緊急設置頁面");
+            announceError(getString(R.string.emergency_settings_unavailable));
             Log.e("MainActivity", "打開緊急設置失敗: " + e.getMessage());
         }
     }
