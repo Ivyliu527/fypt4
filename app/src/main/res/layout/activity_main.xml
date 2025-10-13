@@ -39,7 +39,7 @@
             android:textColor="#FFFFFF"
             android:background="@drawable/button_square_background"
             android:backgroundTint="@null"
-            android:contentDescription="緊急求助設置，點擊進入緊急聯絡人設置"
+            android:contentDescription="@string/emergency_settings_desc"
             android:layout_marginEnd="12dp"
             android:minHeight="64dp"
             android:minWidth="64dp" />
@@ -54,7 +54,7 @@
             android:textColor="#FFFFFF"
             android:background="@drawable/button_square_background"
             android:backgroundTint="@null"
-            android:contentDescription="系統設定，點擊進入語音和無障礙設置"
+            android:contentDescription="@string/system_settings_desc"
             android:layout_marginEnd="12dp"
             android:minHeight="64dp"
             android:minWidth="64dp" />
@@ -69,7 +69,7 @@
             android:textColor="#FFFFFF"
             android:background="@drawable/button_square_background"
             android:backgroundTint="@null"
-            android:contentDescription="當前語言廣東話，點擊切換語言"
+            android:contentDescription="@string/language_button_desc_prefix"
             android:minHeight="72dp"
             android:minWidth="72dp" />
 
@@ -100,7 +100,7 @@
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="20dp"
-        android:contentDescription="功能選擇區域，共有四個主要功能"
+        android:contentDescription="@string/function_selection_area_desc"
         android:minHeight="32dp" />
 
     <!-- 功能列表 - 優化間距 -->
@@ -121,7 +121,7 @@
         android:orientation="vertical"
         android:clickable="true"
         android:focusable="true"
-        android:contentDescription="緊急求助按鈕，長按三秒發送求助信息"
+        android:contentDescription="@string/emergency_button_desc"
         android:minHeight="90dp"
         android:padding="12dp">
         
