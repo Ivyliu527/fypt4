@@ -121,6 +121,40 @@
     <string name="other_settings">其他设定</string>
     <string name="reset_settings">重置设定</string>
     
+    <!-- Settings Activity Strings -->
+    <string name="status_on">开启</string>
+    <string name="status_off">关闭</string>
+    <string name="vibration_enabled">震动反馈已开启</string>
+    <string name="vibration_disabled">震动反馈已关闭</string>
+    <string name="screen_reader_enabled">读屏支援已开启</string>
+    <string name="screen_reader_disabled">读屏支援已关闭</string>
+    <string name="gesture_enabled">手势操作已开启</string>
+    <string name="gesture_disabled">手势操作已关闭</string>
+    <string name="testing_voice">正在测试语音设定</string>
+    <string name="reset_settings_title">重置设定</string>
+    <string name="reset_settings_message">确定要重置所有设定吗？</string>
+    <string name="settings_reset">所有设定已重置为预设值</string>
+    <string name="reset_cancelled">已取消重置</string>
+    
+    <!-- Emergency Settings Activity Strings -->
+    <string name="emergency_settings_page_title">紧急求助设置</string>
+    <string name="emergency_settings_page_desc">紧急求助设置页面标题</string>
+    <string name="emergency_setup_complete_title">紧急求助已设置</string>
+    <string name="emergency_setup_complete_desc">紧急求助已设置完成</string>
+    <string name="enter_phone_number">输入电话号码</string>
+    <string name="enter_phone_number_desc">输入新的紧急联络人电话号码</string>
+    <string name="back_button_desc_emergency">返回主页按钮</string>
+    <string name="add_contact_button_desc">添加紧急联络人按钮</string>
+    <string name="test_emergency_button_desc">测试紧急求助功能按钮</string>
+    <string name="setup_complete_button_desc">完成设置按钮</string>
+    <string name="contacts_list_desc">紧急联络人列表</string>
+    <string name="error_enter_phone">请输入电话号码</string>
+    <string name="error_invalid_phone">电话号码格式不正确</string>
+    <string name="error_contact_exists">该联络人已存在</string>
+    <string name="error_add_contact">请至少添加一个紧急联络人</string>
+    <string name="settings_saved">设定已保存</string>
+    <string name="emergency_settings_saved">紧急设置已保存</string>
+    
     <!-- 通用按钮 -->
     <string name="back">返回</string>
     <string name="confirm">确定</string>

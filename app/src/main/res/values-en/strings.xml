@@ -121,6 +121,40 @@
     <string name="other_settings">Other Settings</string>
     <string name="reset_settings">Reset Settings</string>
     
+    <!-- Settings Activity Strings -->
+    <string name="status_on">On</string>
+    <string name="status_off">Off</string>
+    <string name="vibration_enabled">Vibration feedback enabled</string>
+    <string name="vibration_disabled">Vibration feedback disabled</string>
+    <string name="screen_reader_enabled">Screen reader support enabled</string>
+    <string name="screen_reader_disabled">Screen reader support disabled</string>
+    <string name="gesture_enabled">Gesture operations enabled</string>
+    <string name="gesture_disabled">Gesture operations disabled</string>
+    <string name="testing_voice">Testing voice settings</string>
+    <string name="reset_settings_title">Reset Settings</string>
+    <string name="reset_settings_message">Are you sure you want to reset all settings?</string>
+    <string name="settings_reset">All settings have been reset to default</string>
+    <string name="reset_cancelled">Reset cancelled</string>
+    
+    <!-- Emergency Settings Activity Strings -->
+    <string name="emergency_settings_page_title">Emergency Settings</string>
+    <string name="emergency_settings_page_desc">Emergency settings page title</string>
+    <string name="emergency_setup_complete_title">Emergency Setup Complete</string>
+    <string name="emergency_setup_complete_desc">Emergency setup completed</string>
+    <string name="enter_phone_number">Enter phone number</string>
+    <string name="enter_phone_number_desc">Enter new emergency contact phone number</string>
+    <string name="back_button_desc_emergency">Back to home button</string>
+    <string name="add_contact_button_desc">Add emergency contact button</string>
+    <string name="test_emergency_button_desc">Test emergency function button</string>
+    <string name="setup_complete_button_desc">Complete setup button</string>
+    <string name="contacts_list_desc">Emergency contacts list</string>
+    <string name="error_enter_phone">Please enter a phone number</string>
+    <string name="error_invalid_phone">Invalid phone number format</string>
+    <string name="error_contact_exists">This contact already exists</string>
+    <string name="error_add_contact">Please add at least one emergency contact</string>
+    <string name="settings_saved">Settings saved</string>
+    <string name="emergency_settings_saved">Emergency settings saved</string>
+    
     <!-- Common Buttons -->
     <string name="back">Back</string>
     <string name="confirm">Confirm</string>
