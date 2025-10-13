@@ -6,6 +6,8 @@
     <string name="home_title">瞳伴</string>
     <string name="function_selection">功能選擇</string>
     <string name="emergency_button_text">緊急求助\n長按3秒發送</string>
+    <string name="emergency_help_text">緊急求助</string>
+    <string name="long_press_send_text">長按3秒發送</string>
     <string name="operation_guide">操作指引</string>
     <string name="operation_guide_content">• 點擊功能項目進入對應功能\n• 右上角按鈕：緊急設置🚨、系統設定⚙、語言切換廣\n• 緊急求助：長按底部紅色按鈕3秒</string>
     
