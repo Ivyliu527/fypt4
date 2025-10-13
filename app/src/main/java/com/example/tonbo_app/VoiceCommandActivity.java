@@ -25,7 +25,6 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     
     private VoiceCommandManager voiceCommandManager;
     private Button listenButton;
-    private Button languageButton;
     private TextView statusText;
     private TextView commandText;
     private TextView hintText;
@@ -64,7 +63,6 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     
     private void initViews() {
         listenButton = findViewById(R.id.listenButton);
-        languageButton = findViewById(R.id.languageButton);
         statusText = findViewById(R.id.statusText);
         commandText = findViewById(R.id.commandText);
         hintText = findViewById(R.id.hintText);
@@ -75,12 +73,6 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
             toggleListening();
         });
 
-        // 設置語言切換按鈕
-        languageButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            toggleLanguage();
-        });
-        
         // 返回按鈕
         Button backButton = findViewById(R.id.backButton);
         if (backButton != null) {
@@ -318,59 +310,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         }
     }
 
-    private void toggleLanguage() {
-        switch (currentLanguage) {
-            case "cantonese":
-                currentLanguage = "english";
-                break;
-            case "english":
-                currentLanguage = "mandarin";
-                break;
-            case "mandarin":
-            default:
-                currentLanguage = "cantonese";
-                break;
-        }
 
-        // 保存語言設置
-        localeManager.setLanguage(this, currentLanguage);
 
-        // 更新TTS語言
-        ttsManager.changeLanguage(currentLanguage);
-
-        // 更新語言按鈕
-        updateLanguageButton();
-
-        // 重新創建Activity以應用新語言
-        recreate();
-    }
-
-    private void updateLanguageButton() {
-        if (languageButton != null) {
-            String buttonText = getLanguageButtonText(currentLanguage);
-            languageButton.setText(buttonText);
-            
-            String languageDesc = getLanguageDescription(currentLanguage);
-            languageButton.setContentDescription(getString(R.string.language_button_desc_prefix) + languageDesc + getString(R.string.language_button_desc_suffix));
-        }
-    }
-
-    private String getLanguageButtonText(String language) {
-        switch (language) {
-            case "cantonese": return getString(R.string.language_button_cantonese);
-            case "english": return getString(R.string.language_button_english);
-            case "mandarin": return getString(R.string.language_button_mandarin);
-            default: return getString(R.string.language_button_cantonese);
-        }
-    }
-
-    private String getLanguageDescription(String language) {
-        switch (language) {
-            case "cantonese": return getString(R.string.language_cantonese_desc);
-            case "english": return getString(R.string.language_english_desc);
-            case "mandarin": return getString(R.string.language_mandarin_desc);
-            default: return getString(R.string.language_cantonese_desc);
-        }
-    }
 }
 
