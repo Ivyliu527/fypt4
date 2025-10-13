@@ -48,6 +48,11 @@
     <string name="detection_results_format">偵測到 %1$d 個物體：\n\n</string>
     <string name="more_objects_format">...還有 %1$d 個物體</string>
     <string name="go_home_announcement">返回主頁</string>
+    <string name="document_started_message">相機已啟動，將文件或貨幣放在掃描框內，然後點擊拍照掃描。系統會識別文字內容和貨幣面額</string>
+    <string name="no_content_detected">未識別到任何內容</string>
+    <string name="scan_results_placeholder">掃描結果將顯示在這裡...</string>
+    <string name="ready_to_scan">準備掃描</string>
+    <string name="results_cleared">結果已清除</string>
     <string name="camera_started_message">相機已啟動，系統正在實時分析畫面並顯示檢測框。將相機對準物體即可看到識別結果</string>
     <string name="emergency_button_long_press_info">緊急求助按鈕，長按三秒發送求助信息</string>
     <string name="app_title_accessibility">應用程式名稱，瞳伴</string>
