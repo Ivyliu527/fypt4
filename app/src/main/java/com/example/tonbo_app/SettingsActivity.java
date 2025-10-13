@@ -275,7 +275,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
         
         // 這裡可以添加讀屏相關的設定邏輯
         if (newState) {
-            announceInfo("讀屏支援已開啟，將優化語音播報和內容描述");
+            announceInfo(getString(R.string.screen_reader_status_on));
         }
     }
     
@@ -290,7 +290,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
         announceSettingChange(message);
         
         if (newState) {
-            announceInfo("手勢操作已開啟，可以使用滑動手勢進行操作");
+            announceInfo(getString(R.string.gesture_operations_status_on));
         }
     }
     
@@ -376,8 +376,8 @@ public class SettingsActivity extends BaseAccessibleActivity {
     }
     
     private void announceSettingChange(String message) {
-        String englishMessage = "Setting changed";
-        ttsManager.speak(message, englishMessage, false);
+        // 直接使用傳入的詳細訊息，不需要額外的英文訊息
+        ttsManager.speak(message, null, false);
     }
     
     @Override
