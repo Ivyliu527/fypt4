@@ -102,9 +102,9 @@ public class SettingsActivity extends BaseAccessibleActivity {
         boolean screenReaderEnabled = preferences.getBoolean("screen_reader_enabled", true);
         boolean gestureEnabled = preferences.getBoolean("gesture_enabled", false);
         
-        updateToggleButton(vibrationToggleButton, vibrationEnabled, "震動反饋");
-        updateToggleButton(screenReaderToggleButton, screenReaderEnabled, "讀屏支援");
-        updateToggleButton(gestureToggleButton, gestureEnabled, "手勢操作");
+        updateToggleButton(vibrationToggleButton, vibrationEnabled, getString(R.string.vibration_feedback));
+        updateToggleButton(screenReaderToggleButton, screenReaderEnabled, getString(R.string.screen_reader_support));
+        updateToggleButton(gestureToggleButton, gestureEnabled, getString(R.string.gesture_operations));
         
         Log.d(TAG, "設定已載入 - 語速:" + speechRate + " 音調:" + speechPitch + " 音量:" + speechVolume);
     }
@@ -237,11 +237,11 @@ public class SettingsActivity extends BaseAccessibleActivity {
     
     private void updateToggleButton(Button button, boolean enabled, String settingName) {
         if (enabled) {
-            button.setText("開啟");
-            button.setContentDescription(settingName + "已開啟，點擊關閉");
+            button.setText(getString(R.string.status_on));
+            button.setContentDescription(settingName + getString(R.string.status_on) + "，點擊關閉");
         } else {
-            button.setText("關閉");
-            button.setContentDescription(settingName + "已關閉，點擊開啟");
+            button.setText(getString(R.string.status_off));
+            button.setContentDescription(settingName + getString(R.string.status_off) + "，點擊開啟");
         }
     }
     
@@ -250,12 +250,12 @@ public class SettingsActivity extends BaseAccessibleActivity {
         boolean newState = !currentState;
         
         preferences.edit().putBoolean("vibration_enabled", newState).apply();
-        updateToggleButton(vibrationToggleButton, newState, "震動反饋");
+        updateToggleButton(vibrationToggleButton, newState, getString(R.string.vibration_feedback));
         
         // 更新VibrationManager狀態
         vibrationManager.setEnabled(newState);
         
-        String message = newState ? "震動反饋已開啟" : "震動反饋已關閉";
+        String message = newState ? getString(R.string.vibration_enabled) : getString(R.string.vibration_disabled);
         announceSettingChange(message);
         
         if (newState) {
@@ -268,9 +268,9 @@ public class SettingsActivity extends BaseAccessibleActivity {
         boolean newState = !currentState;
         
         preferences.edit().putBoolean("screen_reader_enabled", newState).apply();
-        updateToggleButton(screenReaderToggleButton, newState, "讀屏支援");
+        updateToggleButton(screenReaderToggleButton, newState, getString(R.string.screen_reader_support));
         
-        String message = newState ? "讀屏支援已開啟" : "讀屏支援已關閉";
+        String message = newState ? getString(R.string.screen_reader_enabled) : getString(R.string.screen_reader_disabled);
         announceSettingChange(message);
         
         // 這裡可以添加讀屏相關的設定邏輯
@@ -284,9 +284,9 @@ public class SettingsActivity extends BaseAccessibleActivity {
         boolean newState = !currentState;
         
         preferences.edit().putBoolean("gesture_enabled", newState).apply();
-        updateToggleButton(gestureToggleButton, newState, "手勢操作");
+        updateToggleButton(gestureToggleButton, newState, getString(R.string.gesture_operations));
         
-        String message = newState ? "手勢操作已開啟" : "手勢操作已關閉";
+        String message = newState ? getString(R.string.gesture_enabled) : getString(R.string.gesture_disabled);
         announceSettingChange(message);
         
         if (newState) {
@@ -295,7 +295,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
     }
     
     private void testVoice() {
-        announceInfo("正在測試語音設定");
+        announceInfo(getString(R.string.testing_voice));
         
         // 測試當前語音設定
         String testText = "這是語音測試。語速：" + speechRateSeekBar.getProgress() + "%，音調：" + 
@@ -308,14 +308,14 @@ public class SettingsActivity extends BaseAccessibleActivity {
     
     private void showResetDialog() {
         new AlertDialog.Builder(this)
-                .setTitle("重置設定")
-                .setMessage("確定要重置所有設定到預設值嗎？")
-                .setPositiveButton("確定", (dialog, which) -> {
+                .setTitle(getString(R.string.reset_settings_title))
+                .setMessage(getString(R.string.reset_settings_message))
+                .setPositiveButton(getString(R.string.confirm), (dialog, which) -> {
                     resetAllSettings();
-                    announceInfo("所有設定已重置為預設值");
+                    announceInfo(getString(R.string.settings_reset));
                 })
-                .setNegativeButton("取消", (dialog, which) -> {
-                    announceInfo("已取消重置");
+                .setNegativeButton(getString(R.string.back), (dialog, which) -> {
+                    announceInfo(getString(R.string.reset_cancelled));
                 })
                 .show();
     }
@@ -337,9 +337,9 @@ public class SettingsActivity extends BaseAccessibleActivity {
         speechVolumeSeekBar.setProgress(100);
         updateSpeechTexts();
         
-        updateToggleButton(vibrationToggleButton, true, "震動反饋");
-        updateToggleButton(screenReaderToggleButton, true, "讀屏支援");
-        updateToggleButton(gestureToggleButton, false, "手勢操作");
+        updateToggleButton(vibrationToggleButton, true, getString(R.string.vibration_feedback));
+        updateToggleButton(screenReaderToggleButton, true, getString(R.string.screen_reader_support));
+        updateToggleButton(gestureToggleButton, false, getString(R.string.gesture_operations));
         
         // 重置TTS設定
         ttsManager.setSpeechRate(1.0f);

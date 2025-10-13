@@ -67,8 +67,8 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         // 標題欄
         backButton = findViewById(R.id.backButton);
         TextView titleText = findViewById(R.id.titleText);
-        titleText.setText("緊急求助設置");
-        titleText.setContentDescription("緊急求助設置頁面標題");
+        titleText.setText(getString(R.string.emergency_settings_page_title));
+        titleText.setContentDescription(getString(R.string.emergency_settings_page_desc));
         
         // 獲取各個區域的引用
         addContactSection = findViewById(R.id.addContactSection);
@@ -81,8 +81,8 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         
         // 添加聯絡人
         newContactEditText = findViewById(R.id.newContactEditText);
-        newContactEditText.setHint("輸入電話號碼");
-        newContactEditText.setContentDescription("輸入新的緊急聯絡人電話號碼");
+        newContactEditText.setHint(getString(R.string.enter_phone_number));
+        newContactEditText.setContentDescription(getString(R.string.enter_phone_number_desc));
         
         addContactButton = findViewById(R.id.addContactButton);
         
@@ -113,11 +113,11 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
     }
     
     private void setContentDescriptions() {
-        backButton.setContentDescription("返回主頁按鈕");
-        addContactButton.setContentDescription("添加緊急聯絡人按鈕");
-        testEmergencyButton.setContentDescription("測試緊急求助功能按鈕");
-        setupCompleteButton.setContentDescription("完成設置按鈕");
-        contactsRecyclerView.setContentDescription("緊急聯絡人列表");
+        backButton.setContentDescription(getString(R.string.back_button_desc_emergency));
+        addContactButton.setContentDescription(getString(R.string.add_contact_button_desc));
+        testEmergencyButton.setContentDescription(getString(R.string.test_emergency_button_desc));
+        setupCompleteButton.setContentDescription(getString(R.string.setup_complete_button_desc));
+        contactsRecyclerView.setContentDescription(getString(R.string.contacts_list_desc));
     }
     
     private void loadSettings() {
@@ -192,18 +192,18 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         String contact = newContactEditText.getText().toString().trim();
         
         if (contact.isEmpty()) {
-            announceError("請輸入電話號碼");
+            announceError(getString(R.string.error_enter_phone));
             return;
         }
         
         // 簡單驗證電話號碼格式
         if (!isValidPhoneNumber(contact)) {
-            announceError("電話號碼格式不正確");
+            announceError(getString(R.string.error_invalid_phone));
             return;
         }
         
         if (emergencyContacts.contains(contact)) {
-            announceError("該聯絡人已存在");
+            announceError(getString(R.string.error_contact_exists));
             return;
         }
         
@@ -272,8 +272,8 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
             
             // 更新標題
             TextView titleText = findViewById(R.id.titleText);
-            titleText.setText("緊急求助已設置");
-            titleText.setContentDescription("緊急求助已設置完成");
+            titleText.setText(getString(R.string.emergency_setup_complete_title));
+            titleText.setContentDescription(getString(R.string.emergency_setup_complete_desc));
             
             // 更新測試按鈕文字
             testEmergencyButton.setText("✅ 測試緊急求助");
@@ -285,8 +285,8 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
             
             // 更新標題
             TextView titleText = findViewById(R.id.titleText);
-            titleText.setText("緊急求助設置");
-            titleText.setContentDescription("緊急求助設置頁面標題");
+            titleText.setText(getString(R.string.emergency_settings_page_title));
+            titleText.setContentDescription(getString(R.string.emergency_settings_page_desc));
             
             // 更新測試按鈕文字
             testEmergencyButton.setText("🚨 測試緊急求助");
@@ -297,7 +297,7 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         vibrationManager.vibrateClick();
         
         if (emergencyContacts.size() < 1) {
-            announceError("請至少添加一個緊急聯絡人");
+            announceError(getString(R.string.error_add_contact));
             return;
         }
         
