@@ -153,28 +153,41 @@ public class MainActivity extends BaseAccessibleActivity {
         // 保存語言設置
         localeManager.setLanguage(this, currentLanguage);
         
-        // 更新TTS語言
-        ttsManager.changeLanguage(currentLanguage);
-        
-        // 立即播放語言切換確認語音（使用新語言）
+        // 立即播放語言切換確認語音（使用當前TTS語言）
         announceLanguageChange(currentLanguage);
+        
+        // 立即更新TTS語言
+        ttsManager.changeLanguage(currentLanguage);
         
         // 重新創建Activity以應用新語言
         recreate();
     }
     
     private void announceLanguageChange(String language) {
-        // 立即播放語言切換確認語音，使用當前語言
-        String currentLang = localeManager.getCurrentLanguage();
+        // 立即播放語言切換確認語音，使用當前TTS語言
+        String currentTTSLanguage = ttsManager.getCurrentLanguage();
+        
         switch (language) {
             case "cantonese":
-                ttsManager.speak("已切換到廣東話", "Switched to Cantonese", true);
+                if ("english".equals(currentTTSLanguage)) {
+                    ttsManager.speak(null, "Switched to Cantonese", true);
+                } else {
+                    ttsManager.speak("已切換到廣東話", null, true);
+                }
                 break;
             case "english":
-                ttsManager.speak("已切換到英文", "Switched to English", true);
+                if ("english".equals(currentTTSLanguage)) {
+                    ttsManager.speak(null, "Switched to English", true);
+                } else {
+                    ttsManager.speak("已切換到英文", null, true);
+                }
                 break;
             case "mandarin":
-                ttsManager.speak("已切換到普通話", "Switched to Mandarin", true);
+                if ("english".equals(currentTTSLanguage)) {
+                    ttsManager.speak(null, "Switched to Mandarin", true);
+                } else {
+                    ttsManager.speak("已切換到普通話", null, true);
+                }
                 break;
         }
     }
