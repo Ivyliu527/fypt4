@@ -37,6 +37,7 @@
     <string name="language_mandarin_desc">普通話</string>
     
     <!-- 環境識別 -->
+    <string name="environment_title">環境識別</string>
     <string name="flash_on">閃光燈：開啟</string>
     <string name="flash_off">閃光燈：關閉</string>
     <string name="clear_display">清除顯示</string>
