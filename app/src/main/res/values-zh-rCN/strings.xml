@@ -44,6 +44,9 @@
     <string name="detection_no_objects">实时检测中 - 未发现物体</string>
     <string name="detection_status_prefix">侦测状态：</string>
     <string name="detection_results_prefix">侦测结果：</string>
+    <string name="detection_results_format">侦测到 %1$d 个物体：\n\n</string>
+    <string name="more_objects_format">...还有 %1$d 个物体</string>
+    <string name="go_home_announcement">返回主页</string>
     <string name="camera_started_message">相机已启动，系统正在实时分析画面并显示检测框。将相机对准物体即可看到识别结果</string>
     <string name="emergency_button_long_press_info">紧急求助按钮，长按三秒发送求助信息</string>
     <string name="app_title_accessibility">应用程序名称，瞳伴</string>
