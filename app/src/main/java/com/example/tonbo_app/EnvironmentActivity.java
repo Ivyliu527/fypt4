@@ -619,10 +619,18 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             descriptionText = getString(R.string.no_objects_detected);
         }
         
-        // 根據當前語言選擇對應的描述文字
-        String cantoneseText = currentLanguage.equals("english") ? translateToChinese(descriptionText) : descriptionText;
-        String englishText = currentLanguage.equals("english") ? descriptionText : translateEnvironmentDescriptionToEnglish(descriptionText);
-        ttsManager.speak(cantoneseText, englishText, true);
+        // 根據當前語言選擇對應的描述文字和語音
+        if ("english".equals(currentLanguage)) {
+            // 英文版本：使用英文文字和英語語音
+            ttsManager.speak(descriptionText, null, true);
+        } else if ("mandarin".equals(currentLanguage)) {
+            // 普通話版本：使用簡體中文文字和普通話語音
+            String simplifiedText = translateToSimplifiedChinese(descriptionText);
+            ttsManager.speak(simplifiedText, null, true);
+        } else {
+            // 廣東話版本：使用繁體中文文字和廣東話語音
+            ttsManager.speak(descriptionText, null, true);
+        }
         vibrationManager.vibrateSuccess();
     }
 
@@ -677,6 +685,39 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 .replace("yellow", "黃色")
                 .replace("black", "黑色")
                 .replace("white", "白色");
+    }
+
+    /**
+     * 將繁體中文翻譯為簡體中文
+     */
+    private String translateToSimplifiedChinese(String traditionalText) {
+        // 簡化的繁體轉簡體映射
+        return traditionalText
+                .replace("偵測", "检测")
+                .replace("物體", "物体")
+                .replace("主要", "主要")
+                .replace("顏色", "颜色")
+                .replace("整體", "整体")
+                .replace("光線", "光线")
+                .replace("條件", "条件")
+                .replace("來自", "来自")
+                .replace("紅色", "红色")
+                .replace("藍色", "蓝色")
+                .replace("綠色", "绿色")
+                .replace("黃色", "黄色")
+                .replace("橙色", "橙色")
+                .replace("紫色", "紫色")
+                .replace("黑色", "黑色")
+                .replace("白色", "白色")
+                .replace("灰色", "灰色")
+                .replace("桌子", "桌子")
+                .replace("椅子", "椅子")
+                .replace("人", "人")
+                .replace("門", "门")
+                .replace("窗", "窗")
+                .replace("牆", "墙")
+                .replace("地板", "地板")
+                .replace("天花板", "天花板");
     }
 
     /**
