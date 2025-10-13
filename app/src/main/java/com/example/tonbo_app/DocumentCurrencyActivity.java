@@ -74,8 +74,9 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
 
     @Override
     protected void announcePageTitle() {
-        announcePageTitle("閱讀助手頁面");
-        announceNavigation("相機已啟動，將文件或貨幣放在掃描框內，然後點擊拍照掃描。系統會識別文字內容和貨幣面額");
+        String pageTitle = getString(R.string.document_title);
+        announcePageTitle(pageTitle);
+        announceNavigation(getString(R.string.document_started_message));
     }
 
     private void initViews() {
@@ -143,7 +144,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
             if (allPermissionsGranted()) {
                 startCamera();
             } else {
-                announceError("需要相機權限才能使用此功能");
+                announceError(getString(R.string.camera_permission_message));
                 finish();
             }
         }
@@ -321,20 +322,23 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
             }
             
             if (speechText.isEmpty()) {
-                speechText = "未識別到任何內容";
+                speechText = getString(R.string.no_content_detected);
             }
             
-            ttsManager.speak(speechText, translateToEnglish(speechText), true);
+            // 根據當前語言選擇對應的語音內容
+            String cantoneseText = currentLanguage.equals("english") ? translateToChinese(speechText) : speechText;
+            String englishText = currentLanguage.equals("english") ? speechText : translateToEnglish(speechText);
+            ttsManager.speak(cantoneseText, englishText, true);
         }
     }
 
     private void clearResults() {
-        resultText.setText("掃描結果將顯示在這裡...");
+        resultText.setText(getString(R.string.scan_results_placeholder));
         lastRecognitionResult = "";
         lastOCRResults = null;
         lastCurrencyResults = null;
-        updateStatus("準備掃描");
-        announceInfo("結果已清除");
+        updateStatus(getString(R.string.ready_to_scan));
+        announceInfo(getString(R.string.results_cleared));
     }
 
     private void updateStatus(String status) {
@@ -462,5 +466,157 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
             case "mandarin": return getString(R.string.language_mandarin_desc);
             default: return getString(R.string.language_cantonese_desc);
         }
+    }
+
+    /**
+     * 將英文描述翻譯為中文
+     */
+    private String translateToChinese(String english) {
+        // 簡單的翻譯映射
+        return english
+                .replace("No content detected", "未識別到任何內容")
+                .replace("Text recognized", "識別到文字")
+                .replace("Currency detected", "檢測到貨幣")
+                .replace("Scanning", "掃描中")
+                .replace("Ready to scan", "準備掃描")
+                .replace("Results cleared", "結果已清除")
+                .replace("Camera permission needed", "需要相機權限")
+                .replace("Text content", "文字內容")
+                .replace("Currency amount", "貨幣金額")
+                .replace("Document", "文件")
+                .replace("Menu", "菜單")
+                .replace("Banknote", "紙幣")
+                .replace("Coin", "硬幣")
+                .replace("Dollar", "美元")
+                .replace("Euro", "歐元")
+                .replace("Yuan", "人民幣")
+                .replace("Yen", "日圓")
+                .replace("Pound", "英鎊")
+                .replace("Franc", "法郎")
+                .replace("Mark", "馬克")
+                .replace("Lira", "里拉")
+                .replace("Peseta", "比塞塔")
+                .replace("Guilder", "荷蘭盾")
+                .replace("Crown", "克朗")
+                .replace("Krone", "克朗")
+                .replace("Krona", "克朗")
+                .replace("Rupee", "盧比")
+                .replace("Peso", "比索")
+                .replace("Real", "雷亞爾")
+                .replace("Rand", "蘭特")
+                .replace("Dinar", "第納爾")
+                .replace("Dirham", "迪拉姆")
+                .replace("Riyal", "里亞爾")
+                .replace("Ruble", "盧布")
+                .replace("Hryvnia", "格里夫納")
+                .replace("Zloty", "茲羅提")
+                .replace("Forint", "福林")
+                .replace("Koruna", "克朗")
+                .replace("Leu", "列伊")
+                .replace("Lev", "列弗")
+                .replace("Kuna", "庫納")
+                .replace("Dram", "德拉姆")
+                .replace("Taka", "塔卡")
+                .replace("Rupiah", "印尼盾")
+                .replace("Ringgit", "林吉特")
+                .replace("Baht", "泰銖")
+                .replace("Won", "韓圓")
+                .replace("Dong", "越南盾")
+                .replace("Kip", "基普")
+                .replace("Riel", "瑞爾")
+                .replace("Pataca", "澳門元")
+                .replace("Singapore dollar", "新加坡元")
+                .replace("Hong Kong dollar", "港幣")
+                .replace("New Taiwan dollar", "新台幣")
+                .replace("Korean won", "韓圓")
+                .replace("Japanese yen", "日圓")
+                .replace("Chinese yuan", "人民幣")
+                .replace("British pound", "英鎊")
+                .replace("US dollar", "美元")
+                .replace("Canadian dollar", "加拿大元")
+                .replace("Australian dollar", "澳元")
+                .replace("New Zealand dollar", "紐西蘭元")
+                .replace("Swiss franc", "瑞士法郎")
+                .replace("Swedish krona", "瑞典克朗")
+                .replace("Norwegian krone", "挪威克朗")
+                .replace("Danish krone", "丹麥克朗")
+                .replace("Polish zloty", "波蘭茲羅提")
+                .replace("Czech koruna", "捷克克朗")
+                .replace("Hungarian forint", "匈牙利福林")
+                .replace("Romanian leu", "羅馬尼亞列伊")
+                .replace("Bulgarian lev", "保加利亞列弗")
+                .replace("Croatian kuna", "克羅地亞庫納")
+                .replace("Serbian dinar", "塞爾維亞第納爾")
+                .replace("Turkish lira", "土耳其里拉")
+                .replace("Israeli shekel", "以色列謝克爾")
+                .replace("Saudi riyal", "沙烏地里亞爾")
+                .replace("UAE dirham", "阿聯酋迪拉姆")
+                .replace("Qatari riyal", "卡塔爾里亞爾")
+                .replace("Kuwaiti dinar", "科威特第納爾")
+                .replace("Bahraini dinar", "巴林第納爾")
+                .replace("Omani rial", "阿曼里亞爾")
+                .replace("Jordanian dinar", "約旦第納爾")
+                .replace("Lebanese pound", "黎巴嫩鎊")
+                .replace("Egyptian pound", "埃及鎊")
+                .replace("South African rand", "南非蘭特")
+                .replace("Nigerian naira", "奈及利亞奈拉")
+                .replace("Kenyan shilling", "肯尼亞先令")
+                .replace("Ugandan shilling", "烏干達先令")
+                .replace("Tanzanian shilling", "坦桑尼亞先令")
+                .replace("Ethiopian birr", "衣索比亞比爾")
+                .replace("Moroccan dirham", "摩洛哥迪拉姆")
+                .replace("Algerian dinar", "阿爾及利亞第納爾")
+                .replace("Tunisian dinar", "突尼斯第納爾")
+                .replace("Libyan dinar", "利比亞第納爾")
+                .replace("Sudanese pound", "蘇丹鎊")
+                .replace("Ghanaian cedi", "加納塞地")
+                .replace("Botswana pula", "博茨瓦納普拉")
+                .replace("Namibian dollar", "納米比亞元")
+                .replace("Zambian kwacha", "贊比亞克瓦查")
+                .replace("Zimbabwean dollar", "津巴布韋元")
+                .replace("Mauritian rupee", "毛里求斯盧比")
+                .replace("Seychellois rupee", "塞舌爾盧比")
+                .replace("Malagasy ariary", "馬達加斯加阿里亞里")
+                .replace("Comorian franc", "科摩羅法郎")
+                .replace("Djiboutian franc", "吉布提法郎")
+                .replace("Eritrean nakfa", "厄立特里亞納克法")
+                .replace("Somalian shilling", "索馬里先令")
+                .replace("Burundian franc", "布隆迪法郎")
+                .replace("Rwandan franc", "盧旺達法郎")
+                .replace("Congolese franc", "剛果法郎")
+                .replace("Central African franc", "中非法郎")
+                .replace("West African franc", "西非法郎")
+                .replace("Cape Verdean escudo", "佛得角埃斯庫多")
+                .replace("Sao Tomean dobra", "聖多美多布拉")
+                .replace("Guinean franc", "幾內亞法郎")
+                .replace("Sierra Leonean leone", "塞拉利昂利昂")
+                .replace("Liberian dollar", "利比里亞元")
+                .replace("Gambian dalasi", "岡比亞達拉西")
+                .replace("Senegalese franc", "塞內加爾法郎")
+                .replace("Mauritanian ouguiya", "毛里塔尼亞烏吉亞")
+                .replace("Malian franc", "馬里法郎")
+                .replace("Burkina Faso franc", "布基納法索法郎")
+                .replace("Nigerian franc", "尼日爾法郎")
+                .replace("Chadian franc", "乍得法郎")
+                .replace("Cameroonian franc", "喀麥隆法郎")
+                .replace("Gabonese franc", "加蓬法郎")
+                .replace("Equatorial Guinean franc", "赤道幾內亞法郎")
+                .replace("Central African franc", "中非法郎")
+                .replace("Republic of Congo franc", "剛果共和國法郎")
+                .replace("Democratic Republic of Congo franc", "剛果民主共和國法郎")
+                .replace("Angolan kwanza", "安哥拉寬扎")
+                .replace("Mozambican metical", "莫桑比克梅蒂卡爾")
+                .replace("Malawian kwacha", "馬拉維克瓦查")
+                .replace("Lesotho loti", "萊索托洛蒂")
+                .replace("Swazi lilangeni", "斯威士蘭里蘭吉尼")
+                .replace("South African rand", "南非蘭特")
+                .replace("Namibian dollar", "納米比亞元")
+                .replace("Botswana pula", "博茨瓦納普拉")
+                .replace("Zambian kwacha", "贊比亞克瓦查")
+                .replace("Zimbabwean dollar", "津巴布韋元")
+                .replace("Malagasy ariary", "馬達加斯加阿里亞里")
+                .replace("Mauritian rupee", "毛里求斯盧比")
+                .replace("Seychellois rupee", "塞舌爾盧比")
+                .replace("Comorian franc", "科摩羅法郎");
     }
 }
