@@ -184,9 +184,21 @@
     <!-- Emergency Settings Layout Strings -->
     <string name="add_emergency_contact_title">Add Emergency Contact</string>
     <string name="add_button">Add</string>
-    <string name="emergency_contacts_list_title">Emergency Contacts List</string>
+    <string name="emergency_contacts_list_title">Emergency Contacts</string>
     <string name="emergency_message_preview">Emergency Message Preview</string>
     <string name="test_emergency_function">Test Emergency Function</string>
+    
+    <!-- Settings Voice Control Strings -->
+    <string name="speech_rate_display">Speech Rate: %d%%</string>
+    <string name="speech_pitch_display">Pitch: %d%%</string>
+    <string name="speech_volume_display">Volume: %d%%</string>
+    
+    <!-- Emergency Settings Additional Strings -->
+    <string name="phone_examples">e.g.: 999, +852-999, +86-138-0000-0000</string>
+    <string name="default_message_label">Default Message:</string>
+    <string name="test_emergency_assistance">Test Emergency Assistance</string>
+    <string name="test_mode_warning">Note: Test mode will not send actual assistance messages, only tests voice and vibration functions</string>
+    <string name="complete_setup">Complete Setup</string>
     
     <!-- Common Buttons -->
     <string name="back">Back</string>

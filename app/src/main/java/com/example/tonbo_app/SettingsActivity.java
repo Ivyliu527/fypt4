@@ -230,9 +230,9 @@ public class SettingsActivity extends BaseAccessibleActivity {
         int pitch = speechPitchSeekBar.getProgress();
         int volume = speechVolumeSeekBar.getProgress();
         
-        speechRateText.setText("語速: " + rate + "%");
-        speechPitchText.setText("音調: " + pitch + "%");
-        speechVolumeText.setText("音量: " + volume + "%");
+        speechRateText.setText(String.format(getString(R.string.speech_rate_display), rate));
+        speechPitchText.setText(String.format(getString(R.string.speech_pitch_display), pitch));
+        speechVolumeText.setText(String.format(getString(R.string.speech_volume_display), volume));
     }
     
     private void updateToggleButton(Button button, boolean enabled, String settingName) {

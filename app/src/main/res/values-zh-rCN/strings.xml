@@ -184,9 +184,21 @@
     <!-- Emergency Settings Layout Strings -->
     <string name="add_emergency_contact_title">添加紧急联络人</string>
     <string name="add_button">添加</string>
-    <string name="emergency_contacts_list_title">紧急联络人列表</string>
+    <string name="emergency_contacts_list_title">紧急联络人</string>
     <string name="emergency_message_preview">紧急讯息预览</string>
     <string name="test_emergency_function">测试紧急功能</string>
+    
+    <!-- Settings Voice Control Strings -->
+    <string name="speech_rate_display">语速: %d%%</string>
+    <string name="speech_pitch_display">音调: %d%%</string>
+    <string name="speech_volume_display">音量: %d%%</string>
+    
+    <!-- Emergency Settings Additional Strings -->
+    <string name="phone_examples">例如：999、+852-999、+86-138-0000-0000</string>
+    <string name="default_message_label">预设讯息:</string>
+    <string name="test_emergency_assistance">测试紧急求助</string>
+    <string name="test_mode_warning">注意：测试模式不会发送实际的求助信息，只会测试语音和震动功能</string>
+    <string name="complete_setup">完成设置</string>
     
     <!-- 通用按钮 -->
     <string name="back">返回</string>
