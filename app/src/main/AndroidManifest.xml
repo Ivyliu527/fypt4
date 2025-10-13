@@ -55,26 +55,31 @@
         <!-- Environment Activity - 環境識別 -->
         <activity
             android:name=".EnvironmentActivity"
+            android:label="@string/environment_title"
             android:exported="false" />
             
         <!-- Document Currency Activity - 閱讀助手 -->
         <activity
             android:name=".DocumentCurrencyActivity"
+            android:label="@string/document_title"
             android:exported="false" />
             
         <!-- Emergency Settings Activity - 緊急求助設置 -->
         <activity
             android:name=".EmergencySettingsActivity"
+            android:label="@string/emergency_settings_page_title"
             android:exported="false" />
             
         <!-- Settings Activity - 系統設定 -->
         <activity
             android:name=".SettingsActivity"
+            android:label="@string/settings_page_title"
             android:exported="false" />
             
         <!-- Voice Command Activity - 語音命令控制 -->
         <activity
             android:name=".VoiceCommandActivity"
+            android:label="@string/voice_command_title"
             android:exported="false" />
     </application>
 
