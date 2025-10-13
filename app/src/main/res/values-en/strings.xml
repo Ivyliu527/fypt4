@@ -174,6 +174,20 @@
     <string name="settings_saved">Settings saved</string>
     <string name="emergency_settings_saved">Emergency settings saved</string>
     
+    <!-- Settings Activity Layout Strings -->
+    <string name="test_and_reset">Test and Reset</string>
+    
+    <!-- Emergency Contact Item Strings -->
+    <string name="contact_phone_placeholder">Contact phone number</string>
+    <string name="remove_button">Remove</string>
+    
+    <!-- Emergency Settings Layout Strings -->
+    <string name="add_emergency_contact_title">Add Emergency Contact</string>
+    <string name="add_button">Add</string>
+    <string name="emergency_contacts_list_title">Emergency Contacts List</string>
+    <string name="emergency_message_preview">Emergency Message Preview</string>
+    <string name="test_emergency_function">Test Emergency Function</string>
+    
     <!-- Common Buttons -->
     <string name="back">Back</string>
     <string name="confirm">Confirm</string>

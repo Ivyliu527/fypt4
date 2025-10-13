@@ -57,7 +57,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="添加緊急聯絡人"
+            android:text="@string/add_emergency_contact_title"
             android:textColor="@color/primary_blue"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -75,7 +75,7 @@
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:hint="輸入電話號碼"
+                android:hint="@string/enter_phone_number"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
                 android:textSize="16sp"
@@ -88,7 +88,7 @@
                 android:id="@+id/addContactButton"
                 android:layout_width="wrap_content"
                 android:layout_height="60dp"
-                android:text="添加"
+                android:text="@string/add_button"
                 android:textSize="16sp"
                 android:textColor="@color/white"
                 android:background="@drawable/button_square_background"
@@ -125,7 +125,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="緊急聯絡人列表"
+            android:text="@string/emergency_contacts_list_title"
             android:textColor="@color/primary_blue"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -156,7 +156,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="緊急訊息預覽"
+            android:text="@string/emergency_message_preview"
             android:textColor="@color/primary_blue"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -192,7 +192,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="測試緊急功能"
+            android:text="@string/test_emergency_function"
             android:textColor="@color/primary_blue"
             android:textSize="18sp"
             android:textStyle="bold"
