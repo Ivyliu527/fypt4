@@ -91,7 +91,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
         // 返回按鈕
         backButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
-            announceNavigation("返回主頁");
+            announceNavigation(getString(R.string.go_back_home));
             finish();
         });
 
@@ -230,7 +230,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
             return;
         }
 
-        announceInfo("正在拍照並分析");
+        announceInfo(getString(R.string.capturing_analyzing));
         updateStatus("正在分析圖像...");
 
         if (currentBitmap != null) {
@@ -254,7 +254,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
                         updateResults(combinedResult);
                         updateStatus("分析完成");
                         announceInfo("分析完成，共識別到" + 
-                            (ocrResults.size() + currencyResults.size()) + "個項目");
+                            String.format(getString(R.string.items_detected), (ocrResults.size() + currencyResults.size())));
                         isAnalyzing = false;
                     });
 
@@ -298,7 +298,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
 
     private void speakRecognitionResults() {
         if (lastRecognitionResult.isEmpty()) {
-            announceInfo("尚未進行掃描分析");
+            announceInfo(getString(R.string.not_scanned_yet));
         } else {
             // 使用語音播報主要結果
             String speechText = "";

@@ -52,6 +52,25 @@
     <string name="scan_results_placeholder">扫描结果将显示在这里...</string>
     <string name="ready_to_scan">准备扫描</string>
     <string name="results_cleared">结果已清除</string>
+    
+    <!-- Document Currency Activity UI Strings -->
+    <string name="back_to_home">返回主页按钮</string>
+    <string name="flash_button_desc">开启闪光灯按钮</string>
+    <string name="scan_area_desc">扫描区域指示框</string>
+    <string name="scan_instruction">将文件或货币放在框内</string>
+    <string name="status_desc">当前扫描状态</string>
+    <string name="result_content_desc">识别结果文字内容</string>
+    <string name="capture_button">📷\n拍照扫描</string>
+    <string name="capture_button_desc">拍照并扫描文字和货币</string>
+    <string name="read_button">🎤\n语音朗读</string>
+    <string name="read_button_desc">语音朗读识别结果</string>
+    <string name="clear_button">🧹\n清除</string>
+    <string name="clear_button_desc">清除扫描结果</string>
+    <string name="go_back_home">返回主页</string>
+    <string name="capturing_analyzing">正在拍照并分析</string>
+    <string name="items_detected">%d个项目</string>
+    <string name="not_scanned_yet">尚未进行扫描分析</string>
+    
     <string name="document_assistant_announcement">正在进入阅读助手页面</string>
     <string name="document_assistant_unavailable">阅读助手功能暂不可用</string>
     <string name="settings_announcement">正在进入系统设定页面</string>
