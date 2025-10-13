@@ -28,7 +28,6 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
     private EmergencyManager emergencyManager;
     private TTSManager ttsManager;
     private VibrationManager vibrationManager;
-    private Button languageButton;
     
     private RecyclerView contactsRecyclerView;
     private EmergencyContactsAdapter contactsAdapter;
@@ -67,7 +66,6 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
     private void initViews() {
         // 標題欄
         backButton = findViewById(R.id.backButton);
-        languageButton = findViewById(R.id.languageButton);
         TextView titleText = findViewById(R.id.titleText);
         titleText.setText("緊急求助設置");
         titleText.setContentDescription("緊急求助設置頁面標題");
@@ -103,10 +101,6 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
             finish();
         });
 
-        languageButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            toggleLanguage();
-        });
         
         addContactButton.setOnClickListener(v -> addEmergencyContact());
         
@@ -351,60 +345,5 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
                 ttsManager.speak(cantoneseText, englishText, true);
             }
         }, 500);
-    }
-
-    private void toggleLanguage() {
-        switch (currentLanguage) {
-            case "cantonese":
-                currentLanguage = "english";
-                break;
-            case "english":
-                currentLanguage = "mandarin";
-                break;
-            case "mandarin":
-            default:
-                currentLanguage = "cantonese";
-                break;
-        }
-
-        // 保存語言設置
-        localeManager.setLanguage(this, currentLanguage);
-
-        // 更新TTS語言
-        ttsManager.changeLanguage(currentLanguage);
-
-        // 更新語言按鈕
-        updateLanguageButton();
-
-        // 重新創建Activity以應用新語言
-        recreate();
-    }
-
-    private void updateLanguageButton() {
-        if (languageButton != null) {
-            String buttonText = getLanguageButtonText(currentLanguage);
-            languageButton.setText(buttonText);
-            
-            String languageDesc = getLanguageDescription(currentLanguage);
-            languageButton.setContentDescription(getString(R.string.language_button_desc_prefix) + languageDesc + getString(R.string.language_button_desc_suffix));
-        }
-    }
-
-    private String getLanguageButtonText(String language) {
-        switch (language) {
-            case "cantonese": return getString(R.string.language_button_cantonese);
-            case "english": return getString(R.string.language_button_english);
-            case "mandarin": return getString(R.string.language_button_mandarin);
-            default: return getString(R.string.language_button_cantonese);
-        }
-    }
-
-    private String getLanguageDescription(String language) {
-        switch (language) {
-            case "cantonese": return getString(R.string.language_cantonese_desc);
-            case "english": return getString(R.string.language_english_desc);
-            case "mandarin": return getString(R.string.language_mandarin_desc);
-            default: return getString(R.string.language_cantonese_desc);
-        }
     }
 }
