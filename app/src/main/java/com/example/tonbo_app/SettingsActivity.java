@@ -297,9 +297,20 @@ public class SettingsActivity extends BaseAccessibleActivity {
     private void testVoice() {
         announceInfo(getString(R.string.testing_voice));
         
-        // 測試當前語音設定
-        String testText = "這是語音測試。語速：" + speechRateSeekBar.getProgress() + "%，音調：" + 
-                         speechPitchSeekBar.getProgress() + "%，音量：" + speechVolumeSeekBar.getProgress() + "%。";
+        // 根據當前語言生成測試文字
+        String currentLang = ttsManager.getCurrentLanguage();
+        String testText;
+        
+        if ("english".equals(currentLang)) {
+            testText = "This is voice test. Speech rate: " + speechRateSeekBar.getProgress() + "%, pitch: " + 
+                      speechPitchSeekBar.getProgress() + "%, volume: " + speechVolumeSeekBar.getProgress() + "%.";
+        } else if ("mandarin".equals(currentLang)) {
+            testText = "这是语音测试。语速：" + speechRateSeekBar.getProgress() + "%，音调：" + 
+                      speechPitchSeekBar.getProgress() + "%，音量：" + speechVolumeSeekBar.getProgress() + "%。";
+        } else { // cantonese (default)
+            testText = "這是語音測試。語速：" + speechRateSeekBar.getProgress() + "%，音調：" + 
+                      speechPitchSeekBar.getProgress() + "%，音量：" + speechVolumeSeekBar.getProgress() + "%。";
+        }
         
         new android.os.Handler().postDelayed(() -> {
             ttsManager.speak(testText, null, true);
