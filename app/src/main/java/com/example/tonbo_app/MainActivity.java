@@ -291,10 +291,10 @@ public class MainActivity extends BaseAccessibleActivity {
         try {
             Intent intent = new Intent(MainActivity.this, DocumentCurrencyActivity.class);
             intent.putExtra("language", currentLanguage);
-            announceNavigation("正在進入閱讀助手頁面");
+            announceNavigation(getString(R.string.document_assistant_announcement));
             startActivity(intent);
         } catch (Exception e) {
-            announceError("閱讀助手功能暫不可用");
+            announceError(getString(R.string.document_assistant_unavailable));
         }
     }
     

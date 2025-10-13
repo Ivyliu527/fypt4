@@ -53,6 +53,8 @@
     <string name="scan_results_placeholder">掃描結果將顯示在這裡...</string>
     <string name="ready_to_scan">準備掃描</string>
     <string name="results_cleared">結果已清除</string>
+    <string name="document_assistant_announcement">正在進入閱讀助手頁面</string>
+    <string name="document_assistant_unavailable">閱讀助手功能暫不可用</string>
     <string name="camera_started_message">相機已啟動，系統正在實時分析畫面並顯示檢測框。將相機對準物體即可看到識別結果</string>
     <string name="emergency_button_long_press_info">緊急求助按鈕，長按三秒發送求助信息</string>
     <string name="app_title_accessibility">應用程式名稱，瞳伴</string>
