@@ -25,6 +25,11 @@ public class MainActivity extends BaseAccessibleActivity {
         // 初始化緊急管理器
         emergencyManager = EmergencyManager.getInstance(this);
         
+        // 確保currentLanguage正確初始化
+        if (currentLanguage == null) {
+            currentLanguage = localeManager.getCurrentLanguage();
+        }
+        
         initViews();
         setupFunctionList();
         setupRecyclerView();
