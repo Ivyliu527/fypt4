@@ -2,6 +2,8 @@ package com.example.tonbo_app;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
@@ -151,11 +153,13 @@ public class MainActivity extends BaseAccessibleActivity {
         // 保存語言設置
         localeManager.setLanguage(this, currentLanguage);
         
-        // 更新TTS語言
-        ttsManager.changeLanguage(currentLanguage);
-        
         // 重新創建Activity以應用新語言
         recreate();
+        
+        // 延遲更新TTS語言，確保Activity重新創建完成後再切換
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            ttsManager.changeLanguage(currentLanguage);
+        }, 500);
     }
     
     private String getLanguageDescription(String language) {
