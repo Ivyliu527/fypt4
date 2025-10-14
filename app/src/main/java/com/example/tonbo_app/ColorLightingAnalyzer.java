@@ -215,7 +215,8 @@ public class ColorLightingAnalyzer {
         
         for (int pixel : pixels) {
             String colorCategory = categorizeColor(pixel);
-            colorCount.put(colorCategory, colorCount.getOrDefault(colorCategory, 0) + 1);
+            Integer currentCount = colorCount.get(colorCategory);
+            colorCount.put(colorCategory, (currentCount != null ? currentCount : 0) + 1);
         }
         
         return colorCount;
