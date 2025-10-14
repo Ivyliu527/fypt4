@@ -168,7 +168,7 @@
             android:backgroundTint="@null"
             android:layout_marginEnd="12dp"
             android:gravity="center"
-            android:contentDescription="@string/capture_button_desc" />
+            android:contentDescription="@string/document_capture_button_desc" />
 
         <Button
             android:id="@+id/readButton"

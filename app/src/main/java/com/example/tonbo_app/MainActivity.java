@@ -307,7 +307,7 @@ public class MainActivity extends BaseAccessibleActivity {
                 startVoiceCommandActivity();
                 break;
             case "find_items":
-                announceInfo(getString(R.string.function_find_items) + "功能開發中");
+                startFindItemsActivity();
                 break;
             case "live_assistance":
                 announceInfo(getString(R.string.function_live_assistance) + "功能開發中");
@@ -346,6 +346,18 @@ public class MainActivity extends BaseAccessibleActivity {
         } catch (Exception e) {
             announceError("語音命令功能暫不可用");
             Log.e("MainActivity", "打開語音命令失敗: " + e.getMessage());
+        }
+    }
+
+    private void startFindItemsActivity() {
+        try {
+            Intent intent = new Intent(MainActivity.this, FindItemsActivity.class);
+            intent.putExtra("language", currentLanguage);
+            announceNavigation("正在進入尋找物品頁面");
+            startActivity(intent);
+        } catch (Exception e) {
+            announceError("尋找物品功能暫不可用");
+            Log.e("MainActivity", "打開尋找物品失敗: " + e.getMessage());
         }
     }
 
