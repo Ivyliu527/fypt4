@@ -8,6 +8,7 @@
     <string name="emergency_button_text">Emergency Help\nLong press 3 sec</string>
     <string name="emergency_help_text">Emergency Help</string>
     <string name="long_press_send_text">Long press 3 sec</string>
+    <string name="operation_guide">Operation Guide</string>
     <string name="operation_guide_title">Operation Guide</string>
     <string name="operation_guide_content">• Tap function items to enter\n• Top right buttons: Emergency Settings🚨, System Settings⚙, Language Switch\n• Emergency: Long press red button for 3 seconds</string>
     
@@ -40,6 +41,15 @@
     <string name="camera_api_incompatible">Camera API incompatible</string>
     <string name="camera_api_error">Error: Android version too old or API incompatible</string>
     <string name="camera_bind_failed">Camera bind failed</string>
+    <string name="camera_setup_failed">Camera setup failed</string>
+    <string name="analysis_failed">Analysis failed</string>
+    <string name="analysis_complete">Analysis complete</string>
+    <string name="camera_not_ready">Please wait for camera to be ready</string>
+    <string name="camera_not_ready_status">Camera not ready</string>
+    <string name="no_text_or_currency">No text or currency detected</string>
+    <string name="flash_on_announcement">Flash is on</string>
+    <string name="flash_off_announcement">Flash is off</string>
+    <string name="flash_not_supported">Flash not supported on this device</string>
     <string name="camera_bind_error">Error: %1$s</string>
     <string name="detection_status_format">Real-time detection - %1$d objects (%2$dms)</string>
     <string name="detection_no_objects">Real-time detection - No objects found</string>

@@ -169,7 +169,10 @@ public class ObjectDetectorHelper {
                     float score = detection.getCategories().get(0).getScore();
                     
                     // 獲取中文標籤
-                    String labelZh = LABEL_MAP_ZH.getOrDefault(label, label);
+                    String labelZh = LABEL_MAP_ZH.get(label);
+                    if (labelZh == null) {
+                        labelZh = label;
+                    }
                     
                     results.add(new DetectionResult(
                             label,

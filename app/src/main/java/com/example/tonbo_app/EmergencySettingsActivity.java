@@ -18,7 +18,7 @@ import java.util.List;
  * 用於配置緊急聯絡人、測試緊急功能
  */
 public class EmergencySettingsActivity extends BaseAccessibleActivity {
-    private static final String TAG = "EmergencySettingsActivity";
+    private static final String TAG = "EmergencySettingsAct";
     private static final String PREFS_NAME = "emergency_settings";
     private static final String KEY_CONTACTS = "emergency_contacts";
     private static final String KEY_MESSAGE = "emergency_message";

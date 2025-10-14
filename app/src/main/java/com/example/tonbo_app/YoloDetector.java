@@ -13,6 +13,8 @@ import androidx.camera.core.ImageProxy;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -252,7 +254,12 @@ public class YoloDetector {
         }
         
         // 按置信度排序
-        results.sort((a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
+        Collections.sort(results, new Comparator<DetectionResult>() {
+            @Override
+            public int compare(DetectionResult a, DetectionResult b) {
+                return Float.compare(b.getConfidence(), a.getConfidence());
+            }
+        });
         
         return results;
     }
@@ -281,7 +288,8 @@ public class YoloDetector {
      * 獲取中文類別名稱
      */
     public static String getChineseLabel(String englishLabel) {
-        return CLASS_NAMES_ZH.getOrDefault(englishLabel, englishLabel);
+        String chineseLabel = CLASS_NAMES_ZH.get(englishLabel);
+        return chineseLabel != null ? chineseLabel : englishLabel;
     }
     
     public void close() {

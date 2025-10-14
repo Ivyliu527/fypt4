@@ -25,7 +25,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class DocumentCurrencyActivity extends BaseAccessibleActivity {
-    private static final String TAG = "DocumentCurrencyActivity";
+    private static final String TAG = "DocumentCurrencyAct";
     private static final int REQUEST_CODE_PERMISSIONS = 10;
     private static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.CAMERA};
 
