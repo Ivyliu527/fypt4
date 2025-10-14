@@ -8,6 +8,7 @@ import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,8 @@ import java.util.concurrent.CountDownLatch;
 public class OCRHelper {
     private static final String TAG = "OCRHelper";
 
-    private com.google.mlkit.vision.text.TextRecognizer textRecognizer;
+    private com.google.mlkit.vision.text.TextRecognizer chineseTextRecognizer;
+    private com.google.mlkit.vision.text.TextRecognizer englishTextRecognizer;
     private Context context;
 
     public OCRHelper(Context context) {
@@ -32,10 +34,16 @@ public class OCRHelper {
      * 初始化文字識別器
      */
     private void initializeTextRecognizer() {
-        // 使用中文文字識別選項，支持中英文混合識別
-        textRecognizer = TextRecognition.getClient(
+        // 初始化中文文字識別器
+        chineseTextRecognizer = TextRecognition.getClient(
                 new ChineseTextRecognizerOptions.Builder().build()
         );
+        
+        // 初始化英文文字識別器
+        englishTextRecognizer = TextRecognition.getClient(
+                TextRecognizerOptions.DEFAULT_OPTIONS
+        );
+        
         Log.d(TAG, "OCR文字識別器初始化完成");
     }
 
@@ -54,15 +62,39 @@ public class OCRHelper {
             // 使用CountDownLatch等待異步結果
             CountDownLatch latch = new CountDownLatch(1);
 
-            textRecognizer.process(image)
+            // 先嘗試中文識別器
+            chineseTextRecognizer.process(image)
                     .addOnSuccessListener(visionText -> {
                         // 處理識別結果
-                        processTextRecognitionResult(visionText, results);
-                        latch.countDown();
+                        processTextRecognitionResult(visionText, results, "中文識別");
+                        
+                        // 如果中文識別結果較少，再嘗試英文識別器
+                        if (results.isEmpty() || results.size() < 2) {
+                            englishTextRecognizer.process(image)
+                                    .addOnSuccessListener(englishText -> {
+                                        processTextRecognitionResult(englishText, results, "英文識別");
+                                        latch.countDown();
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.w(TAG, "英文OCR識別失敗: " + e.getMessage());
+                                        latch.countDown();
+                                    });
+                        } else {
+                            latch.countDown();
+                        }
                     })
                     .addOnFailureListener(e -> {
-                        Log.e(TAG, "OCR識別失敗: " + e.getMessage());
-                        latch.countDown();
+                        Log.e(TAG, "中文OCR識別失敗，嘗試英文識別: " + e.getMessage());
+                        // 中文識別失敗，嘗試英文識別
+                        englishTextRecognizer.process(image)
+                                .addOnSuccessListener(englishText -> {
+                                    processTextRecognitionResult(englishText, results, "英文識別");
+                                    latch.countDown();
+                                })
+                                .addOnFailureListener(e2 -> {
+                                    Log.e(TAG, "英文OCR識別也失敗: " + e2.getMessage());
+                                    latch.countDown();
+                                });
                     });
 
             // 等待識別完成（最多等待10秒）
@@ -78,7 +110,7 @@ public class OCRHelper {
     /**
      * 處理文字識別結果
      */
-    private void processTextRecognitionResult(Text visionText, List<OCRResult> results) {
+    private void processTextRecognitionResult(Text visionText, List<OCRResult> results, String recognizerType) {
         String fullText = visionText.getText();
         Log.d(TAG, "識別到的完整文字: " + fullText);
 
@@ -86,7 +118,7 @@ public class OCRHelper {
             // 創建主要識別結果
             OCRResult mainResult = new OCRResult(
                     fullText,
-                    "完整文字",
+                    recognizerType + "完整文字",
                     calculateConfidence(fullText)
             );
             results.add(mainResult);
@@ -97,7 +129,7 @@ public class OCRHelper {
                 if (blockText != null && !blockText.trim().isEmpty()) {
                     OCRResult blockResult = new OCRResult(
                             blockText,
-                            "文字塊",
+                            recognizerType + "文字塊",
                             calculateConfidence(blockText)
                     );
                     results.add(blockResult);
@@ -109,7 +141,7 @@ public class OCRHelper {
                     if (lineText != null && !lineText.trim().isEmpty()) {
                         OCRResult lineResult = new OCRResult(
                                 lineText,
-                                "文字行",
+                                recognizerType + "文字行",
                                 calculateConfidence(lineText)
                         );
                         results.add(lineResult);
@@ -202,10 +234,15 @@ public class OCRHelper {
      * 關閉文字識別器
      */
     public void close() {
-        if (textRecognizer != null) {
-            textRecognizer.close();
-            textRecognizer = null;
-            Log.d(TAG, "OCR文字識別器已關閉");
+        if (chineseTextRecognizer != null) {
+            chineseTextRecognizer.close();
+            chineseTextRecognizer = null;
+            Log.d(TAG, "中文OCR文字識別器已關閉");
+        }
+        if (englishTextRecognizer != null) {
+            englishTextRecognizer.close();
+            englishTextRecognizer = null;
+            Log.d(TAG, "英文OCR文字識別器已關閉");
         }
     }
 
