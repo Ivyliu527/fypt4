@@ -25,6 +25,35 @@
     <string name="language_english_desc">English</string>
     <string name="language_mandarin_desc">Mandarin</string>
     
+    <!-- Find Items Page -->
+    <string name="find_items_title">Find Items</string>
+    <string name="find_items_title_desc">Find Items page title</string>
+    <string name="find_items_ready">Ready to mark or find items</string>
+    <string name="camera_ready">Camera ready</string>
+    <string name="captured_image_desc">Captured image display</string>
+    <string name="item_name_input_desc">Item name input field</string>
+    <string name="capture_button_desc">Capture photo button</string>
+    <string name="mark_item_button_desc">Mark item button</string>
+    <string name="find_item_button_desc">Find items button</string>
+    <string name="status_text_desc">Status text display</string>
+    <string name="capture_photo">Capture Photo</string>
+    <string name="mark_item">Mark Item</string>
+    <string name="find_items">Find Items</string>
+    <string name="item_name_label">Item Name:</string>
+    <string name="item_name_label_desc">Item name label</string>
+    <string name="item_name_hint">Enter item name</string>
+    <string name="photo_captured_successfully">Photo captured successfully</string>
+    <string name="photo_capture_failed">Photo capture failed</string>
+    <string name="please_enter_item_name">Please enter item name</string>
+    <string name="no_photo_to_mark">No photo to mark</string>
+    <string name="item_marked_successfully">Item marked successfully: %1$s</string>
+    <string name="no_marked_items">No marked items found</string>
+    <string name="found_items_count">Found %1$d marked items</string>
+    <string name="marked_items_list">Marked Items (%1$d)</string>
+    <string name="marked_items_list_desc">Marked items list title</string>
+    <string name="selected_item">Selected item: %1$s</string>
+    <string name="going_back_to_home">Going back to home</string>
+    
     <!-- Accessibility Descriptions -->
     <string name="camera_preview_desc">Camera preview screen</string>
     <string name="object_detection_overlay_desc">Object detection result overlay, showing detection boxes and labels</string>
@@ -84,7 +113,7 @@
     <string name="status_desc">Current scan status</string>
     <string name="result_content_desc">Recognition result text content</string>
     <string name="capture_button">📷\nCapture Scan</string>
-    <string name="capture_button_desc">Capture and scan text and currency</string>
+    <string name="document_capture_button_desc">Capture and scan text and currency</string>
     <string name="read_button">🎤\nRead Aloud</string>
     <string name="read_button_desc">Read recognition results aloud</string>
     <string name="clear_button">🧹\nClear</string>

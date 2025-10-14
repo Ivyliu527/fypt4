@@ -84,6 +84,12 @@
             android:name=".VoiceCommandActivity"
             android:label="@string/voice_command_title"
             android:exported="false" />
+            
+        <!-- Find Items Activity - 尋找物品 -->
+        <activity
+            android:name=".FindItemsActivity"
+            android:label="@string/find_items_title"
+            android:exported="false" />
     </application>
 
 </manifest>

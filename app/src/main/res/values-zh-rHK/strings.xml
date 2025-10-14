@@ -22,6 +22,35 @@
     <string name="function_find_items">尋找物品</string>
     <string name="function_live_assistance">即時協助</string>
     
+    <!-- Find Items Page -->
+    <string name="find_items_title">尋找物品</string>
+    <string name="find_items_title_desc">尋找物品頁面標題</string>
+    <string name="find_items_ready">準備標記或尋找物品</string>
+    <string name="camera_ready">相機已準備就緒</string>
+    <string name="captured_image_desc">拍攝的圖片顯示</string>
+    <string name="item_name_input_desc">物品名稱輸入欄位</string>
+    <string name="capture_button_desc">拍攝照片按鈕</string>
+    <string name="mark_item_button_desc">標記物品按鈕</string>
+    <string name="find_item_button_desc">尋找物品按鈕</string>
+    <string name="status_text_desc">狀態文字顯示</string>
+    <string name="capture_photo">拍攝照片</string>
+    <string name="mark_item">標記物品</string>
+    <string name="find_items">尋找物品</string>
+    <string name="item_name_label">物品名稱：</string>
+    <string name="item_name_label_desc">物品名稱標籤</string>
+    <string name="item_name_hint">輸入物品名稱</string>
+    <string name="photo_captured_successfully">照片拍攝成功</string>
+    <string name="photo_capture_failed">照片拍攝失敗</string>
+    <string name="please_enter_item_name">請輸入物品名稱</string>
+    <string name="no_photo_to_mark">沒有照片可標記</string>
+    <string name="item_marked_successfully">物品標記成功：%1$s</string>
+    <string name="no_marked_items">沒有找到標記的物品</string>
+    <string name="found_items_count">找到%1$d個標記物品</string>
+    <string name="marked_items_list">標記物品(%1$d)</string>
+    <string name="marked_items_list_desc">標記物品列表標題</string>
+    <string name="selected_item">選中物品：%1$s</string>
+    <string name="going_back_to_home">返回主頁</string>
+    
     <!-- 功能描述 -->
     <string name="desc_environment">描述周圍環境和物體</string>
     <string name="desc_document">掃描文件和識別貨幣</string>
@@ -83,7 +112,7 @@
     <string name="status_desc">狀態描述</string>
     <string name="result_content_desc">結果內容描述</string>
     <string name="capture_button">拍攝</string>
-    <string name="capture_button_desc">拍攝按鈕</string>
+    <string name="document_capture_button_desc">拍攝按鈕</string>
     <string name="read_button">讀取</string>
     <string name="read_button_desc">讀取按鈕</string>
     <string name="clear_button">清除</string>

@@ -61,7 +61,7 @@
     <string name="status_desc">当前扫描状态</string>
     <string name="result_content_desc">识别结果文字内容</string>
     <string name="capture_button">📷\n拍照扫描</string>
-    <string name="capture_button_desc">拍照并扫描文字和货币</string>
+    <string name="document_capture_button_desc">拍照并扫描文字和货币</string>
     <string name="read_button">🎤\n语音朗读</string>
     <string name="read_button_desc">语音朗读识别结果</string>
     <string name="clear_button">🧹\n清除</string>
@@ -87,6 +87,35 @@
     <string name="function_voice_command">语音命令</string>
     <string name="function_find_items">寻找物品</string>
     <string name="function_live_assistance">即时协助</string>
+    
+    <!-- Find Items Page -->
+    <string name="find_items_title">寻找物品</string>
+    <string name="find_items_title_desc">寻找物品页面标题</string>
+    <string name="find_items_ready">准备标记或寻找物品</string>
+    <string name="camera_ready">相机已准备就绪</string>
+    <string name="captured_image_desc">拍摄的图片显示</string>
+    <string name="item_name_input_desc">物品名称输入字段</string>
+    <string name="capture_button_desc">拍摄照片按钮</string>
+    <string name="mark_item_button_desc">标记物品按钮</string>
+    <string name="find_item_button_desc">寻找物品按钮</string>
+    <string name="status_text_desc">状态文字显示</string>
+    <string name="capture_photo">拍摄照片</string>
+    <string name="mark_item">标记物品</string>
+    <string name="find_items">寻找物品</string>
+    <string name="item_name_label">物品名称：</string>
+    <string name="item_name_label_desc">物品名称标签</string>
+    <string name="item_name_hint">输入物品名称</string>
+    <string name="photo_captured_successfully">照片拍摄成功</string>
+    <string name="photo_capture_failed">照片拍摄失败</string>
+    <string name="please_enter_item_name">请输入物品名称</string>
+    <string name="no_photo_to_mark">没有照片可标记</string>
+    <string name="item_marked_successfully">物品标记成功：%1$s</string>
+    <string name="no_marked_items">没有找到标记的物品</string>
+    <string name="found_items_count">找到%1$d个标记物品</string>
+    <string name="marked_items_list">标记物品(%1$d)</string>
+    <string name="marked_items_list_desc">标记物品列表标题</string>
+    <string name="selected_item">选中物品：%1$s</string>
+    <string name="going_back_to_home">返回主页</string>
     
     <!-- 功能描述 -->
     <string name="desc_environment">描述周围环境和物体</string>
