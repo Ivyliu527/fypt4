@@ -1,7 +1,9 @@
 package com.example.tonbo_app;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -9,6 +11,8 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public abstract class BaseAccessibleActivity extends AppCompatActivity {
     protected TTSManager ttsManager;
@@ -16,6 +20,9 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
     protected LocaleManager localeManager;
     protected GlobalVoiceCommandManager globalVoiceManager;
     protected String currentLanguage;
+    
+    // 權限請求常數
+    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 1001;
     
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -45,6 +52,9 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
         
         // 初始化全局語音命令管理器
         initializeGlobalVoiceManager();
+        
+        // 檢查並請求麥克風權限
+        checkAndRequestMicrophonePermission();
         
         // 設置無障礙支持
         setupAccessibility();
@@ -314,6 +324,43 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
     // 獲取當前語言
     protected String getCurrentLanguage() {
         return currentLanguage;
+    }
+    
+    /**
+     * 檢查並請求麥克風權限
+     */
+    private void checkAndRequestMicrophonePermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) 
+                != PackageManager.PERMISSION_GRANTED) {
+            
+            // 權限未授予，請求權限
+            ActivityCompat.requestPermissions(this, 
+                new String[]{Manifest.permission.RECORD_AUDIO}, 
+                REQUEST_RECORD_AUDIO_PERMISSION);
+        } else {
+            // 權限已授予
+            android.util.Log.d("BaseAccessibleActivity", "麥克風權限已授予");
+        }
+    }
+    
+    /**
+     * 處理權限請求結果
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // 麥克風權限已授予
+                android.util.Log.d("BaseAccessibleActivity", "麥克風權限請求成功");
+                announceInfo("麥克風權限已授予，語音命令功能已啟用");
+            } else {
+                // 麥克風權限被拒絕
+                android.util.Log.w("BaseAccessibleActivity", "麥克風權限請求被拒絕");
+                announceInfo("麥克風權限被拒絕，語音命令功能將不可用");
+            }
+        }
     }
     
     // 切換語言

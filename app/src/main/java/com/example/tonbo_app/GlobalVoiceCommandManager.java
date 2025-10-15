@@ -135,9 +135,7 @@ public class GlobalVoiceCommandManager {
         // 檢查語音識別權限
         if (!checkMicrophonePermission()) {
             Log.e(TAG, "麥克風權限不足");
-            if (callback != null) {
-                callback.onVoiceError("需要麥克風權限才能使用語音命令");
-            }
+            handleMicrophonePermissionMissing();
             return;
         }
         
@@ -205,8 +203,79 @@ public class GlobalVoiceCommandManager {
     }
     
     private boolean checkMicrophonePermission() {
-        return ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) 
+        boolean hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) 
                 == PackageManager.PERMISSION_GRANTED;
+        Log.d(TAG, "麥克風權限檢查: " + (hasPermission ? "已授予" : "未授予"));
+        return hasPermission;
+    }
+    
+    /**
+     * 處理麥克風權限缺失
+     */
+    private void handleMicrophonePermissionMissing() {
+        Log.w(TAG, "處理麥克風權限缺失");
+        
+        // 獲取本地化錯誤消息
+        String errorMessage = getLocalizedPermissionErrorMessage();
+        
+        // 通知回調
+        if (callback != null) {
+            callback.onVoiceError(errorMessage);
+        }
+        
+        // 播放語音提示
+        if (ttsManager != null) {
+            ttsManager.speak(null, errorMessage, true);
+        }
+        
+        // 提供權限請求指導
+        providePermissionGuidance();
+    }
+    
+    /**
+     * 獲取本地化的權限錯誤消息
+     */
+    private String getLocalizedPermissionErrorMessage() {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        switch (currentLang) {
+            case "english":
+                return "Microphone permission required for voice commands. Please grant permission in settings.";
+            case "mandarin":
+                return "語音命令需要麥克風權限，請在設置中授予權限。";
+            case "cantonese":
+            default:
+                return "語音命令需要麥克風權限，請喺設置度授予權限。";
+        }
+    }
+    
+    /**
+     * 提供權限請求指導
+     */
+    private void providePermissionGuidance() {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        String guidanceMessage;
+        
+        switch (currentLang) {
+            case "english":
+                guidanceMessage = "To enable voice commands, go to Settings > Apps > Tonbo App > Permissions > Microphone and enable it.";
+                break;
+            case "mandarin":
+                guidanceMessage = "要啟用語音命令，請前往設置 > 應用 > Tonbo應用 > 權限 > 麥克風並啟用它。";
+                break;
+            case "cantonese":
+            default:
+                guidanceMessage = "要啟用語音命令，請前往設置 > 應用 > Tonbo應用 > 權限 > 麥克風並啟用它。";
+                break;
+        }
+        
+        Log.i(TAG, "權限指導: " + guidanceMessage);
+        
+        // 延遲播放指導消息
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (ttsManager != null) {
+                ttsManager.speak(null, guidanceMessage, true);
+            }
+        }, 3000); // 3秒後播放指導消息
     }
     
     public void stopListening() {
@@ -832,9 +901,19 @@ public class GlobalVoiceCommandManager {
         boolean hasPermission = checkMicrophonePermission();
         Log.d(TAG, "麥克風權限: " + (hasPermission ? "已授予" : "未授予"));
         
+        if (!hasPermission) {
+            Log.w(TAG, "⚠️ 麥克風權限未授予 - 這是語音識別失敗的主要原因");
+            providePermissionGuidance();
+            return;
+        }
+        
         // 檢查語音識別可用性
         boolean isAvailable = SpeechRecognizer.isRecognitionAvailable(context);
         Log.d(TAG, "語音識別服務: " + (isAvailable ? "可用" : "不可用"));
+        
+        if (!isAvailable) {
+            Log.w(TAG, "⚠️ 語音識別服務不可用 - 請檢查系統設置");
+        }
         
         // 檢查識別器狀態
         boolean isConnected = isRecognitionServiceConnected();
@@ -850,7 +929,30 @@ public class GlobalVoiceCommandManager {
         // 檢查重試次數
         Log.d(TAG, "當前重試次數: " + retryCount + "/" + MAX_RETRY_ATTEMPTS);
         
+        // 綜合診斷結果
+        if (hasPermission && isAvailable && isConnected) {
+            Log.i(TAG, "✅ 語音識別系統狀態正常");
+        } else {
+            Log.w(TAG, "❌ 語音識別系統存在問題，請檢查上述項目");
+        }
+        
         Log.d(TAG, "語音識別診斷完成");
+    }
+    
+    /**
+     * 檢查並請求麥克風權限
+     */
+    public boolean checkAndRequestMicrophonePermission() {
+        boolean hasPermission = checkMicrophonePermission();
+        
+        if (!hasPermission) {
+            Log.i(TAG, "麥克風權限未授予，嘗試請求權限");
+            // 注意：這裡需要Activity來處理權限請求
+            // 在GlobalVoiceCommandManager中我們只能檢查，不能直接請求
+            // 實際的權限請求需要在Activity中處理
+        }
+        
+        return hasPermission;
     }
     
     /**

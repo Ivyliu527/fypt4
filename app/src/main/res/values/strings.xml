@@ -294,5 +294,11 @@
     
     <!-- Accessibility Description -->
     <string name="accessibility_service_description">Tonbo accessibility service to assist visually impaired users</string>
+    
+    <!-- 權限相關 -->
+    <string name="microphone_permission_granted">Microphone permission granted, voice commands enabled</string>
+    <string name="microphone_permission_denied">Microphone permission denied, voice commands will be unavailable</string>
+    <string name="microphone_permission_required">Microphone permission required for voice commands</string>
+    <string name="microphone_permission_guidance">To enable voice commands, go to Settings > Apps > Tonbo App > Permissions > Microphone and enable it</string>
 </resources>
 
