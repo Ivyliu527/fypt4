@@ -80,8 +80,21 @@ public class DetectionOverlayView extends View {
         Log.d(TAG, "updateDetections called with " + (newDetections != null ? newDetections.size() : 0) + " detections");
         this.detections = newDetections != null ? new ArrayList<>(newDetections) : new ArrayList<>();
         Log.d(TAG, "Updated detections list size: " + this.detections.size());
-        postInvalidate(); // 觸發重繪
-        Log.d(TAG, "postInvalidate() called");
+        
+        // 確保視圖可見
+        setVisibility(VISIBLE);
+        
+        // 強制重繪
+        postInvalidate();
+        invalidate();
+        
+        Log.d(TAG, "postInvalidate() and invalidate() called");
+        
+        // 打印檢測結果詳情
+        for (int i = 0; i < this.detections.size(); i++) {
+            ObjectDetectorHelper.DetectionResult detection = this.detections.get(i);
+            Log.d(TAG, "Detection " + i + ": " + detection.getLabel() + " (" + detection.getConfidence() + ") at " + detection.getBoundingBox());
+        }
     }
     
     /**
@@ -127,17 +140,40 @@ public class DetectionOverlayView extends View {
         // 獲取邊界框（模型輸出的是0-1的相對座標）
         RectF boundingBox = detection.getBoundingBox();
         
+        Log.d(TAG, "原始邊界框座標: " + boundingBox);
+        Log.d(TAG, "視圖尺寸: " + viewWidth + "x" + viewHeight);
+        
         // 轉換為實際像素座標
         float left = boundingBox.left * viewWidth;
         float top = boundingBox.top * viewHeight;
         float right = boundingBox.right * viewWidth;
         float bottom = boundingBox.bottom * viewHeight;
         
+        Log.d(TAG, "轉換後座標: left=" + left + ", top=" + top + ", right=" + right + ", bottom=" + bottom);
+        
+        // 檢查座標是否在有效範圍內
+        if (left < 0 || top < 0 || right > viewWidth || bottom > viewHeight) {
+            Log.w(TAG, "邊界框座標超出視圖範圍，調整中...");
+            left = Math.max(0, Math.min(left, viewWidth));
+            top = Math.max(0, Math.min(top, viewHeight));
+            right = Math.max(0, Math.min(right, viewWidth));
+            bottom = Math.max(0, Math.min(bottom, viewHeight));
+            Log.d(TAG, "調整後座標: left=" + left + ", top=" + top + ", right=" + right + ", bottom=" + bottom);
+        }
+        
+        // 檢查邊界框是否有效
+        if (right <= left || bottom <= top) {
+            Log.w(TAG, "無效的邊界框尺寸，跳過繪製");
+            return;
+        }
+        
         // 創建邊界框矩形
         RectF rect = new RectF(left, top, right, bottom);
         
         // 設置邊界框顏色
         boxPaint.setColor(boxColor);
+        
+        Log.d(TAG, "繪製邊界框: " + rect + ", 顏色: " + Integer.toHexString(boxColor));
         
         // 繪製邊界框
         canvas.drawRect(rect, boxPaint);

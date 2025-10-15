@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -361,8 +362,16 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                 String speechText = objectDetectorHelper.formatResultsForSpeech(results);
                                 
                                 runOnUiThread(() -> {
+                                    Log.d(TAG, "更新UI，檢測結果數量: " + results.size());
+                                    
                                     // 更新覆蓋層顯示檢測框
                                     detectionOverlay.updateDetections(results);
+                                    
+                                    // 添加測試邊界框（用於調試）
+                                    if (results.isEmpty()) {
+                                        Log.d(TAG, "沒有檢測到物體，添加測試邊界框");
+                                        addTestBoundingBox();
+                                    }
                                     
                                     updateDetectionResults(resultText);
                                     updateDetectionStatus(String.format(
@@ -930,5 +939,27 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 startCamera();
             }
         }
+    }
+    
+    /**
+     * 添加測試邊界框（用於調試邊界框顯示問題）
+     */
+    private void addTestBoundingBox() {
+        Log.d(TAG, "添加測試邊界框");
+        
+        // 創建一個測試檢測結果
+        List<ObjectDetectorHelper.DetectionResult> testResults = new ArrayList<>();
+        
+        // 在屏幕中央添加一個測試邊界框
+        android.graphics.RectF testBoundingBox = new android.graphics.RectF(0.3f, 0.3f, 0.7f, 0.7f);
+        ObjectDetectorHelper.DetectionResult testDetection = new ObjectDetectorHelper.DetectionResult(
+            "test", "測試", 0.8f, testBoundingBox
+        );
+        testResults.add(testDetection);
+        
+        // 更新覆蓋層
+        detectionOverlay.updateDetections(testResults);
+        
+        Log.d(TAG, "測試邊界框已添加");
     }
 }
