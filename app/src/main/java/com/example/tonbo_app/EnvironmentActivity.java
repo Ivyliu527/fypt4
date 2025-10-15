@@ -390,8 +390,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                     // 只在有新物體時播報（避免重複播報）
                                     if (!speechText.equals(lastDetectionResult)) {
                                         lastDetectionResult = speechText;
-                                        // 可選：自動播報
-                                        // speakDetectionResults();
+                                        // 自動播報檢測結果給視障人士
+                                        speakDetectionResults(speechText);
                                     }
                                     
                                     // 定期進行顏色和光線分析
@@ -964,6 +964,43 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 objectDetectorHelper.forceReset();
                 announceInfo("檢測器狀態已重置，正在恢復正常檢測");
             }
+        }
+    }
+    
+    /**
+     * 語音播報檢測結果
+     */
+    private void speakDetectionResults(String speechText) {
+        if (ttsManager != null && speechText != null && !speechText.isEmpty()) {
+            Log.d(TAG, "語音播報檢測結果: " + speechText);
+            
+            // 添加環境描述前綴
+            String fullSpeechText = getEnvironmentDescriptionPrefix() + speechText;
+            
+            // 播報檢測結果
+            ttsManager.speak(null, fullSpeechText, true);
+            
+            // 震動反饋
+            if (vibrationManager != null) {
+                vibrationManager.vibrateClick();
+            }
+        }
+    }
+    
+    /**
+     * 獲取環境描述前綴
+     */
+    private String getEnvironmentDescriptionPrefix() {
+        String currentLang = LocaleManager.getInstance(this).getCurrentLanguage();
+        
+        switch (currentLang) {
+            case "english":
+                return "Environment detected: ";
+            case "mandarin":
+                return "環境檢測到：";
+            case "cantonese":
+            default:
+                return "環境檢測到：";
         }
     }
     
