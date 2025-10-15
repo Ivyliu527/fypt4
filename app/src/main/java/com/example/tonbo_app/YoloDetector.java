@@ -249,7 +249,23 @@ public class YoloDetector {
             if (selectedIndices.add(index)) {
                 String[] obj = mockObjects[index];
                 float confidence = 0.75f + random.nextFloat() * 0.24f; // 0.75-0.99
-                results.add(new DetectionResult(obj[0], obj[1], confidence));
+                
+                // 創建隨機邊界框
+                float left = random.nextFloat() * 0.7f; // 0-0.7
+                float top = random.nextFloat() * 0.7f;  // 0-0.7
+                float right = left + 0.1f + random.nextFloat() * 0.2f; // 0.1-0.3寬度
+                float bottom = top + 0.1f + random.nextFloat() * 0.2f; // 0.1-0.3高度
+                
+                // 確保邊界框在有效範圍內
+                right = Math.min(right, 1.0f);
+                bottom = Math.min(bottom, 1.0f);
+                
+                android.graphics.Rect boundingBox = new android.graphics.Rect(
+                    (int)(left * 1000), (int)(top * 1000), 
+                    (int)(right * 1000), (int)(bottom * 1000)
+                );
+                
+                results.add(new DetectionResult(obj[0], obj[1], confidence, boundingBox));
             }
         }
         

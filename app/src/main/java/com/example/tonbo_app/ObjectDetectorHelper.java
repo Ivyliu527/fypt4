@@ -170,9 +170,25 @@ public class ObjectDetectorHelper {
         
         try {
             if (useYolo && yoloDetector != null) {
-                // 使用YOLO檢測器（更準確）
-                results = detectWithYolo(bitmap);
-                Log.d(TAG, String.format("YOLO檢測到 %d 個物體", results.size()));
+                // 嘗試使用YOLO檢測器（更準確）
+                try {
+                    results = detectWithYolo(bitmap);
+                    Log.d(TAG, String.format("YOLO檢測到 %d 個物體", results.size()));
+                    
+                    // 如果YOLO檢測結果為空，嘗試SSD
+                    if (results.isEmpty() && objectDetector != null) {
+                        Log.d(TAG, "YOLO檢測結果為空，嘗試使用SSD檢測器");
+                        results = detectWithSSD(bitmap);
+                        Log.d(TAG, String.format("SSD檢測到 %d 個物體", results.size()));
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "YOLO檢測器異常，降級到SSD: " + e.getMessage());
+                    useYolo = false; // 暫時禁用YOLO
+                    if (objectDetector != null) {
+                        results = detectWithSSD(bitmap);
+                        Log.d(TAG, String.format("SSD檢測到 %d 個物體", results.size()));
+                    }
+                }
             } else if (objectDetector != null) {
                 // 使用SSD檢測器
                 results = detectWithSSD(bitmap);
@@ -257,22 +273,40 @@ public class ObjectDetectorHelper {
                         labelZh = yoloResult.getLabel();
                     }
                     
-                    // 轉換Rect為RectF
+                    // 檢查邊界框是否為null
                     android.graphics.Rect rect = yoloResult.getBoundingBox();
-                    android.graphics.RectF rectF = new android.graphics.RectF(
-                            rect.left, rect.top, rect.right, rect.bottom
-                    );
-                    
-                    results.add(new DetectionResult(
-                            yoloResult.getLabel(),
-                            labelZh,
-                            yoloResult.getConfidence(),
-                            rectF
-                    ));
+                    if (rect != null) {
+                        // 轉換Rect為RectF
+                        android.graphics.RectF rectF = new android.graphics.RectF(
+                                rect.left, rect.top, rect.right, rect.bottom
+                        );
+                        
+                        results.add(new DetectionResult(
+                                yoloResult.getLabel(),
+                                labelZh,
+                                yoloResult.getConfidence(),
+                                rectF
+                        ));
+                    } else {
+                        // 如果邊界框為null，創建一個默認邊界框
+                        Log.w(TAG, "YOLO檢測結果邊界框為null，使用默認邊界框");
+                        android.graphics.RectF defaultRect = new android.graphics.RectF(0.1f, 0.1f, 0.9f, 0.9f);
+                        results.add(new DetectionResult(
+                                yoloResult.getLabel(),
+                                labelZh,
+                                yoloResult.getConfidence(),
+                                defaultRect
+                        ));
+                    }
                 }
             }
         } catch (Exception e) {
             Log.e(TAG, "YOLO檢測失敗: " + e.getMessage());
+            // YOLO失敗時，嘗試使用SSD檢測器
+            Log.d(TAG, "YOLO檢測失敗，嘗試使用SSD檢測器");
+            if (objectDetector != null) {
+                results = detectWithSSD(bitmap);
+            }
         }
         
         return results;
