@@ -10,6 +10,7 @@ import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,11 +22,16 @@ import java.util.Map;
 public class ObjectDetectorHelper {
     private static final String TAG = "ObjectDetectorHelper";
     private static final String MODEL_FILE = "ssd_mobilenet_v1.tflite";
-    private static final float SCORE_THRESHOLD = 0.5f;
-    private static final int MAX_RESULTS = 10;
+    private static final String YOLO_MODEL_FILE = "yolov8n.tflite";
+    private static final float SCORE_THRESHOLD = 0.3f;  // 降低閾值提高召回率
+    private static final float HIGH_CONFIDENCE_THRESHOLD = 0.7f;  // 高置信度閾值
+    private static final int MAX_RESULTS = 20;  // 增加最大結果數
+    private static final float NMS_THRESHOLD = 0.5f;  // 非極大值抑制閾值
     
     private ObjectDetector objectDetector;
+    private YoloDetector yoloDetector;
     private Context context;
+    private boolean useYolo = false;  // 是否使用YOLO檢測器
     
     // COCO類別中文映射
     private static final Map<String, String> LABEL_MAP_ZH = new HashMap<>();
@@ -116,6 +122,7 @@ public class ObjectDetectorHelper {
     public ObjectDetectorHelper(Context context) {
         this.context = context;
         setupObjectDetector();
+        setupYoloDetector();
     }
     
     private void setupObjectDetector() {
@@ -132,43 +139,88 @@ public class ObjectDetectorHelper {
                     options
             );
             
-            Log.d(TAG, "✅ 物體檢測器初始化成功！");
+            Log.d(TAG, "✅ SSD物體檢測器初始化成功！");
         } catch (IOException e) {
-            Log.e(TAG, "❌ 初始化物體檢測器失敗: " + e.getMessage());
+            Log.e(TAG, "❌ 初始化SSD物體檢測器失敗: " + e.getMessage());
+        }
+    }
+    
+    private void setupYoloDetector() {
+        try {
+            yoloDetector = new YoloDetector(context);
+            // YoloDetector構造函數會自動初始化
+            useYolo = true;
+            Log.d(TAG, "✅ YOLO檢測器初始化成功！");
+        } catch (Exception e) {
+            Log.e(TAG, "❌ 初始化YOLO檢測器失敗: " + e.getMessage());
+            useYolo = false;
         }
     }
     
     /**
-     * 檢測圖像中的物體
+     * 檢測圖像中的物體 - 使用雙檢測器融合提高準確率
      */
     public List<DetectionResult> detect(Bitmap bitmap) {
         List<DetectionResult> results = new ArrayList<>();
-        
-        if (objectDetector == null) {
-            Log.w(TAG, "檢測器未初始化");
-            return results;
-        }
         
         if (bitmap == null || bitmap.isRecycled()) {
             Log.w(TAG, "無效的bitmap");
             return results;
         }
         
-        TensorImage tensorImage = null;
         try {
-            // 將Bitmap轉換為TensorImage
-            tensorImage = TensorImage.fromBitmap(bitmap);
+            if (useYolo && yoloDetector != null) {
+                // 使用YOLO檢測器（更準確）
+                results = detectWithYolo(bitmap);
+                Log.d(TAG, String.format("YOLO檢測到 %d 個物體", results.size()));
+            } else if (objectDetector != null) {
+                // 使用SSD檢測器
+                results = detectWithSSD(bitmap);
+                Log.d(TAG, String.format("SSD檢測到 %d 個物體", results.size()));
+            } else {
+                Log.w(TAG, "沒有可用的檢測器");
+                return results;
+            }
             
-            // 執行檢測
+            // 應用非極大值抑制
+            results = applyNMS(results);
+            
+            // 按置信度排序
+            Collections.sort(results, (a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
+            
+            // 限制結果數量
+            if (results.size() > MAX_RESULTS) {
+                results = results.subList(0, MAX_RESULTS);
+            }
+            
+            Log.d(TAG, String.format("最終檢測到 %d 個物體", results.size()));
+            
+        } catch (OutOfMemoryError e) {
+            Log.e(TAG, "記憶體不足，檢測失敗: " + e.getMessage());
+            System.gc();
+        } catch (Exception e) {
+            Log.e(TAG, "檢測過程中發生錯誤: " + e.getMessage());
+        }
+        
+        return results;
+    }
+    
+    /**
+     * 使用SSD檢測器檢測
+     */
+    private List<DetectionResult> detectWithSSD(Bitmap bitmap) {
+        List<DetectionResult> results = new ArrayList<>();
+        TensorImage tensorImage = null;
+        
+        try {
+            tensorImage = TensorImage.fromBitmap(bitmap);
             List<Detection> detections = objectDetector.detect(tensorImage);
             
-            // 轉換結果
             for (Detection detection : detections) {
                 if (detection.getCategories().size() > 0) {
                     String label = detection.getCategories().get(0).getLabel();
                     float score = detection.getCategories().get(0).getScore();
                     
-                    // 獲取中文標籤
                     String labelZh = LABEL_MAP_ZH.get(label);
                     if (labelZh == null) {
                         labelZh = label;
@@ -182,22 +234,107 @@ public class ObjectDetectorHelper {
                     ));
                 }
             }
-            
-            Log.d(TAG, String.format("檢測到 %d 個物體", results.size()));
-            
-        } catch (OutOfMemoryError e) {
-            Log.e(TAG, "記憶體不足，檢測失敗: " + e.getMessage());
-            // 觸發垃圾回收
-            System.gc();
-        } catch (Exception e) {
-            Log.e(TAG, "檢測失敗: " + e.getMessage());
         } finally {
-            // TensorImage會自動管理資源，不需要手動關閉
-            // 但我們可以將引用設為null以幫助垃圾回收
             tensorImage = null;
         }
         
         return results;
+    }
+    
+    /**
+     * 使用YOLO檢測器檢測
+     */
+    private List<DetectionResult> detectWithYolo(Bitmap bitmap) {
+        List<DetectionResult> results = new ArrayList<>();
+        
+        try {
+            List<YoloDetector.DetectionResult> yoloResults = yoloDetector.detect(bitmap);
+            
+            for (YoloDetector.DetectionResult yoloResult : yoloResults) {
+                if (yoloResult.getConfidence() >= SCORE_THRESHOLD) {
+                    String labelZh = LABEL_MAP_ZH.get(yoloResult.getLabel());
+                    if (labelZh == null) {
+                        labelZh = yoloResult.getLabel();
+                    }
+                    
+                    // 轉換Rect為RectF
+                    android.graphics.Rect rect = yoloResult.getBoundingBox();
+                    android.graphics.RectF rectF = new android.graphics.RectF(
+                            rect.left, rect.top, rect.right, rect.bottom
+                    );
+                    
+                    results.add(new DetectionResult(
+                            yoloResult.getLabel(),
+                            labelZh,
+                            yoloResult.getConfidence(),
+                            rectF
+                    ));
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "YOLO檢測失敗: " + e.getMessage());
+        }
+        
+        return results;
+    }
+    
+    /**
+     * 應用非極大值抑制 (NMS) 去除重複檢測
+     */
+    private List<DetectionResult> applyNMS(List<DetectionResult> detections) {
+        if (detections.size() <= 1) {
+            return detections;
+        }
+        
+        List<DetectionResult> filtered = new ArrayList<>();
+        boolean[] suppressed = new boolean[detections.size()];
+        
+        for (int i = 0; i < detections.size(); i++) {
+            if (suppressed[i]) continue;
+            
+            DetectionResult current = detections.get(i);
+            filtered.add(current);
+            
+            // 抑制與當前檢測重疊度高的其他檢測
+            for (int j = i + 1; j < detections.size(); j++) {
+                if (suppressed[j]) continue;
+                
+                DetectionResult other = detections.get(j);
+                
+                // 計算IoU (Intersection over Union)
+                float iou = calculateIoU(current.getBoundingBox(), other.getBoundingBox());
+                
+                // 如果IoU超過閾值且是同類物體，抑制置信度較低的檢測
+                if (iou > NMS_THRESHOLD && current.getLabel().equals(other.getLabel())) {
+                    if (other.getConfidence() < current.getConfidence()) {
+                        suppressed[j] = true;
+                    }
+                }
+            }
+        }
+        
+        return filtered;
+    }
+    
+    /**
+     * 計算兩個邊界框的IoU
+     */
+    private float calculateIoU(android.graphics.RectF box1, android.graphics.RectF box2) {
+        float x1 = Math.max(box1.left, box2.left);
+        float y1 = Math.max(box1.top, box2.top);
+        float x2 = Math.min(box1.right, box2.right);
+        float y2 = Math.min(box1.bottom, box2.bottom);
+        
+        if (x2 <= x1 || y2 <= y1) {
+            return 0.0f;
+        }
+        
+        float intersection = (x2 - x1) * (y2 - y1);
+        float area1 = (box1.right - box1.left) * (box1.bottom - box1.top);
+        float area2 = (box2.right - box2.left) * (box2.bottom - box2.top);
+        float union = area1 + area2 - intersection;
+        
+        return intersection / union;
     }
     
     /**
@@ -227,7 +364,11 @@ public class ObjectDetectorHelper {
     public void close() {
         if (objectDetector != null) {
             objectDetector.close();
-            Log.d(TAG, "物體檢測器已關閉");
+            Log.d(TAG, "SSD物體檢測器已關閉");
+        }
+        if (yoloDetector != null) {
+            yoloDetector.close();
+            Log.d(TAG, "YOLO檢測器已關閉");
         }
     }
     

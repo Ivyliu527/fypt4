@@ -54,7 +54,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private List<ObjectDetectorHelper.DetectionResult> lastDetections;
     private long lastDetectionTime = 0;
     private boolean isAnalyzing = false;
-    private int frameSkipCount = 3; // 每3幀檢測一次，實時響應
+    private int frameSkipCount = 2; // 每2幀檢測一次，提高檢測頻率
     
     // 顏色和光線分析
     private ColorLightingAnalyzer colorLightingAnalyzer;
