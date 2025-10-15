@@ -30,12 +30,12 @@ public class GlobalVoiceCommandManager {
     private boolean isListening = false;
     private VoiceCommandCallback callback;
     
-    // 語音識別重試機制
+    // 語音識別重試機制 - 增強版
     private int retryCount = 0;
-    private static final int MAX_RETRY_ATTEMPTS = 3;
-    private static final long RETRY_DELAY_MS = 1000;
+    private static final int MAX_RETRY_ATTEMPTS = 5; // 增加重試次數
+    private static final long RETRY_DELAY_MS = 500; // 減少重試延遲
     private long lastErrorTime = 0;
-    private static final long ERROR_COOLDOWN_MS = 2000;
+    private static final long ERROR_COOLDOWN_MS = 1000; // 減少錯誤冷卻期
     
     // 語音命令接口
     public interface VoiceCommandCallback {
@@ -148,19 +148,22 @@ public class GlobalVoiceCommandManager {
         }
         
         try {
+            // 語音識別預熱 - 先進行一次快速測試
+            performVoiceRecognitionWarmup();
+            
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, getCurrentLanguage());
             intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
             
-            // 優化語音識別參數 - 提高靈敏度
-            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5); // 增加結果數量提高識別率
+            // 進一步優化語音識別參數 - 針對繁體中文優化
+            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10); // 大幅增加結果數量
             intent.putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true); // 啟用置信度分數
             
-            // 降低靜音檢測閾值 - 更容易觸發識別
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000); // 5秒靜音後結束
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000); // 2秒可能完成靜音
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500); // 降低最小語音長度到0.5秒
+            // 極度放寬靜音檢測閾值 - 更容易觸發識別
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 8000); // 8秒靜音後結束
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3000); // 3秒可能完成靜音
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 200); // 極低最小語音長度0.2秒
             
             // 添加額外的識別參數
             intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false); // 允許在線識別
@@ -168,6 +171,14 @@ public class GlobalVoiceCommandManager {
             
             // 添加提示詞
             intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getListeningPrompt());
+            
+            // 針對繁體中文的特殊優化
+            if (getCurrentLanguage().contains("zh")) {
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, getCurrentLanguage());
+                intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, getCurrentLanguage());
+                // 添加中文識別的額外參數
+                intent.putExtra("android.speech.extra.DICTATION_MODE", true);
+            }
             
             speechRecognizer.startListening(intent);
             isListening = true;
@@ -399,20 +410,24 @@ public class GlobalVoiceCommandManager {
         if (shouldRetry && retryCount < MAX_RETRY_ATTEMPTS) {
             retryCount++;
             
+            // 漸進式重試延遲：第1次500ms，第2次1000ms，第3次1500ms...
+            long progressiveDelay = RETRY_DELAY_MS * retryCount;
+            
             if (shouldAutoRetry) {
                 // 自動重試
-                Log.d(TAG, "自動重試語音識別 (" + retryCount + "/" + MAX_RETRY_ATTEMPTS + ")");
+                Log.d(TAG, "自動重試語音識別 (" + retryCount + "/" + MAX_RETRY_ATTEMPTS + ")，延遲: " + progressiveDelay + "ms");
                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                     if (callback != null) {
                         startListening(callback);
                     }
-                }, RETRY_DELAY_MS);
+                }, progressiveDelay);
             } else {
                 // 手動重試提示
+                Log.d(TAG, "手動重試語音識別 (" + retryCount + "/" + MAX_RETRY_ATTEMPTS + ")，延遲: " + progressiveDelay + "ms");
                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                     String retryMessage = getRetryMessage(currentLang);
                     ttsManager.speak(null, retryMessage, true);
-                }, 2000);
+                }, progressiveDelay);
             }
         } else if (retryCount >= MAX_RETRY_ATTEMPTS) {
             // 達到最大重試次數
@@ -577,6 +592,44 @@ public class GlobalVoiceCommandManager {
             case "cantonese":
             default:
                 return Locale.TRADITIONAL_CHINESE.toString();
+        }
+    }
+    
+    /**
+     * 語音識別預熱 - 提高識別成功率
+     */
+    private void performVoiceRecognitionWarmup() {
+        Log.d(TAG, "開始語音識別預熱");
+        
+        // 檢查語音識別器狀態
+        if (speechRecognizer == null) {
+            Log.w(TAG, "語音識別器未初始化，跳過預熱");
+            return;
+        }
+        
+        // 進行一次快速的語音識別測試
+        try {
+            Intent warmupIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            warmupIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            warmupIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, getCurrentLanguage());
+            warmupIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false);
+            warmupIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+            warmupIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1000);
+            warmupIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 100);
+            
+            // 快速啟動和停止，進行預熱
+            speechRecognizer.startListening(warmupIntent);
+            
+            // 100ms後停止預熱
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                if (isListening) {
+                    speechRecognizer.stopListening();
+                    Log.d(TAG, "語音識別預熱完成");
+                }
+            }, 100);
+            
+        } catch (Exception e) {
+            Log.w(TAG, "語音識別預熱失敗: " + e.getMessage());
         }
     }
     
