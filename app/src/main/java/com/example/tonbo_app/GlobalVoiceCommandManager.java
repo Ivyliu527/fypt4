@@ -30,6 +30,13 @@ public class GlobalVoiceCommandManager {
     private boolean isListening = false;
     private VoiceCommandCallback callback;
     
+    // 語音識別重試機制
+    private int retryCount = 0;
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+    private static final long RETRY_DELAY_MS = 1000;
+    private long lastErrorTime = 0;
+    private static final long ERROR_COOLDOWN_MS = 2000;
+    
     // 語音命令接口
     public interface VoiceCommandCallback {
         void onCommandRecognized(String command);
@@ -142,15 +149,23 @@ public class GlobalVoiceCommandManager {
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, getCurrentLanguage());
             intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3); // 增加結果數量
+            intent.putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true); // 啟用置信度分數
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 3000); // 3秒靜音後結束
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1500); // 1.5秒可能完成靜音
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1000); // 最小語音長度1秒
             
             speechRecognizer.startListening(intent);
+            isListening = true;
             
             // 播放開始聆聽的語音提示
             announceListeningStart();
             
+            Log.d(TAG, "語音識別已啟動，語言: " + getCurrentLanguage());
+            
         } catch (Exception e) {
             Log.e(TAG, "啟動語音識別失敗: " + e.getMessage());
+            isListening = false;
             if (callback != null) {
                 callback.onVoiceError("語音識別啟動失敗");
             }
@@ -293,6 +308,16 @@ public class GlobalVoiceCommandManager {
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
         String errorMessage;
         boolean shouldRetry = false;
+        boolean shouldAutoRetry = false;
+        
+        long currentTime = System.currentTimeMillis();
+        
+        // 檢查錯誤冷卻期
+        if (currentTime - lastErrorTime < ERROR_COOLDOWN_MS) {
+            Log.d(TAG, "錯誤冷卻期中，跳過處理");
+            return;
+        }
+        lastErrorTime = currentTime;
         
         switch (error) {
             case SpeechRecognizer.ERROR_AUDIO:
@@ -301,6 +326,7 @@ public class GlobalVoiceCommandManager {
             case SpeechRecognizer.ERROR_CLIENT:
                 errorMessage = getLocalizedErrorMessage("client_error", currentLang);
                 shouldRetry = true;
+                shouldAutoRetry = true;
                 break;
             case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
                 errorMessage = getLocalizedErrorMessage("permission_error", currentLang);
@@ -308,30 +334,37 @@ public class GlobalVoiceCommandManager {
             case SpeechRecognizer.ERROR_NETWORK:
                 errorMessage = getLocalizedErrorMessage("network_error", currentLang);
                 shouldRetry = true;
+                shouldAutoRetry = true;
                 break;
             case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
                 errorMessage = getLocalizedErrorMessage("network_timeout", currentLang);
                 shouldRetry = true;
+                shouldAutoRetry = true;
                 break;
             case SpeechRecognizer.ERROR_NO_MATCH:
                 errorMessage = getLocalizedErrorMessage("no_match", currentLang);
                 shouldRetry = true;
+                shouldAutoRetry = true;
                 break;
             case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
                 errorMessage = getLocalizedErrorMessage("recognizer_busy", currentLang);
                 shouldRetry = true;
+                shouldAutoRetry = true;
                 break;
             case SpeechRecognizer.ERROR_SERVER:
                 errorMessage = getLocalizedErrorMessage("server_error", currentLang);
                 shouldRetry = true;
+                shouldAutoRetry = true;
                 break;
             case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
                 errorMessage = getLocalizedErrorMessage("speech_timeout", currentLang);
                 shouldRetry = true;
+                shouldAutoRetry = true;
                 break;
             default:
                 errorMessage = getLocalizedErrorMessage("unknown_error", currentLang);
                 shouldRetry = true;
+                shouldAutoRetry = true;
                 break;
         }
         
@@ -347,27 +380,64 @@ public class GlobalVoiceCommandManager {
         // 播放錯誤語音
         ttsManager.speak(null, errorMessage, true);
         
-        // 如果是可重試的錯誤，提供重試提示
-        if (shouldRetry) {
-            // 延遲後提供重試提示
+        // 智能重試機制
+        if (shouldRetry && retryCount < MAX_RETRY_ATTEMPTS) {
+            retryCount++;
+            
+            if (shouldAutoRetry) {
+                // 自動重試
+                Log.d(TAG, "自動重試語音識別 (" + retryCount + "/" + MAX_RETRY_ATTEMPTS + ")");
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                    if (callback != null) {
+                        startListening(callback);
+                    }
+                }, RETRY_DELAY_MS);
+            } else {
+                // 手動重試提示
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                    String retryMessage = getRetryMessage(currentLang);
+                    ttsManager.speak(null, retryMessage, true);
+                }, 2000);
+            }
+        } else if (retryCount >= MAX_RETRY_ATTEMPTS) {
+            // 達到最大重試次數
+            Log.w(TAG, "達到最大重試次數，停止重試");
+            retryCount = 0;
+            
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                String retryMessage;
-                
-                switch (currentLang) {
-                    case "english":
-                        retryMessage = "Please tap the voice command button again to retry";
-                        break;
-                    case "mandarin":
-                        retryMessage = "请再次点击语音命令按钮重试";
-                        break;
-                    case "cantonese":
-                    default:
-                        retryMessage = "請再次點擊語音命令按鈕重試";
-                        break;
-                }
-                
-                ttsManager.speak(null, retryMessage, true);
+                String maxRetryMessage = getMaxRetryMessage(currentLang);
+                ttsManager.speak(null, maxRetryMessage, true);
             }, 2000);
+        }
+    }
+    
+    /**
+     * 獲取重試提示消息
+     */
+    private String getRetryMessage(String currentLang) {
+        switch (currentLang) {
+            case "english":
+                return "Please speak clearly and try again";
+            case "mandarin":
+                return "請清晰說話並重試";
+            case "cantonese":
+            default:
+                return "請清晰說話並重試";
+        }
+    }
+    
+    /**
+     * 獲取最大重試次數消息
+     */
+    private String getMaxRetryMessage(String currentLang) {
+        switch (currentLang) {
+            case "english":
+                return "Maximum retry attempts reached. Please try again later";
+            case "mandarin":
+                return "已達到最大重試次數，請稍後再試";
+            case "cantonese":
+            default:
+                return "已達到最大重試次數，請稍後再試";
         }
     }
     
@@ -460,6 +530,9 @@ public class GlobalVoiceCommandManager {
     private void announceCommandRecognized(String command) {
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
         String message;
+        
+        // 重置重試計數
+        retryCount = 0;
         
         switch (currentLang) {
             case "english":
