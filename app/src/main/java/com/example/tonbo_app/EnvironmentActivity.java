@@ -950,16 +950,23 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         // 創建一個測試檢測結果
         List<ObjectDetectorHelper.DetectionResult> testResults = new ArrayList<>();
         
-        // 在屏幕中央添加一個測試邊界框
-        android.graphics.RectF testBoundingBox = new android.graphics.RectF(0.3f, 0.3f, 0.7f, 0.7f);
+        // 在屏幕中央添加一個大的測試邊界框（像素座標）
+        android.graphics.RectF testBoundingBox = new android.graphics.RectF(200.0f, 200.0f, 600.0f, 500.0f);
         ObjectDetectorHelper.DetectionResult testDetection = new ObjectDetectorHelper.DetectionResult(
-            "test", "測試", 0.8f, testBoundingBox
+            "test", "測試邊界框", 0.9f, testBoundingBox
         );
         testResults.add(testDetection);
+        
+        // 添加第二個測試邊界框
+        android.graphics.RectF testBoundingBox2 = new android.graphics.RectF(800.0f, 300.0f, 1200.0f, 600.0f);
+        ObjectDetectorHelper.DetectionResult testDetection2 = new ObjectDetectorHelper.DetectionResult(
+            "test2", "測試邊界框2", 0.85f, testBoundingBox2
+        );
+        testResults.add(testDetection2);
         
         // 更新覆蓋層
         detectionOverlay.updateDetections(testResults);
         
-        Log.d(TAG, "測試邊界框已添加");
+        Log.d(TAG, "測試邊界框已添加 - 兩個大邊界框");
     }
 }
