@@ -28,6 +28,7 @@ public class GlobalVoiceCommandManager {
     private SpeechRecognizer speechRecognizer;
     private TTSManager ttsManager;
     private boolean isListening = false;
+    private boolean isRecognizerBusy = false;
     private VoiceCommandCallback callback;
     
     // 語音識別重試機制 - 增強版
@@ -61,11 +62,13 @@ public class GlobalVoiceCommandManager {
                 public void onReadyForSpeech(Bundle params) {
                     Log.d(TAG, "語音識別準備就緒 - 語言: " + getCurrentLanguage());
                     isListening = true;
+                    isRecognizerBusy = false;
                 }
 
                 @Override
                 public void onBeginningOfSpeech() {
                     Log.d(TAG, "開始語音識別 - 檢測到語音輸入");
+                    isRecognizerBusy = true;
                 }
 
                 @Override
@@ -85,12 +88,14 @@ public class GlobalVoiceCommandManager {
                 public void onEndOfSpeech() {
                     Log.d(TAG, "語音識別結束");
                     isListening = false;
+                    isRecognizerBusy = false;
                 }
 
                 @Override
                 public void onError(int error) {
                     Log.e(TAG, "語音識別錯誤: " + error);
                     isListening = false;
+                    isRecognizerBusy = false;
                     handleSpeechError(error);
                 }
 
@@ -98,6 +103,7 @@ public class GlobalVoiceCommandManager {
                 public void onResults(Bundle results) {
                     Log.d(TAG, "語音識別結果");
                     isListening = false;
+                    isRecognizerBusy = false;
                     processRecognitionResults(results);
                 }
 
@@ -136,20 +142,35 @@ public class GlobalVoiceCommandManager {
             return;
         }
         
-        if (isListening) {
-            Log.w(TAG, "語音識別正在進行中，先停止當前識別");
+        // 檢查語音識別服務連接狀態
+        if (!isRecognitionServiceConnected()) {
+            Log.e(TAG, "語音識別服務未連接");
+            if (callback != null) {
+                callback.onVoiceError("語音識別服務未連接，請稍後重試");
+            }
+            return;
+        }
+        
+        if (isListening || isRecognizerBusy) {
+            Log.w(TAG, "語音識別器忙碌，先停止當前識別");
             stopListening();
-            // 等待一小段時間讓識別器完全停止
+            // 等待更長時間讓識別器完全停止
             try {
-                Thread.sleep(100);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            }
+            
+            // 如果仍然忙碌，重置識別器
+            if (isRecognizerBusy) {
+                Log.w(TAG, "識別器仍然忙碌，重置識別器");
+                resetRecognizer();
             }
         }
         
         try {
-            // 語音識別預熱 - 先進行一次快速測試
-            performVoiceRecognitionWarmup();
+            // 移除預熱機制以避免連接問題
+            // performVoiceRecognitionWarmup();
             
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -203,10 +224,18 @@ public class GlobalVoiceCommandManager {
     }
     
     public void stopListening() {
-        if (speechRecognizer != null && isListening) {
-            speechRecognizer.stopListening();
-            isListening = false;
-            Log.d(TAG, "停止語音識別");
+        if (speechRecognizer != null && (isListening || isRecognizerBusy)) {
+            try {
+                speechRecognizer.stopListening();
+                speechRecognizer.cancel();
+                isListening = false;
+                isRecognizerBusy = false;
+                Log.d(TAG, "語音識別已停止");
+            } catch (Exception e) {
+                Log.e(TAG, "停止語音識別失敗: " + e.getMessage());
+                // 如果停止失敗，重置識別器
+                resetRecognizer();
+            }
         }
     }
     
@@ -376,6 +405,13 @@ public class GlobalVoiceCommandManager {
                 errorMessage = getLocalizedErrorMessage("recognizer_busy", currentLang);
                 shouldRetry = true;
                 shouldAutoRetry = true;
+                isRecognizerBusy = true;
+                Log.w(TAG, "語音識別器忙碌，將重置後重試");
+                
+                // 立即重置識別器
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                    resetRecognizer();
+                });
                 break;
             case SpeechRecognizer.ERROR_SERVER:
                 errorMessage = getLocalizedErrorMessage("server_error", currentLang);
@@ -416,6 +452,15 @@ public class GlobalVoiceCommandManager {
             if (shouldAutoRetry) {
                 // 自動重試
                 Log.d(TAG, "自動重試語音識別 (" + retryCount + "/" + MAX_RETRY_ATTEMPTS + ")，延遲: " + progressiveDelay + "ms");
+                
+                // 如果是識別器忙碌錯誤，先重置識別器並增加延遲
+                if (isRecognizerBusy) {
+                    Log.d(TAG, "識別器忙碌，先重置識別器");
+                    resetRecognizer();
+                    // 識別器忙碌時增加額外延遲
+                    progressiveDelay += 1000;
+                }
+                
                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                     if (callback != null) {
                         startListening(callback);
@@ -596,6 +641,66 @@ public class GlobalVoiceCommandManager {
     }
     
     /**
+     * 重置語音識別器 - 增強版
+     */
+    private void resetRecognizer() {
+        Log.d(TAG, "重置語音識別器");
+        
+        try {
+            // 停止當前識別
+            if (speechRecognizer != null) {
+                try {
+                    speechRecognizer.stopListening();
+                    speechRecognizer.cancel();
+                } catch (Exception e) {
+                    Log.w(TAG, "停止識別器時出現異常: " + e.getMessage());
+                }
+                
+                try {
+                    speechRecognizer.destroy();
+                } catch (Exception e) {
+                    Log.w(TAG, "銷毀識別器時出現異常: " + e.getMessage());
+                }
+                
+                speechRecognizer = null;
+            }
+            
+            // 重置狀態
+            isListening = false;
+            isRecognizerBusy = false;
+            retryCount = 0;
+            
+            // 等待一段時間讓服務完全釋放
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            
+            // 檢查語音識別服務可用性
+            if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+                Log.e(TAG, "語音識別服務不可用");
+                return;
+            }
+            
+            // 重新初始化識別器
+            initializeSpeechRecognizer();
+            
+            // 再次等待讓識別器完全初始化
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            
+            Log.d(TAG, "語音識別器重置完成");
+            
+        } catch (Exception e) {
+            Log.e(TAG, "重置語音識別器失敗: " + e.getMessage());
+        }
+    }
+    
+    /**
      * 語音識別預熱 - 提高識別成功率
      */
     private void performVoiceRecognitionWarmup() {
@@ -651,6 +756,37 @@ public class GlobalVoiceCommandManager {
     
     public boolean isListening() {
         return isListening;
+    }
+    
+    /**
+     * 檢查識別器是否忙碌
+     */
+    public boolean isRecognizerBusy() {
+        return isRecognizerBusy;
+    }
+    
+    /**
+     * 獲取識別器狀態信息
+     */
+    public String getRecognizerStatus() {
+        return "Listening: " + isListening + ", Busy: " + isRecognizerBusy + ", Retry: " + retryCount;
+    }
+    
+    /**
+     * 檢查語音識別服務連接狀態
+     */
+    private boolean isRecognitionServiceConnected() {
+        if (speechRecognizer == null) {
+            return false;
+        }
+        
+        try {
+            // 嘗試檢查識別器狀態
+            return SpeechRecognizer.isRecognitionAvailable(context);
+        } catch (Exception e) {
+            Log.w(TAG, "檢查識別服務連接失敗: " + e.getMessage());
+            return false;
+        }
     }
     
     /**
