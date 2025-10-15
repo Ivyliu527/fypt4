@@ -73,9 +73,16 @@ public class GlobalVoiceCommandManager {
 
                 @Override
                 public void onRmsChanged(float rmsdB) {
-                    // 音量變化，用於調試
+                    // 音量變化，用於調試和語音檢測
                     if (rmsdB > 0) {
                         Log.d(TAG, "音量變化: " + rmsdB + " dB");
+                        
+                        // 語音檢測邏輯
+                        if (rmsdB > 5.0f) {
+                            Log.d(TAG, "檢測到語音輸入，音量: " + rmsdB + " dB");
+                        } else if (rmsdB < 1.0f) {
+                            Log.d(TAG, "音量過低，可能無法識別");
+                        }
                     }
                 }
 
@@ -177,29 +184,8 @@ public class GlobalVoiceCommandManager {
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, getCurrentLanguage());
             intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
             
-            // 進一步優化語音識別參數 - 針對繁體中文優化
-            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10); // 大幅增加結果數量
-            intent.putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true); // 啟用置信度分數
-            
-            // 極度放寬靜音檢測閾值 - 更容易觸發識別
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 8000); // 8秒靜音後結束
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3000); // 3秒可能完成靜音
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 200); // 極低最小語音長度0.2秒
-            
-            // 添加額外的識別參數
-            intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false); // 允許在線識別
-            intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, new String[]{getCurrentLanguage()});
-            
-            // 添加提示詞
-            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getListeningPrompt());
-            
-            // 針對繁體中文的特殊優化
-            if (getCurrentLanguage().contains("zh")) {
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, getCurrentLanguage());
-                intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, getCurrentLanguage());
-                // 添加中文識別的額外參數
-                intent.putExtra("android.speech.extra.DICTATION_MODE", true);
-            }
+            // 根據語言優化語音識別參數
+            optimizeSpeechRecognitionParams(intent);
             
             speechRecognizer.startListening(intent);
             isListening = true;
@@ -446,8 +432,8 @@ public class GlobalVoiceCommandManager {
         if (shouldRetry && retryCount < MAX_RETRY_ATTEMPTS) {
             retryCount++;
             
-            // 漸進式重試延遲：第1次500ms，第2次1000ms，第3次1500ms...
-            long progressiveDelay = RETRY_DELAY_MS * retryCount;
+            // 智能重試延遲：根據錯誤類型和重試次數調整
+            long progressiveDelay = calculateRetryDelay(error, retryCount);
             
             if (shouldAutoRetry) {
                 // 自動重試
@@ -739,6 +725,53 @@ public class GlobalVoiceCommandManager {
     }
     
     /**
+     * 根據語言優化語音識別參數
+     */
+    private void optimizeSpeechRecognitionParams(Intent intent) {
+        String currentLang = getCurrentLanguage();
+        
+        // 通用參數
+        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10);
+        intent.putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true);
+        intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
+        intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, new String[]{currentLang});
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getListeningPrompt());
+        
+        if (currentLang.contains("en")) {
+            // 英文優化參數
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 6000); // 6秒靜音
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2500); // 2.5秒可能完成
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 300); // 0.3秒最小長度
+            
+            // 英文特定優化
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-US");
+            intent.putExtra("android.speech.extra.DICTATION_MODE", false);
+            
+            Log.d(TAG, "應用英文語音識別優化參數");
+            
+        } else if (currentLang.contains("zh")) {
+            // 中文優化參數
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 8000); // 8秒靜音
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3000); // 3秒可能完成
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 200); // 0.2秒最小長度
+            
+            // 中文特定優化
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, currentLang);
+            intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, currentLang);
+            intent.putExtra("android.speech.extra.DICTATION_MODE", true);
+            
+            Log.d(TAG, "應用中文語音識別優化參數");
+        } else {
+            // 默認參數
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 7000);
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2800);
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 250);
+            
+            Log.d(TAG, "應用默認語音識別參數");
+        }
+    }
+    
+    /**
      * 獲取聆聽提示詞
      */
     private String getListeningPrompt() {
@@ -787,6 +820,70 @@ public class GlobalVoiceCommandManager {
             Log.w(TAG, "檢查識別服務連接失敗: " + e.getMessage());
             return false;
         }
+    }
+    
+    /**
+     * 語音識別診斷
+     */
+    public void performVoiceRecognitionDiagnostics() {
+        Log.d(TAG, "開始語音識別診斷");
+        
+        // 檢查麥克風權限
+        boolean hasPermission = checkMicrophonePermission();
+        Log.d(TAG, "麥克風權限: " + (hasPermission ? "已授予" : "未授予"));
+        
+        // 檢查語音識別可用性
+        boolean isAvailable = SpeechRecognizer.isRecognitionAvailable(context);
+        Log.d(TAG, "語音識別服務: " + (isAvailable ? "可用" : "不可用"));
+        
+        // 檢查識別器狀態
+        boolean isConnected = isRecognitionServiceConnected();
+        Log.d(TAG, "識別器連接: " + (isConnected ? "已連接" : "未連接"));
+        
+        // 檢查當前語言
+        String currentLang = getCurrentLanguage();
+        Log.d(TAG, "當前識別語言: " + currentLang);
+        
+        // 檢查識別器忙碌狀態
+        Log.d(TAG, "識別器狀態: " + getRecognizerStatus());
+        
+        // 檢查重試次數
+        Log.d(TAG, "當前重試次數: " + retryCount + "/" + MAX_RETRY_ATTEMPTS);
+        
+        Log.d(TAG, "語音識別診斷完成");
+    }
+    
+    /**
+     * 計算智能重試延遲
+     */
+    private long calculateRetryDelay(int error, int retryCount) {
+        long baseDelay = RETRY_DELAY_MS;
+        
+        switch (error) {
+            case SpeechRecognizer.ERROR_NO_MATCH:
+                // 未識別到語音，增加延遲讓用戶有時間說話
+                baseDelay = 2000 + (retryCount * 1000); // 2秒起，每次增加1秒
+                break;
+                
+            case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+                // 識別器忙碌，需要更長延遲
+                baseDelay = 1500 + (retryCount * 500); // 1.5秒起，每次增加0.5秒
+                break;
+                
+            case SpeechRecognizer.ERROR_NETWORK:
+            case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
+                // 網絡錯誤，適度延遲
+                baseDelay = 1000 + (retryCount * 500); // 1秒起，每次增加0.5秒
+                break;
+                
+            default:
+                // 其他錯誤，使用漸進式延遲
+                baseDelay = RETRY_DELAY_MS * retryCount;
+                break;
+        }
+        
+        // 限制最大延遲時間
+        return Math.min(baseDelay, 5000);
     }
     
     /**
