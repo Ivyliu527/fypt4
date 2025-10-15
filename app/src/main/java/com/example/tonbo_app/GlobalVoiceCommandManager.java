@@ -1,13 +1,18 @@
 package com.example.tonbo_app;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -104,6 +109,15 @@ public class GlobalVoiceCommandManager {
     public void startListening(VoiceCommandCallback callback) {
         this.callback = callback;
         
+        // 檢查語音識別權限
+        if (!checkMicrophonePermission()) {
+            Log.e(TAG, "麥克風權限不足");
+            if (callback != null) {
+                callback.onVoiceError("需要麥克風權限才能使用語音命令");
+            }
+            return;
+        }
+        
         if (speechRecognizer == null) {
             Log.e(TAG, "語音識別器未初始化");
             if (callback != null) {
@@ -113,8 +127,14 @@ public class GlobalVoiceCommandManager {
         }
         
         if (isListening) {
-            Log.w(TAG, "語音識別正在進行中");
-            return;
+            Log.w(TAG, "語音識別正在進行中，先停止當前識別");
+            stopListening();
+            // 等待一小段時間讓識別器完全停止
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
         
         try {
@@ -135,6 +155,11 @@ public class GlobalVoiceCommandManager {
                 callback.onVoiceError("語音識別啟動失敗");
             }
         }
+    }
+    
+    private boolean checkMicrophonePermission() {
+        return ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) 
+                == PackageManager.PERMISSION_GRANTED;
     }
     
     public void stopListening() {
@@ -266,40 +291,53 @@ public class GlobalVoiceCommandManager {
     
     private void handleSpeechError(int error) {
         String errorMessage;
+        boolean shouldRetry = false;
+        
         switch (error) {
             case SpeechRecognizer.ERROR_AUDIO:
-                errorMessage = "音頻錯誤";
+                errorMessage = "音頻錯誤，請檢查麥克風";
                 break;
             case SpeechRecognizer.ERROR_CLIENT:
                 errorMessage = "客戶端錯誤";
+                shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
-                errorMessage = "權限不足";
+                errorMessage = "權限不足，請在設定中允許麥克風權限";
                 break;
             case SpeechRecognizer.ERROR_NETWORK:
-                errorMessage = "網絡錯誤";
+                errorMessage = "網絡錯誤，請檢查網絡連接";
+                shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
-                errorMessage = "網絡超時";
+                errorMessage = "網絡超時，請重試";
+                shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_NO_MATCH:
-                errorMessage = "未識別到語音";
+                errorMessage = "未識別到語音，請重試";
+                shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-                errorMessage = "語音識別器忙碌";
+                errorMessage = "語音識別器忙碌，請稍後重試";
+                shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_SERVER:
-                errorMessage = "服務器錯誤";
+                errorMessage = "服務器錯誤，請重試";
+                shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-                errorMessage = "語音超時";
+                errorMessage = "語音超時，請重試";
+                shouldRetry = true;
                 break;
             default:
                 errorMessage = "未知錯誤";
+                shouldRetry = true;
                 break;
         }
         
-        Log.e(TAG, "語音識別錯誤: " + errorMessage);
+        Log.e(TAG, "語音識別錯誤: " + errorMessage + " (錯誤代碼: " + error + ")");
+        
+        // 重置聆聽狀態
+        isListening = false;
         
         if (callback != null) {
             callback.onVoiceError(errorMessage);
@@ -307,6 +345,14 @@ public class GlobalVoiceCommandManager {
         
         // 播放錯誤語音
         ttsManager.speak(null, errorMessage, true);
+        
+        // 如果是可重試的錯誤，提供重試提示
+        if (shouldRetry) {
+            // 延遲後提供重試提示
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                ttsManager.speak(null, "請再次點擊語音命令按鈕重試", true);
+            }, 2000);
+        }
     }
     
     private void announceListeningStart() {
