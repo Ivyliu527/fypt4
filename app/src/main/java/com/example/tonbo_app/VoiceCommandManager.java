@@ -28,6 +28,13 @@ public class VoiceCommandManager {
     private VoiceCommandListener commandListener;
     private boolean isListening = false;
     
+    // 語音識別重試機制
+    private int retryCount = 0;
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+    private static final long RETRY_DELAY_MS = 1000;
+    private long lastErrorTime = 0;
+    private static final long ERROR_COOLDOWN_MS = 2000;
+    
     // 命令映射表 - 廣東話
     private Map<String, String> cantoneseCommands = new HashMap<>();
     // 命令映射表 - 英文
@@ -185,7 +192,7 @@ public class VoiceCommandManager {
             speechRecognizer.setRecognitionListener(new RecognitionListener() {
                 @Override
                 public void onReadyForSpeech(Bundle params) {
-                    Log.d(TAG, "準備接收語音");
+                    Log.d(TAG, "準備接收語音 - 語言: " + currentLanguage);
                     isListening = true;
                     if (commandListener != null) {
                         commandListener.onListeningStarted();
@@ -199,7 +206,10 @@ public class VoiceCommandManager {
                 
                 @Override
                 public void onRmsChanged(float rmsdB) {
-                    // 音量變化
+                    // 音量變化 - 用於調試
+                    if (rmsdB > 0) {
+                        Log.d(TAG, "音量變化: " + rmsdB + " dB");
+                    }
                 }
                 
                 @Override
@@ -215,10 +225,34 @@ public class VoiceCommandManager {
                 
                 @Override
                 public void onError(int error) {
-                    Log.e(TAG, "語音識別錯誤: " + getErrorText(error));
+                    String errorText = getErrorText(error);
+                    Log.e(TAG, "語音識別錯誤: " + errorText + " (錯誤代碼: " + error + ")");
                     isListening = false;
+                    
+                    // 檢查錯誤冷卻期
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - lastErrorTime < ERROR_COOLDOWN_MS) {
+                        Log.d(TAG, "錯誤冷卻期中，跳過處理");
+                        return;
+                    }
+                    lastErrorTime = currentTime;
+                    
+                    // 智能重試機制
+                    if (shouldRetry(error) && retryCount < MAX_RETRY_ATTEMPTS) {
+                        retryCount++;
+                        Log.d(TAG, "自動重試語音識別 (" + retryCount + "/" + MAX_RETRY_ATTEMPTS + ")");
+                        
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                            startListening();
+                        }, RETRY_DELAY_MS);
+                    } else if (retryCount >= MAX_RETRY_ATTEMPTS) {
+                        Log.w(TAG, "達到最大重試次數，停止重試");
+                        retryCount = 0;
+                        errorText += " (已達到最大重試次數)";
+                    }
+                    
                     if (commandListener != null) {
-                        commandListener.onError(getErrorText(error));
+                        commandListener.onError(errorText);
                         commandListener.onListeningStopped();
                     }
                 }
@@ -229,7 +263,16 @@ public class VoiceCommandManager {
                     if (matches != null && !matches.isEmpty()) {
                         String recognizedText = matches.get(0);
                         Log.d(TAG, "識別結果: " + recognizedText);
+                        
+                        // 重置重試計數
+                        retryCount = 0;
+                        
                         processCommand(recognizedText);
+                    } else {
+                        Log.w(TAG, "沒有識別到語音");
+                        if (commandListener != null) {
+                            commandListener.onError("沒有識別到語音，請重試");
+                        }
                     }
                     isListening = false;
                     if (commandListener != null) {
@@ -303,11 +346,56 @@ public class VoiceCommandManager {
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, locale);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, locale);
         
+        // 優化語音識別參數
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3); // 減少結果數量提高準確性
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true); // 啟用置信度分數
+        
+        // 語音輸入參數優化
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 3000); // 3秒靜音後結束
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1500); // 1.5秒可能完成靜音
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1000); // 最小語音長度1秒
+        
+        // 提示詞優化
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PROMPT, getPromptText());
         
         speechRecognizer.startListening(recognizerIntent);
         Log.d(TAG, "開始監聽語音命令 - 語言: " + currentLanguage);
+    }
+    
+    /**
+     * 獲取語音識別提示詞
+     */
+    private String getPromptText() {
+        switch (currentLanguage) {
+            case "english":
+                return "Please speak your command clearly";
+            case "mandarin":
+                return "請清晰地說出您的命令";
+            case "cantonese":
+            default:
+                return "請清晰咁講出你嘅指令";
+        }
+    }
+    
+    /**
+     * 判斷是否應該重試
+     */
+    private boolean shouldRetry(int error) {
+        switch (error) {
+            case SpeechRecognizer.ERROR_NETWORK:
+            case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
+            case SpeechRecognizer.ERROR_NO_MATCH:
+            case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+            case SpeechRecognizer.ERROR_SERVER:
+            case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
+                return true;
+            case SpeechRecognizer.ERROR_AUDIO:
+            case SpeechRecognizer.ERROR_CLIENT:
+            case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
+            default:
+                return false;
+        }
     }
     
     /**
