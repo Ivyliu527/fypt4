@@ -12,8 +12,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 真實的物體檢測助手
@@ -23,10 +25,94 @@ public class ObjectDetectorHelper {
     private static final String TAG = "ObjectDetectorHelper";
     private static final String MODEL_FILE = "ssd_mobilenet_v1.tflite";
     private static final String YOLO_MODEL_FILE = "yolov8n.tflite";
-    private static final float SCORE_THRESHOLD = 0.3f;  // 降低閾值提高召回率
+    private static final float SCORE_THRESHOLD = 0.4f;  // 提高閾值，專注於環境相關物體
     private static final float HIGH_CONFIDENCE_THRESHOLD = 0.7f;  // 高置信度閾值
-    private static final int MAX_RESULTS = 20;  // 增加最大結果數
+    private static final int MAX_RESULTS = 15;  // 減少結果數，專注於重要物體
     private static final float NMS_THRESHOLD = 0.5f;  // 非極大值抑制閾值
+    
+    // 環境識別相關的物體類別（優先檢測）
+    private static final Set<String> ENVIRONMENT_RELEVANT_OBJECTS = new HashSet<>();
+    
+    static {
+        // 環境識別相關的重要物體
+        ENVIRONMENT_RELEVANT_OBJECTS.add("person");           // 人
+        ENVIRONMENT_RELEVANT_OBJECTS.add("car");              // 汽車
+        ENVIRONMENT_RELEVANT_OBJECTS.add("truck");            // 卡車
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bus");              // 公車
+        ENVIRONMENT_RELEVANT_OBJECTS.add("motorcycle");       // 摩托車
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bicycle");          // 腳踏車
+        ENVIRONMENT_RELEVANT_OBJECTS.add("traffic light");    // 交通燈
+        ENVIRONMENT_RELEVANT_OBJECTS.add("stop sign");        // 停車標誌
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bench");            // 長椅
+        ENVIRONMENT_RELEVANT_OBJECTS.add("chair");            // 椅子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("table");            // 桌子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bed");              // 床
+        ENVIRONMENT_RELEVANT_OBJECTS.add("couch");            // 沙發
+        ENVIRONMENT_RELEVANT_OBJECTS.add("tv");               // 電視
+        ENVIRONMENT_RELEVANT_OBJECTS.add("laptop");           // 筆記本電腦
+        ENVIRONMENT_RELEVANT_OBJECTS.add("book");             // 書
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bottle");           // 瓶子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("cup");              // 杯子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bowl");             // 碗
+        ENVIRONMENT_RELEVANT_OBJECTS.add("clock");            // 時鐘
+        ENVIRONMENT_RELEVANT_OBJECTS.add("vase");             // 花瓶
+        ENVIRONMENT_RELEVANT_OBJECTS.add("scissors");         // 剪刀
+        ENVIRONMENT_RELEVANT_OBJECTS.add("teddy bear");       // 泰迪熊
+        ENVIRONMENT_RELEVANT_OBJECTS.add("toothbrush");       // 牙刷
+        ENVIRONMENT_RELEVANT_OBJECTS.add("hair drier");       // 吹風機
+        ENVIRONMENT_RELEVANT_OBJECTS.add("umbrella");         // 雨傘
+        ENVIRONMENT_RELEVANT_OBJECTS.add("handbag");          // 手提包
+        ENVIRONMENT_RELEVANT_OBJECTS.add("backpack");         // 背包
+        ENVIRONMENT_RELEVANT_OBJECTS.add("suitcase");         // 手提箱
+        ENVIRONMENT_RELEVANT_OBJECTS.add("frisbee");          // 飛盤
+        ENVIRONMENT_RELEVANT_OBJECTS.add("sports ball");      // 運動球
+        ENVIRONMENT_RELEVANT_OBJECTS.add("kite");             // 風箏
+        ENVIRONMENT_RELEVANT_OBJECTS.add("baseball bat");     // 棒球棒
+        ENVIRONMENT_RELEVANT_OBJECTS.add("baseball glove");   // 棒球手套
+        ENVIRONMENT_RELEVANT_OBJECTS.add("skateboard");       // 滑板
+        ENVIRONMENT_RELEVANT_OBJECTS.add("surfboard");        // 衝浪板
+        ENVIRONMENT_RELEVANT_OBJECTS.add("tennis racket");    // 網球拍
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bottle");           // 瓶子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("wine glass");       // 酒杯
+        ENVIRONMENT_RELEVANT_OBJECTS.add("cup");              // 杯子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("fork");             // 叉子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("knife");            // 刀子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("spoon");            // 勺子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bowl");             // 碗
+        ENVIRONMENT_RELEVANT_OBJECTS.add("banana");           // 香蕉
+        ENVIRONMENT_RELEVANT_OBJECTS.add("apple");            // 蘋果
+        ENVIRONMENT_RELEVANT_OBJECTS.add("sandwich");         // 三明治
+        ENVIRONMENT_RELEVANT_OBJECTS.add("orange");           // 橙子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("broccoli");         // 西蘭花
+        ENVIRONMENT_RELEVANT_OBJECTS.add("carrot");           // 胡蘿蔔
+        ENVIRONMENT_RELEVANT_OBJECTS.add("hot dog");          // 熱狗
+        ENVIRONMENT_RELEVANT_OBJECTS.add("pizza");            // 披薩
+        ENVIRONMENT_RELEVANT_OBJECTS.add("donut");            // 甜甜圈
+        ENVIRONMENT_RELEVANT_OBJECTS.add("cake");             // 蛋糕
+        ENVIRONMENT_RELEVANT_OBJECTS.add("chair");            // 椅子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("couch");            // 沙發
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bed");              // 床
+        ENVIRONMENT_RELEVANT_OBJECTS.add("dining table");     // 餐桌
+        ENVIRONMENT_RELEVANT_OBJECTS.add("toilet");           // 廁所
+        ENVIRONMENT_RELEVANT_OBJECTS.add("tv");               // 電視
+        ENVIRONMENT_RELEVANT_OBJECTS.add("laptop");           // 筆記本電腦
+        ENVIRONMENT_RELEVANT_OBJECTS.add("mouse");            // 滑鼠
+        ENVIRONMENT_RELEVANT_OBJECTS.add("remote");           // 遙控器
+        ENVIRONMENT_RELEVANT_OBJECTS.add("keyboard");         // 鍵盤
+        ENVIRONMENT_RELEVANT_OBJECTS.add("cell phone");       // 手機
+        ENVIRONMENT_RELEVANT_OBJECTS.add("microwave");        // 微波爐
+        ENVIRONMENT_RELEVANT_OBJECTS.add("oven");             // 烤箱
+        ENVIRONMENT_RELEVANT_OBJECTS.add("toaster");          // 烤麵包機
+        ENVIRONMENT_RELEVANT_OBJECTS.add("sink");             // 水槽
+        ENVIRONMENT_RELEVANT_OBJECTS.add("refrigerator");     // 冰箱
+        ENVIRONMENT_RELEVANT_OBJECTS.add("book");             // 書
+        ENVIRONMENT_RELEVANT_OBJECTS.add("clock");            // 時鐘
+        ENVIRONMENT_RELEVANT_OBJECTS.add("vase");             // 花瓶
+        ENVIRONMENT_RELEVANT_OBJECTS.add("scissors");         // 剪刀
+        ENVIRONMENT_RELEVANT_OBJECTS.add("teddy bear");       // 泰迪熊
+        ENVIRONMENT_RELEVANT_OBJECTS.add("hair drier");       // 吹風機
+        ENVIRONMENT_RELEVANT_OBJECTS.add("toothbrush");       // 牙刷
+    }
     
     // 穩定性增強參數
     private static final int MAX_RETRY_ATTEMPTS = 3;  // 最大重試次數
@@ -162,9 +248,9 @@ public class ObjectDetectorHelper {
     private void setupYoloDetector() {
         try {
             yoloDetector = new YoloDetector(context);
-            // YoloDetector構造函數會自動初始化
-            useYolo = true;
-            Log.d(TAG, "✅ YOLO檢測器初始化成功！");
+            // 環境識別主要使用SSD，YOLO作為備用
+            useYolo = false; // 默認禁用YOLO，專注於環境識別
+            Log.d(TAG, "✅ YOLO檢測器初始化成功（作為備用）！");
         } catch (Exception e) {
             Log.e(TAG, "❌ 初始化YOLO檢測器失敗: " + e.getMessage());
             useYolo = false;
@@ -248,21 +334,21 @@ public class ObjectDetectorHelper {
         
         for (int attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
             try {
-                if (useYolo && yoloDetector != null) {
-                    // 嘗試使用YOLO檢測器
-                    results = detectWithYolo(bitmap);
+                // 環境識別優先使用SSD檢測器（更適合環境描述）
+                if (objectDetector != null) {
+                    results = detectWithSSD(bitmap);
                     if (!results.isEmpty()) {
-                        Log.d(TAG, String.format("YOLO檢測成功 (嘗試 %d/%d): %d 個物體", 
+                        Log.d(TAG, String.format("SSD檢測成功 (嘗試 %d/%d): %d 個物體", 
                             attempt + 1, MAX_RETRY_ATTEMPTS, results.size()));
                         break;
                     }
                 }
                 
-                if (objectDetector != null) {
-                    // 使用SSD檢測器
-                    results = detectWithSSD(bitmap);
+                // SSD失敗時才嘗試YOLO（作為備用）
+                if (useYolo && yoloDetector != null && results.isEmpty()) {
+                    results = detectWithYolo(bitmap);
                     if (!results.isEmpty()) {
-                        Log.d(TAG, String.format("SSD檢測成功 (嘗試 %d/%d): %d 個物體", 
+                        Log.d(TAG, String.format("YOLO檢測成功 (嘗試 %d/%d): %d 個物體", 
                             attempt + 1, MAX_RETRY_ATTEMPTS, results.size()));
                         break;
                     }
@@ -295,6 +381,9 @@ public class ObjectDetectorHelper {
      * 應用後處理
      */
     private List<DetectionResult> applyPostProcessing(List<DetectionResult> results) {
+        // 過濾環境相關物體
+        results = filterEnvironmentRelevantObjects(results);
+        
         // 應用非極大值抑制
         results = applyNMS(results);
         
@@ -307,6 +396,26 @@ public class ObjectDetectorHelper {
         }
         
         return results;
+    }
+    
+    /**
+     * 過濾環境相關物體
+     */
+    private List<DetectionResult> filterEnvironmentRelevantObjects(List<DetectionResult> results) {
+        List<DetectionResult> filtered = new ArrayList<>();
+        
+        for (DetectionResult result : results) {
+            // 檢查是否為環境相關物體
+            if (ENVIRONMENT_RELEVANT_OBJECTS.contains(result.getLabel())) {
+                filtered.add(result);
+                Log.d(TAG, "保留環境相關物體: " + result.getLabelZh());
+            } else {
+                Log.d(TAG, "過濾非環境物體: " + result.getLabelZh());
+            }
+        }
+        
+        Log.d(TAG, String.format("環境物體過濾: %d -> %d", results.size(), filtered.size()));
+        return filtered;
     }
     
     /**
