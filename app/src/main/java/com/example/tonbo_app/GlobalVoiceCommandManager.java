@@ -290,46 +290,47 @@ public class GlobalVoiceCommandManager {
     }
     
     private void handleSpeechError(int error) {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
         String errorMessage;
         boolean shouldRetry = false;
         
         switch (error) {
             case SpeechRecognizer.ERROR_AUDIO:
-                errorMessage = "音頻錯誤，請檢查麥克風";
+                errorMessage = getLocalizedErrorMessage("audio_error", currentLang);
                 break;
             case SpeechRecognizer.ERROR_CLIENT:
-                errorMessage = "客戶端錯誤";
+                errorMessage = getLocalizedErrorMessage("client_error", currentLang);
                 shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
-                errorMessage = "權限不足，請在設定中允許麥克風權限";
+                errorMessage = getLocalizedErrorMessage("permission_error", currentLang);
                 break;
             case SpeechRecognizer.ERROR_NETWORK:
-                errorMessage = "網絡錯誤，請檢查網絡連接";
+                errorMessage = getLocalizedErrorMessage("network_error", currentLang);
                 shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
-                errorMessage = "網絡超時，請重試";
+                errorMessage = getLocalizedErrorMessage("network_timeout", currentLang);
                 shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_NO_MATCH:
-                errorMessage = "未識別到語音，請重試";
+                errorMessage = getLocalizedErrorMessage("no_match", currentLang);
                 shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-                errorMessage = "語音識別器忙碌，請稍後重試";
+                errorMessage = getLocalizedErrorMessage("recognizer_busy", currentLang);
                 shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_SERVER:
-                errorMessage = "服務器錯誤，請重試";
+                errorMessage = getLocalizedErrorMessage("server_error", currentLang);
                 shouldRetry = true;
                 break;
             case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-                errorMessage = "語音超時，請重試";
+                errorMessage = getLocalizedErrorMessage("speech_timeout", currentLang);
                 shouldRetry = true;
                 break;
             default:
-                errorMessage = "未知錯誤";
+                errorMessage = getLocalizedErrorMessage("unknown_error", currentLang);
                 shouldRetry = true;
                 break;
         }
@@ -350,18 +351,129 @@ public class GlobalVoiceCommandManager {
         if (shouldRetry) {
             // 延遲後提供重試提示
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                ttsManager.speak(null, "請再次點擊語音命令按鈕重試", true);
+                String retryMessage;
+                
+                switch (currentLang) {
+                    case "english":
+                        retryMessage = "Please tap the voice command button again to retry";
+                        break;
+                    case "mandarin":
+                        retryMessage = "请再次点击语音命令按钮重试";
+                        break;
+                    case "cantonese":
+                    default:
+                        retryMessage = "請再次點擊語音命令按鈕重試";
+                        break;
+                }
+                
+                ttsManager.speak(null, retryMessage, true);
             }, 2000);
         }
     }
     
+    private String getLocalizedErrorMessage(String errorType, String currentLang) {
+        switch (errorType) {
+            case "audio_error":
+                switch (currentLang) {
+                    case "english": return "Audio error, please check microphone";
+                    case "mandarin": return "音频错误，请检查麦克风";
+                    default: return "音頻錯誤，請檢查麥克風";
+                }
+            case "client_error":
+                switch (currentLang) {
+                    case "english": return "Client error";
+                    case "mandarin": return "客户端错误";
+                    default: return "客戶端錯誤";
+                }
+            case "permission_error":
+                switch (currentLang) {
+                    case "english": return "Permission denied, please allow microphone permission in settings";
+                    case "mandarin": return "权限不足，请在设置中允许麦克风权限";
+                    default: return "權限不足，請在設定中允許麥克風權限";
+                }
+            case "network_error":
+                switch (currentLang) {
+                    case "english": return "Network error, please check network connection";
+                    case "mandarin": return "网络错误，请检查网络连接";
+                    default: return "網絡錯誤，請檢查網絡連接";
+                }
+            case "network_timeout":
+                switch (currentLang) {
+                    case "english": return "Network timeout, please retry";
+                    case "mandarin": return "网络超时，请重试";
+                    default: return "網絡超時，請重試";
+                }
+            case "no_match":
+                switch (currentLang) {
+                    case "english": return "No speech recognized, please retry";
+                    case "mandarin": return "未识别到语音，请重试";
+                    default: return "未識別到語音，請重試";
+                }
+            case "recognizer_busy":
+                switch (currentLang) {
+                    case "english": return "Speech recognizer busy, please retry later";
+                    case "mandarin": return "语音识别器忙碌，请稍后重试";
+                    default: return "語音識別器忙碌，請稍後重試";
+                }
+            case "server_error":
+                switch (currentLang) {
+                    case "english": return "Server error, please retry";
+                    case "mandarin": return "服务器错误，请重试";
+                    default: return "服務器錯誤，請重試";
+                }
+            case "speech_timeout":
+                switch (currentLang) {
+                    case "english": return "Speech timeout, please retry";
+                    case "mandarin": return "语音超时，请重试";
+                    default: return "語音超時，請重試";
+                }
+            case "unknown_error":
+            default:
+                switch (currentLang) {
+                    case "english": return "Unknown error";
+                    case "mandarin": return "未知错误";
+                    default: return "未知錯誤";
+                }
+        }
+    }
+    
     private void announceListeningStart() {
-        String message = "開始聆聽語音命令";
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        String message;
+        
+        switch (currentLang) {
+            case "english":
+                message = "Listening for voice commands";
+                break;
+            case "mandarin":
+                message = "正在聆听语音命令";
+                break;
+            case "cantonese":
+            default:
+                message = "開始聆聽語音命令";
+                break;
+        }
+        
         ttsManager.speak(null, message, true);
     }
     
     private void announceCommandRecognized(String command) {
-        String message = "已識別命令: " + command;
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        String message;
+        
+        switch (currentLang) {
+            case "english":
+                message = "Command recognized: " + command;
+                break;
+            case "mandarin":
+                message = "已识别命令: " + command;
+                break;
+            case "cantonese":
+            default:
+                message = "已識別命令: " + command;
+                break;
+        }
+        
         ttsManager.speak(null, message, true);
     }
     
