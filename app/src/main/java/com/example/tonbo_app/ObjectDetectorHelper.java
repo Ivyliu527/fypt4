@@ -28,10 +28,24 @@ public class ObjectDetectorHelper {
     private static final int MAX_RESULTS = 20;  // 增加最大結果數
     private static final float NMS_THRESHOLD = 0.5f;  // 非極大值抑制閾值
     
+    // 穩定性增強參數
+    private static final int MAX_RETRY_ATTEMPTS = 3;  // 最大重試次數
+    private static final long RETRY_DELAY_MS = 100;  // 重試延遲
+    private static final int MAX_CONSECUTIVE_FAILURES = 5;  // 最大連續失敗次數
+    private static final long DETECTION_TIMEOUT_MS = 5000;  // 檢測超時時間
+    
     private ObjectDetector objectDetector;
     private YoloDetector yoloDetector;
     private Context context;
     private boolean useYolo = false;  // 是否使用YOLO檢測器
+    
+    // 穩定性監控變量
+    private int consecutiveFailures = 0;
+    private long lastSuccessfulDetection = 0;
+    private int totalDetections = 0;
+    private int successfulDetections = 0;
+    private List<DetectionResult> lastSuccessfulResults = new ArrayList<>();
+    private long lastDetectionTime = 0;
     
     // COCO類別中文映射
     private static final Map<String, String> LABEL_MAP_ZH = new HashMap<>();
@@ -158,67 +172,169 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 檢測圖像中的物體 - 使用雙檢測器融合提高準確率
+     * 檢測圖像中的物體 - 使用雙檢測器融合提高準確率和穩定性
      */
     public List<DetectionResult> detect(Bitmap bitmap) {
         List<DetectionResult> results = new ArrayList<>();
+        long startTime = System.currentTimeMillis();
         
         if (bitmap == null || bitmap.isRecycled()) {
             Log.w(TAG, "無效的bitmap");
-            return results;
+            return getLastSuccessfulResults();
         }
         
+        // 檢查檢測頻率，避免過於頻繁
+        if (System.currentTimeMillis() - lastDetectionTime < 100) {
+            Log.d(TAG, "檢測頻率過高，返回上次結果");
+            return getLastSuccessfulResults();
+        }
+        lastDetectionTime = System.currentTimeMillis();
+        
+        totalDetections++;
+        
         try {
-            if (useYolo && yoloDetector != null) {
-                // 嘗試使用YOLO檢測器（更準確）
-                try {
-                    results = detectWithYolo(bitmap);
-                    Log.d(TAG, String.format("YOLO檢測到 %d 個物體", results.size()));
-                    
-                    // 如果YOLO檢測結果為空，嘗試SSD
-                    if (results.isEmpty() && objectDetector != null) {
-                        Log.d(TAG, "YOLO檢測結果為空，嘗試使用SSD檢測器");
-                        results = detectWithSSD(bitmap);
-                        Log.d(TAG, String.format("SSD檢測到 %d 個物體", results.size()));
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "YOLO檢測器異常，降級到SSD: " + e.getMessage());
-                    useYolo = false; // 暫時禁用YOLO
-                    if (objectDetector != null) {
-                        results = detectWithSSD(bitmap);
-                        Log.d(TAG, String.format("SSD檢測到 %d 個物體", results.size()));
-                    }
-                }
-            } else if (objectDetector != null) {
-                // 使用SSD檢測器
-                results = detectWithSSD(bitmap);
-                Log.d(TAG, String.format("SSD檢測到 %d 個物體", results.size()));
+            // 檢查連續失敗次數
+            if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                Log.w(TAG, "連續失敗次數過多，重置檢測器狀態");
+                resetDetectorState();
+            }
+            
+            // 使用重試機制進行檢測
+            results = detectWithRetry(bitmap);
+            
+            if (!results.isEmpty()) {
+                // 檢測成功
+                consecutiveFailures = 0;
+                successfulDetections++;
+                lastSuccessfulDetection = System.currentTimeMillis();
+                lastSuccessfulResults = new ArrayList<>(results);
+                
+                // 應用後處理
+                results = applyPostProcessing(results);
+                
+                Log.d(TAG, String.format("檢測成功: %d 個物體 (成功率: %.1f%%)", 
+                    results.size(), (float)successfulDetections / totalDetections * 100));
             } else {
-                Log.w(TAG, "沒有可用的檢測器");
-                return results;
+                // 檢測失敗，返回上次成功結果
+                Log.w(TAG, "檢測失敗，返回上次成功結果");
+                results = getLastSuccessfulResults();
+                consecutiveFailures++;
             }
-            
-            // 應用非極大值抑制
-            results = applyNMS(results);
-            
-            // 按置信度排序
-            Collections.sort(results, (a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
-            
-            // 限制結果數量
-            if (results.size() > MAX_RESULTS) {
-                results = results.subList(0, MAX_RESULTS);
-            }
-            
-            Log.d(TAG, String.format("最終檢測到 %d 個物體", results.size()));
             
         } catch (OutOfMemoryError e) {
             Log.e(TAG, "記憶體不足，檢測失敗: " + e.getMessage());
             System.gc();
+            consecutiveFailures++;
+            results = getLastSuccessfulResults();
         } catch (Exception e) {
             Log.e(TAG, "檢測過程中發生錯誤: " + e.getMessage());
+            consecutiveFailures++;
+            results = getLastSuccessfulResults();
+        }
+        
+        long detectionTime = System.currentTimeMillis() - startTime;
+        if (detectionTime > 1000) {
+            Log.w(TAG, "檢測時間過長: " + detectionTime + "ms");
         }
         
         return results;
+    }
+    
+    /**
+     * 使用重試機制進行檢測
+     */
+    private List<DetectionResult> detectWithRetry(Bitmap bitmap) {
+        List<DetectionResult> results = new ArrayList<>();
+        
+        for (int attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
+            try {
+                if (useYolo && yoloDetector != null) {
+                    // 嘗試使用YOLO檢測器
+                    results = detectWithYolo(bitmap);
+                    if (!results.isEmpty()) {
+                        Log.d(TAG, String.format("YOLO檢測成功 (嘗試 %d/%d): %d 個物體", 
+                            attempt + 1, MAX_RETRY_ATTEMPTS, results.size()));
+                        break;
+                    }
+                }
+                
+                if (objectDetector != null) {
+                    // 使用SSD檢測器
+                    results = detectWithSSD(bitmap);
+                    if (!results.isEmpty()) {
+                        Log.d(TAG, String.format("SSD檢測成功 (嘗試 %d/%d): %d 個物體", 
+                            attempt + 1, MAX_RETRY_ATTEMPTS, results.size()));
+                        break;
+                    }
+                }
+                
+                // 如果檢測失敗，等待後重試
+                if (attempt < MAX_RETRY_ATTEMPTS - 1) {
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Log.w(TAG, "重試延遲被中斷");
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+                
+            } catch (Exception e) {
+                Log.e(TAG, String.format("檢測嘗試 %d/%d 失敗: %s", 
+                    attempt + 1, MAX_RETRY_ATTEMPTS, e.getMessage()));
+                if (attempt == MAX_RETRY_ATTEMPTS - 1) {
+                    throw e;
+                }
+            }
+        }
+        
+        return results;
+    }
+    
+    /**
+     * 應用後處理
+     */
+    private List<DetectionResult> applyPostProcessing(List<DetectionResult> results) {
+        // 應用非極大值抑制
+        results = applyNMS(results);
+        
+        // 按置信度排序
+        Collections.sort(results, (a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
+        
+        // 限制結果數量
+        if (results.size() > MAX_RESULTS) {
+            results = results.subList(0, MAX_RESULTS);
+        }
+        
+        return results;
+    }
+    
+    /**
+     * 獲取上次成功的檢測結果
+     */
+    private List<DetectionResult> getLastSuccessfulResults() {
+        if (lastSuccessfulResults.isEmpty()) {
+            Log.d(TAG, "沒有可用的歷史檢測結果");
+            return new ArrayList<>();
+        }
+        
+        // 檢查歷史結果是否過期
+        if (System.currentTimeMillis() - lastSuccessfulDetection > 10000) { // 10秒過期
+            Log.d(TAG, "歷史檢測結果已過期");
+            return new ArrayList<>();
+        }
+        
+        Log.d(TAG, "返回歷史檢測結果: " + lastSuccessfulResults.size() + " 個物體");
+        return new ArrayList<>(lastSuccessfulResults);
+    }
+    
+    /**
+     * 重置檢測器狀態
+     */
+    private void resetDetectorState() {
+        consecutiveFailures = 0;
+        useYolo = true; // 重新啟用YOLO
+        Log.d(TAG, "檢測器狀態已重置");
     }
     
     /**
@@ -395,6 +511,36 @@ public class ObjectDetectorHelper {
         return sb.toString();
     }
     
+    /**
+     * 獲取檢測器穩定性統計
+     */
+    public String getStabilityStats() {
+        float successRate = totalDetections > 0 ? (float)successfulDetections / totalDetections * 100 : 0;
+        long timeSinceLastSuccess = System.currentTimeMillis() - lastSuccessfulDetection;
+        
+        return String.format("檢測統計 - 總檢測: %d, 成功: %d, 成功率: %.1f%%, 連續失敗: %d, 上次成功: %d秒前", 
+            totalDetections, successfulDetections, successRate, consecutiveFailures, timeSinceLastSuccess / 1000);
+    }
+    
+    /**
+     * 檢查檢測器健康狀態
+     */
+    public boolean isHealthy() {
+        return consecutiveFailures < MAX_CONSECUTIVE_FAILURES && 
+               (System.currentTimeMillis() - lastSuccessfulDetection) < 30000; // 30秒內有成功檢測
+    }
+    
+    /**
+     * 強制重置檢測器
+     */
+    public void forceReset() {
+        Log.d(TAG, "強制重置檢測器");
+        consecutiveFailures = 0;
+        useYolo = true;
+        lastSuccessfulDetection = 0;
+        lastSuccessfulResults.clear();
+    }
+    
     public void close() {
         if (objectDetector != null) {
             objectDetector.close();
@@ -404,6 +550,9 @@ public class ObjectDetectorHelper {
             yoloDetector.close();
             Log.d(TAG, "YOLO檢測器已關閉");
         }
+        
+        // 輸出最終統計
+        Log.d(TAG, getStabilityStats());
     }
     
     /**

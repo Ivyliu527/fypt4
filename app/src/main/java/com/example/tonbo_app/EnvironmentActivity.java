@@ -55,6 +55,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private long lastDetectionTime = 0;
     private boolean isAnalyzing = false;
     private int frameSkipCount = 2; // 每2幀檢測一次，提高檢測頻率
+    private long lastStabilityCheck = 0; // 上次穩定性檢查時間
     
     // 顏色和光線分析
     private ColorLightingAnalyzer colorLightingAnalyzer;
@@ -325,6 +326,12 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             
             // 定期檢查記憶體使用情況
             checkMemoryUsage();
+            
+            // 定期檢查檢測器穩定性
+            if (System.currentTimeMillis() - lastStabilityCheck > 5000) { // 每5秒檢查一次
+                checkDetectorStability();
+                lastStabilityCheck = System.currentTimeMillis();
+            }
             
             // 跳過幀以提高性能，並且避免同時進行多個檢測
             if (detectionCount % frameSkipCount == 0 && 
@@ -937,6 +944,25 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             } else {
                 // 如果cameraProvider為null，重新啟動相機
                 startCamera();
+            }
+        }
+    }
+    
+    /**
+     * 檢查檢測器穩定性
+     */
+    private void checkDetectorStability() {
+        if (objectDetectorHelper != null) {
+            boolean isHealthy = objectDetectorHelper.isHealthy();
+            String stats = objectDetectorHelper.getStabilityStats();
+            
+            Log.d(TAG, "檢測器穩定性檢查: " + (isHealthy ? "健康" : "異常"));
+            Log.d(TAG, stats);
+            
+            if (!isHealthy) {
+                Log.w(TAG, "檢測器狀態異常，嘗試重置");
+                objectDetectorHelper.forceReset();
+                announceInfo("檢測器狀態已重置，正在恢復正常檢測");
             }
         }
     }
