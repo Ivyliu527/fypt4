@@ -1,6 +1,7 @@
 package com.example.tonbo_app;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,6 +14,7 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
     protected TTSManager ttsManager;
     protected VibrationManager vibrationManager;
     protected LocaleManager localeManager;
+    protected GlobalVoiceCommandManager globalVoiceManager;
     protected String currentLanguage;
     
     @Override
@@ -41,6 +43,9 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
         // 設定TTSManager的語言
         ttsManager.setLanguageSilently(currentLanguage);
         
+        // 初始化全局語音命令管理器
+        initializeGlobalVoiceManager();
+        
         // 設置無障礙支持
         setupAccessibility();
         
@@ -48,6 +53,150 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
         getWindow().getDecorView().post(() -> {
             announcePageTitle();
         });
+    }
+    
+    private void initializeGlobalVoiceManager() {
+        globalVoiceManager = new GlobalVoiceCommandManager(this, ttsManager);
+        
+        // 設置語音命令回調
+        globalVoiceManager.setCallback(new GlobalVoiceCommandManager.VoiceCommandCallback() {
+            @Override
+            public void onCommandRecognized(String command) {
+                handleGlobalVoiceCommand(command);
+            }
+            
+            @Override
+            public void onVoiceError(String error) {
+                announceError("語音命令錯誤: " + error);
+            }
+        });
+    }
+    
+    /**
+     * 處理全局語音命令
+     * 子類可以重寫此方法來處理特定的語音命令
+     */
+    protected void handleGlobalVoiceCommand(String command) {
+        switch (command) {
+            case "environment":
+                startEnvironmentActivity();
+                break;
+            case "document":
+                startDocumentCurrencyActivity();
+                break;
+            case "voice_command":
+                startVoiceCommandActivity();
+                break;
+            case "find_items":
+                startFindItemsActivity();
+                break;
+            case "live_assistance":
+                announceInfo("即時協助功能開發中");
+                break;
+            case "emergency":
+                handleEmergencyCommand();
+                break;
+            case "home":
+                goToHome();
+                break;
+            case "settings":
+                startSettingsActivity();
+                break;
+            case "language":
+                handleLanguageSwitch();
+                break;
+            case "time":
+                announceCurrentTime();
+                break;
+            case "stop":
+                stopCurrentOperation();
+                break;
+            default:
+                announceInfo("未識別的語音命令: " + command);
+                break;
+        }
+    }
+    
+    /**
+     * 啟動全局語音命令聆聽
+     */
+    public void startGlobalVoiceCommand() {
+        if (globalVoiceManager != null) {
+            globalVoiceManager.startListening(null);
+        }
+    }
+    
+    /**
+     * 停止全局語音命令聆聽
+     */
+    public void stopGlobalVoiceCommand() {
+        if (globalVoiceManager != null) {
+            globalVoiceManager.stopListening();
+        }
+    }
+    
+    // 默認的Activity啟動方法，子類可以重寫
+    protected void startEnvironmentActivity() {
+        Intent intent = new Intent(this, EnvironmentActivity.class);
+        intent.putExtra("language", currentLanguage);
+        startActivity(intent);
+    }
+    
+    protected void startDocumentCurrencyActivity() {
+        Intent intent = new Intent(this, DocumentCurrencyActivity.class);
+        intent.putExtra("language", currentLanguage);
+        startActivity(intent);
+    }
+    
+    protected void startVoiceCommandActivity() {
+        Intent intent = new Intent(this, VoiceCommandActivity.class);
+        intent.putExtra("language", currentLanguage);
+        startActivity(intent);
+    }
+    
+    protected void startFindItemsActivity() {
+        Intent intent = new Intent(this, FindItemsActivity.class);
+        intent.putExtra("language", currentLanguage);
+        startActivity(intent);
+    }
+    
+    protected void startSettingsActivity() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        intent.putExtra("language", currentLanguage);
+        startActivity(intent);
+    }
+    
+    protected void handleEmergencyCommand() {
+        announceInfo("緊急求助功能");
+        // 子類可以重寫此方法實現具體的緊急求助邏輯
+    }
+    
+    protected void goToHome() {
+        if (!(this instanceof MainActivity)) {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra("language", currentLanguage);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        } else {
+            announceInfo("已在主頁");
+        }
+    }
+    
+    protected void handleLanguageSwitch() {
+        announceInfo("語言切換功能");
+        // 子類可以重寫此方法實現語言切換
+    }
+    
+    protected void announceCurrentTime() {
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
+        String currentTime = sdf.format(new java.util.Date());
+        announceInfo("現在時間: " + currentTime);
+    }
+    
+    protected void stopCurrentOperation() {
+        announceInfo("停止當前操作");
+        // 子類可以重寫此方法實現停止邏輯
     }
     
     private void setupAccessibility() {
@@ -162,6 +311,11 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // 清理全局語音命令管理器
+        if (globalVoiceManager != null) {
+            globalVoiceManager.destroy();
+            globalVoiceManager = null;
+        }
         // 頁面銷毀時清理資源（但保持管理器實例）
         // ttsManager和vibrationManager是單例，由MainActivity統一管理
     }
