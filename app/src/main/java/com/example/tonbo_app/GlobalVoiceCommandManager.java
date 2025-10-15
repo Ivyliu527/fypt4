@@ -59,18 +59,21 @@ public class GlobalVoiceCommandManager {
             speechRecognizer.setRecognitionListener(new RecognitionListener() {
                 @Override
                 public void onReadyForSpeech(Bundle params) {
-                    Log.d(TAG, "語音識別準備就緒");
+                    Log.d(TAG, "語音識別準備就緒 - 語言: " + getCurrentLanguage());
                     isListening = true;
                 }
 
                 @Override
                 public void onBeginningOfSpeech() {
-                    Log.d(TAG, "開始語音識別");
+                    Log.d(TAG, "開始語音識別 - 檢測到語音輸入");
                 }
 
                 @Override
                 public void onRmsChanged(float rmsdB) {
-                    // 音量變化，可用於視覺反饋
+                    // 音量變化，用於調試
+                    if (rmsdB > 0) {
+                        Log.d(TAG, "音量變化: " + rmsdB + " dB");
+                    }
                 }
 
                 @Override
@@ -149,11 +152,22 @@ public class GlobalVoiceCommandManager {
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, getCurrentLanguage());
             intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3); // 增加結果數量
+            
+            // 優化語音識別參數 - 提高靈敏度
+            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5); // 增加結果數量提高識別率
             intent.putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true); // 啟用置信度分數
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 3000); // 3秒靜音後結束
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1500); // 1.5秒可能完成靜音
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1000); // 最小語音長度1秒
+            
+            // 降低靜音檢測閾值 - 更容易觸發識別
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000); // 5秒靜音後結束
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000); // 2秒可能完成靜音
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500); // 降低最小語音長度到0.5秒
+            
+            // 添加額外的識別參數
+            intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false); // 允許在線識別
+            intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, new String[]{getCurrentLanguage()});
+            
+            // 添加提示詞
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getListeningPrompt());
             
             speechRecognizer.startListening(intent);
             isListening = true;
@@ -345,6 +359,7 @@ public class GlobalVoiceCommandManager {
                 errorMessage = getLocalizedErrorMessage("no_match", currentLang);
                 shouldRetry = true;
                 shouldAutoRetry = true;
+                Log.w(TAG, "未識別到語音，將自動重試");
                 break;
             case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
                 errorMessage = getLocalizedErrorMessage("recognizer_busy", currentLang);
@@ -565,8 +580,88 @@ public class GlobalVoiceCommandManager {
         }
     }
     
+    /**
+     * 獲取聆聽提示詞
+     */
+    private String getListeningPrompt() {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        switch (currentLang) {
+            case "english":
+                return "Please speak clearly, I'm listening...";
+            case "mandarin":
+                return "請清晰說話，我正在聆聽...";
+            case "cantonese":
+            default:
+                return "請清晰咁講，我喺度聽緊...";
+        }
+    }
+    
     public boolean isListening() {
         return isListening;
+    }
+    
+    /**
+     * 測試語音識別功能
+     */
+    public void testVoiceRecognition() {
+        Log.d(TAG, "開始語音識別測試");
+        
+        // 檢查權限
+        if (!checkMicrophonePermission()) {
+            Log.e(TAG, "麥克風權限不足，無法測試語音識別");
+            return;
+        }
+        
+        // 檢查語音識別器
+        if (speechRecognizer == null) {
+            Log.e(TAG, "語音識別器未初始化，無法測試");
+            return;
+        }
+        
+        // 檢查設備支持
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+            Log.e(TAG, "設備不支持語音識別");
+            return;
+        }
+        
+        Log.d(TAG, "語音識別測試條件滿足，開始測試");
+        
+        // 播放測試提示
+        String testMessage = getTestMessage();
+        ttsManager.speak(null, testMessage, true);
+        
+        // 延遲啟動語音識別
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            startListening(new VoiceCommandCallback() {
+                @Override
+                public void onCommandRecognized(String command) {
+                    Log.d(TAG, "語音識別測試成功: " + command);
+                    ttsManager.speak(null, "語音識別測試成功，識別到：" + command, true);
+                }
+                
+                @Override
+                public void onVoiceError(String error) {
+                    Log.e(TAG, "語音識別測試失敗: " + error);
+                    ttsManager.speak(null, "語音識別測試失敗：" + error, true);
+                }
+            });
+        }, 2000); // 2秒後開始測試
+    }
+    
+    /**
+     * 獲取測試提示消息
+     */
+    private String getTestMessage() {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        switch (currentLang) {
+            case "english":
+                return "Voice recognition test starting. Please say something clearly in 2 seconds.";
+            case "mandarin":
+                return "語音識別測試開始，請在2秒後清晰說話";
+            case "cantonese":
+            default:
+                return "語音識別測試開始，請喺2秒後清晰咁講";
+        }
     }
     
     public void destroy() {
