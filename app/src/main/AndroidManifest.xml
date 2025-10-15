@@ -79,12 +79,6 @@
             android:label="@string/settings_page_title"
             android:exported="false" />
             
-        <!-- Voice Command Activity - 語音命令控制 -->
-        <activity
-            android:name=".VoiceCommandActivity"
-            android:label="@string/voice_command_title"
-            android:exported="false" />
-            
         <!-- Find Items Activity - 尋找物品 -->
         <activity
             android:name=".FindItemsActivity"

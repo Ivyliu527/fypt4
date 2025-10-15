@@ -84,9 +84,6 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
             case "document":
                 startDocumentCurrencyActivity();
                 break;
-            case "voice_command":
-                startVoiceCommandActivity();
-                break;
             case "find_items":
                 startFindItemsActivity();
                 break;
@@ -144,12 +141,6 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
     
     protected void startDocumentCurrencyActivity() {
         Intent intent = new Intent(this, DocumentCurrencyActivity.class);
-        intent.putExtra("language", currentLanguage);
-        startActivity(intent);
-    }
-    
-    protected void startVoiceCommandActivity() {
-        Intent intent = new Intent(this, VoiceCommandActivity.class);
         intent.putExtra("language", currentLanguage);
         startActivity(intent);
     }

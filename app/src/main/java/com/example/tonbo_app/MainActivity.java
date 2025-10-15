@@ -260,11 +260,6 @@ public class MainActivity extends BaseAccessibleActivity {
             getString(R.string.desc_document), 
             R.drawable.ic_scan));
         functionList.add(new HomeFunction(
-            "voice_command",
-            getString(R.string.function_voice_command), 
-            getString(R.string.desc_voice_command), 
-            R.drawable.ic_voice_command));
-        functionList.add(new HomeFunction(
             "find_items",
             getString(R.string.function_find_items), 
             getString(R.string.desc_find_items), 
@@ -312,9 +307,6 @@ public class MainActivity extends BaseAccessibleActivity {
             case "document":
                 startDocumentCurrencyActivity();
                 break;
-            case "voice_command":
-                startVoiceCommandActivity();
-                break;
             case "find_items":
                 startFindItemsActivity();
                 break;
@@ -346,18 +338,6 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
     
-    protected void startVoiceCommandActivity() {
-        try {
-            Intent intent = new Intent(MainActivity.this, VoiceCommandActivity.class);
-            intent.putExtra("language", currentLanguage);
-            announceNavigation("正在進入語音命令頁面");
-            startActivity(intent);
-        } catch (Exception e) {
-            announceError("語音命令功能暫不可用");
-            Log.e("MainActivity", "打開語音命令失敗: " + e.getMessage());
-        }
-    }
-
     protected void startFindItemsActivity() {
         try {
             Intent intent = new Intent(MainActivity.this, FindItemsActivity.class);

@@ -84,7 +84,6 @@
     <!-- 功能名称 -->
     <string name="function_environment">环境识别</string>
     <string name="function_document">阅读助手</string>
-    <string name="function_voice_command">语音命令</string>
     <string name="function_find_items">寻找物品</string>
     <string name="function_live_assistance">即时协助</string>
     
@@ -129,7 +128,6 @@
     <!-- 功能描述 -->
     <string name="desc_environment">描述周围环境和物体</string>
     <string name="desc_document">扫描文件和识别货币</string>
-    <string name="desc_voice_command">语音控制应用功能</string>
     <string name="desc_find_items">寻找标记的个人物品</string>
     <string name="desc_live_assistance">视频连线志工协助</string>
     
@@ -146,13 +144,6 @@
     <string name="currency_recognition">货币识别</string>
     <string name="scan_area">扫描区域</string>
     <string name="recognition_result">识别结果</string>
-    
-    <!-- 语音命令页面 -->
-    <string name="voice_command_title">语音命令</string>
-    <string name="listening_status">点击开始</string>
-    <string name="listening_active">正在监听...</string>
-    <string name="available_commands">可用指令：</string>
-    <string name="commands_list">• 打开环境识别\n• 打开阅读助手\n• 寻找物品\n• 即时协助\n• 紧急求助\n• 返回主页\n• 切换语言\n• 打开设置\n• 现在几点\n• 停止</string>
     
     <!-- 紧急设置页面 -->
     <string name="emergency_settings_title">紧急求助设置</string>

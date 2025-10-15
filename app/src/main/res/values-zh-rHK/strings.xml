@@ -14,11 +14,6 @@
     <!-- 功能名稱 -->
     <string name="function_environment">環境識別</string>
     <string name="function_document">閱讀助手</string>
-    <string name="function_voice_command">語音命令</string>
-    <string name="voice_command_title">語音命令</string>
-    <string name="listening_status">點擊開始</string>
-    <string name="available_commands">可用命令：</string>
-    <string name="commands_list">• 開啟環境識別\n• 開啟閱讀助手\n• 尋找物品\n• 即時協助\n• 緊急求助\n• 返回主頁\n• 切換語言\n• 開啟設定\n• 現在幾點\n• 停止</string>
     <string name="function_find_items">尋找物品</string>
     <string name="function_live_assistance">即時協助</string>
     
@@ -63,7 +58,6 @@
     <!-- 功能描述 -->
     <string name="desc_environment">描述周圍環境和物體</string>
     <string name="desc_document">掃描文件和識別貨幣</string>
-    <string name="desc_voice_command">語音控制應用功能</string>
     <string name="desc_find_items">尋找標記的個人物品</string>
     <string name="desc_live_assistance">視訊連線志工協助</string>
     

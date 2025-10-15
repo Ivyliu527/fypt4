@@ -145,14 +145,12 @@
     <!-- Function Names -->
     <string name="function_environment">Environment Recognition</string>
     <string name="function_document">Document Assistant</string>
-    <string name="function_voice_command">Voice Command</string>
     <string name="function_find_items">Find Items</string>
     <string name="function_live_assistance">Live Assistance</string>
     
     <!-- Function Descriptions -->
     <string name="desc_environment">Describe surroundings and objects</string>
     <string name="desc_document">Scan documents and recognize currency</string>
-    <string name="desc_voice_command">Voice control app functions</string>
     <string name="desc_find_items">Find marked personal items</string>
     <string name="desc_live_assistance">Video call with volunteers</string>
     
@@ -169,13 +167,6 @@
     <string name="currency_recognition">Currency Recognition</string>
     <string name="scan_area">Scan Area</string>
     <string name="recognition_result">Recognition Result</string>
-    
-    <!-- Voice Command Page -->
-    <string name="voice_command_title">Voice Command</string>
-    <string name="listening_status">Tap to Start</string>
-    <string name="listening_active">Listening...</string>
-    <string name="available_commands">Available Commands:</string>
-    <string name="commands_list">• open environment\n• open document\n• find items\n• live assistance\n• emergency\n• go home\n• switch language\n• open settings\n• what time is it\n• stop</string>
     
     <!-- Emergency Settings Page -->
     <string name="emergency_settings_title">Emergency Settings</string>
