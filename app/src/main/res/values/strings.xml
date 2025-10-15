@@ -53,6 +53,15 @@
     <string name="marked_items_list_desc">Marked items list title</string>
     <string name="selected_item">Selected item: %1$s</string>
     <string name="going_back_to_home">Going back to home</string>
+    
+    <!-- Global Voice Command -->
+    <string name="global_voice_command">🎤 Global Voice Command</string>
+    <string name="global_voice_command_desc">Global voice command button, tap to start voice control</string>
+    <string name="voice_command_listening">Listening for voice commands</string>
+    <string name="voice_command_recognized">Voice command recognized</string>
+    <string name="voice_command_error">Voice command error</string>
+    <string name="voice_command_unknown">Unknown voice command</string>
+    <string name="voice_command_stop">Stop voice command</string>
     <!-- Environment Recognition -->
     <string name="flash_on">Flash: On</string>
     <string name="flash_off">Flash: Off</string>

@@ -103,6 +103,20 @@
         android:contentDescription="@string/function_selection_area_desc"
         android:minHeight="32dp" />
 
+    <!-- 全局語音命令按鈕 -->
+    <Button
+        android:id="@+id/globalVoiceButton"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:text="@string/global_voice_command"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:background="@drawable/button_square_background"
+        android:backgroundTint="@color/menu_blue"
+        android:textColor="@color/white"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="@string/global_voice_command_desc" />
+
     <!-- 功能列表 - 優化間距 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"

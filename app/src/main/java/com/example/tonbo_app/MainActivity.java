@@ -94,6 +94,15 @@ public class MainActivity extends BaseAccessibleActivity {
             announceInfo("這是緊急求助按鈕，請長按三秒發送求助信息。點擊右上角紅色緊急按鈕可配置緊急聯絡人");
         });
 
+        // 全局語音命令按鈕
+        Button globalVoiceButton = findViewById(R.id.globalVoiceButton);
+        if (globalVoiceButton != null) {
+            globalVoiceButton.setOnClickListener(v -> {
+                vibrationManager.vibrateClick();
+                startGlobalVoiceCommand();
+            });
+        }
+
         // 緊急求助設置按鈕
         Button emergencySettingsButton = findViewById(R.id.emergencySettingsButton);
         if (emergencySettingsButton != null) {
@@ -315,7 +324,7 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
 
-    private void startEnvironmentActivity() {
+    protected void startEnvironmentActivity() {
         try {
             Intent intent = new Intent(MainActivity.this, EnvironmentActivity.class);
             intent.putExtra("language", currentLanguage);
@@ -326,7 +335,7 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
 
-    private void startDocumentCurrencyActivity() {
+    protected void startDocumentCurrencyActivity() {
         try {
             Intent intent = new Intent(MainActivity.this, DocumentCurrencyActivity.class);
             intent.putExtra("language", currentLanguage);
@@ -337,7 +346,7 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
     
-    private void startVoiceCommandActivity() {
+    protected void startVoiceCommandActivity() {
         try {
             Intent intent = new Intent(MainActivity.this, VoiceCommandActivity.class);
             intent.putExtra("language", currentLanguage);
@@ -349,7 +358,7 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
 
-    private void startFindItemsActivity() {
+    protected void startFindItemsActivity() {
         try {
             Intent intent = new Intent(MainActivity.this, FindItemsActivity.class);
             intent.putExtra("language", currentLanguage);
@@ -404,6 +413,11 @@ public class MainActivity extends BaseAccessibleActivity {
             announceError(getString(R.string.emergency_settings_unavailable));
             Log.e("MainActivity", "打開緊急設置失敗: " + e.getMessage());
         }
+    }
+    
+    public void startGlobalVoiceCommand() {
+        announceInfo("開始聆聽語音命令，請說出您想要執行的操作");
+        super.startGlobalVoiceCommand();
     }
 
     @Override
