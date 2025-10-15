@@ -597,27 +597,150 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 格式化檢測結果為語音文本
+     * 格式化檢測結果為語音文本 - 專為視障人士優化
      */
     public String formatResultsForSpeech(List<DetectionResult> results) {
         if (results.isEmpty()) {
-            return "未偵測到任何物體";
+            return getNoObjectsDetectedText();
         }
         
-        StringBuilder sb = new StringBuilder("偵測到：");
+        StringBuilder sb = new StringBuilder();
+        
+        // 檢測到物體數量
+        sb.append(getDetectedObjectsCountText(results.size()));
+        
+        // 詳細描述每個物體
         for (int i = 0; i < Math.min(results.size(), 5); i++) {
             DetectionResult result = results.get(i);
+            
+            // 物體序號
+            sb.append(getObjectNumberText(i + 1));
+            
+            // 物體名稱
             sb.append(result.getLabelZh());
+            
+            // 置信度描述
+            sb.append(getConfidenceDescription(result.getConfidence()));
+            
+            // 位置描述（基於邊界框）
+            sb.append(getPositionDescription(result.getBoundingBox()));
+            
+            // 分隔符
             if (i < Math.min(results.size(), 5) - 1) {
-                sb.append("、");
+                sb.append("，");
             }
         }
         
+        // 如果物體超過5個，添加總數
         if (results.size() > 5) {
             sb.append("等共").append(results.size()).append("個物體");
         }
         
         return sb.toString();
+    }
+    
+    /**
+     * 獲取未檢測到物體的文本
+     */
+    private String getNoObjectsDetectedText() {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        switch (currentLang) {
+            case "english":
+                return "No objects detected in the environment";
+            case "mandarin":
+                return "環境中未檢測到任何物體";
+            case "cantonese":
+            default:
+                return "環境中未檢測到任何物體";
+        }
+    }
+    
+    /**
+     * 獲取檢測到物體數量的文本
+     */
+    private String getDetectedObjectsCountText(int count) {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        switch (currentLang) {
+            case "english":
+                return "Detected " + count + " objects: ";
+            case "mandarin":
+                return "檢測到" + count + "個物體：";
+            case "cantonese":
+            default:
+                return "檢測到" + count + "個物體：";
+        }
+    }
+    
+    /**
+     * 獲取物體序號文本
+     */
+    private String getObjectNumberText(int number) {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        switch (currentLang) {
+            case "english":
+                return "Number " + number + ", ";
+            case "mandarin":
+                return "第" + number + "個，";
+            case "cantonese":
+            default:
+                return "第" + number + "個，";
+        }
+    }
+    
+    /**
+     * 獲取置信度描述
+     */
+    private String getConfidenceDescription(float confidence) {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        int percentage = Math.round(confidence * 100);
+        
+        String confidenceText;
+        if (percentage >= 80) {
+            confidenceText = currentLang.equals("english") ? "high confidence" : "高置信度";
+        } else if (percentage >= 60) {
+            confidenceText = currentLang.equals("english") ? "medium confidence" : "中等置信度";
+        } else {
+            confidenceText = currentLang.equals("english") ? "low confidence" : "低置信度";
+        }
+        
+        return "，" + confidenceText + "（" + percentage + "%）";
+    }
+    
+    /**
+     * 獲取位置描述
+     */
+    private String getPositionDescription(android.graphics.RectF boundingBox) {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        
+        // 計算物體在畫面中的大致位置
+        float centerX = (boundingBox.left + boundingBox.right) / 2;
+        float centerY = (boundingBox.top + boundingBox.bottom) / 2;
+        
+        String horizontalPos, verticalPos;
+        
+        // 水平位置
+        if (centerX < 0.33f) {
+            horizontalPos = currentLang.equals("english") ? "left side" : "左側";
+        } else if (centerX < 0.67f) {
+            horizontalPos = currentLang.equals("english") ? "center" : "中央";
+        } else {
+            horizontalPos = currentLang.equals("english") ? "right side" : "右側";
+        }
+        
+        // 垂直位置
+        if (centerY < 0.33f) {
+            verticalPos = currentLang.equals("english") ? "top" : "上方";
+        } else if (centerY < 0.67f) {
+            verticalPos = currentLang.equals("english") ? "middle" : "中間";
+        } else {
+            verticalPos = currentLang.equals("english") ? "bottom" : "下方";
+        }
+        
+        String positionText = currentLang.equals("english") 
+            ? " located at " + verticalPos + " " + horizontalPos
+            : "位於" + verticalPos + horizontalPos;
+            
+        return positionText;
     }
     
     /**

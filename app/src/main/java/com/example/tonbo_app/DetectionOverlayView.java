@@ -146,22 +146,27 @@ public class DetectionOverlayView extends View {
         // 檢查邊界框座標是否已經是像素座標還是相對座標
         float left, top, right, bottom;
         
-        if (boundingBox.left <= 1.0f && boundingBox.top <= 1.0f && 
-            boundingBox.right <= 1.0f && boundingBox.bottom <= 1.0f) {
-            // 相對座標 (0-1)，需要轉換為像素座標
-            Log.d(TAG, "檢測到相對座標，轉換為像素座標");
-            left = boundingBox.left * viewWidth;
-            top = boundingBox.top * viewHeight;
-            right = boundingBox.right * viewWidth;
-            bottom = boundingBox.bottom * viewHeight;
-        } else {
-            // 已經是像素座標，直接使用
-            Log.d(TAG, "檢測到像素座標，直接使用");
-            left = boundingBox.left;
-            top = boundingBox.top;
-            right = boundingBox.right;
-            bottom = boundingBox.bottom;
-        }
+               // 檢查座標範圍，判斷是否需要轉換
+               boolean isRelativeCoords = (boundingBox.left >= 0 && boundingBox.left <= 1.0f &&
+                                         boundingBox.top >= 0 && boundingBox.top <= 1.0f &&
+                                         boundingBox.right >= 0 && boundingBox.right <= 1.0f &&
+                                         boundingBox.bottom >= 0 && boundingBox.bottom <= 1.0f);
+               
+               if (isRelativeCoords) {
+                   // 相對座標 (0-1)，需要轉換為像素座標
+                   Log.d(TAG, "檢測到相對座標，轉換為像素座標");
+                   left = boundingBox.left * viewWidth;
+                   top = boundingBox.top * viewHeight;
+                   right = boundingBox.right * viewWidth;
+                   bottom = boundingBox.bottom * viewHeight;
+               } else {
+                   // 已經是像素座標，直接使用
+                   Log.d(TAG, "檢測到像素座標，直接使用");
+                   left = boundingBox.left;
+                   top = boundingBox.top;
+                   right = boundingBox.right;
+                   bottom = boundingBox.bottom;
+               }
         
         Log.d(TAG, "轉換後座標: left=" + left + ", top=" + top + ", right=" + right + ", bottom=" + bottom);
         
