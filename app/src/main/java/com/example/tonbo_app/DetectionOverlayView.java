@@ -137,17 +137,31 @@ public class DetectionOverlayView extends View {
     private void drawDetection(Canvas canvas, ObjectDetectorHelper.DetectionResult detection, 
                              int viewWidth, int viewHeight, int boxColor) {
         
-        // 獲取邊界框（模型輸出的是0-1的相對座標）
+        // 獲取邊界框
         RectF boundingBox = detection.getBoundingBox();
         
         Log.d(TAG, "原始邊界框座標: " + boundingBox);
         Log.d(TAG, "視圖尺寸: " + viewWidth + "x" + viewHeight);
         
-        // 轉換為實際像素座標
-        float left = boundingBox.left * viewWidth;
-        float top = boundingBox.top * viewHeight;
-        float right = boundingBox.right * viewWidth;
-        float bottom = boundingBox.bottom * viewHeight;
+        // 檢查邊界框座標是否已經是像素座標還是相對座標
+        float left, top, right, bottom;
+        
+        if (boundingBox.left <= 1.0f && boundingBox.top <= 1.0f && 
+            boundingBox.right <= 1.0f && boundingBox.bottom <= 1.0f) {
+            // 相對座標 (0-1)，需要轉換為像素座標
+            Log.d(TAG, "檢測到相對座標，轉換為像素座標");
+            left = boundingBox.left * viewWidth;
+            top = boundingBox.top * viewHeight;
+            right = boundingBox.right * viewWidth;
+            bottom = boundingBox.bottom * viewHeight;
+        } else {
+            // 已經是像素座標，直接使用
+            Log.d(TAG, "檢測到像素座標，直接使用");
+            left = boundingBox.left;
+            top = boundingBox.top;
+            right = boundingBox.right;
+            bottom = boundingBox.bottom;
+        }
         
         Log.d(TAG, "轉換後座標: left=" + left + ", top=" + top + ", right=" + right + ", bottom=" + bottom);
         
