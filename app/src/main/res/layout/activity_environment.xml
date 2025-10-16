@@ -118,6 +118,20 @@
             android:textColor="@color/text_secondary"
             android:textSize="16sp" />
 
+        <!-- Start Detection Button -->
+        <Button
+            android:id="@+id/startDetectionButton"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/button_square_background"
+            android:backgroundTint="@color/menu_blue"
+            android:contentDescription="@string/start_detection_desc"
+            android:text="@string/start_detection"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
     </LinearLayout>
 
 

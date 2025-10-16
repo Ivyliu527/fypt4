@@ -295,6 +295,14 @@
     <!-- Accessibility Description -->
     <string name="accessibility_service_description">Tonbo accessibility service to assist visually impaired users</string>
     
+    <!-- 環境識別開始按鈕 -->
+    <string name="start_detection">開始檢測</string>
+    <string name="start_detection_desc">點擊開始環境檢測</string>
+    <string name="stop_detection">停止檢測</string>
+    <string name="stop_detection_desc">點擊停止環境檢測</string>
+    <string name="detection_started">檢測已開始</string>
+    <string name="detection_stopped">檢測已停止</string>
+    
     <!-- 權限相關 -->
     <string name="microphone_permission_granted">Microphone permission granted, voice commands enabled</string>
     <string name="microphone_permission_denied">Microphone permission denied, voice commands will be unavailable</string>

@@ -281,6 +281,14 @@
     <!-- 启动画面 -->
     <string name="splash_slogan">你的视觉伙伴</string>
     
+    <!-- 環境識別開始按鈕 -->
+    <string name="start_detection">开始检测</string>
+    <string name="start_detection_desc">点击开始环境检测</string>
+    <string name="stop_detection">停止检测</string>
+    <string name="stop_detection_desc">点击停止环境检测</string>
+    <string name="detection_started">检测已开始</string>
+    <string name="detection_stopped">检测已停止</string>
+    
     <!-- 无障碍描述 -->
     <string name="accessibility_service_description">瞳伴无障碍服务，协助视障用户使用应用功能</string>
 </resources>
