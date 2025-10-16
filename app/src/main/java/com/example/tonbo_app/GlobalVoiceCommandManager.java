@@ -38,6 +38,13 @@ public class GlobalVoiceCommandManager {
     private long lastErrorTime = 0;
     private static final long ERROR_COOLDOWN_MS = 1000; // 減少錯誤冷卻期
     
+    // 音量統計
+    private float maxVolume = 0f;
+    private float minVolume = Float.MAX_VALUE;
+    private float avgVolume = 0f;
+    private int volumeSampleCount = 0;
+    private float volumeSum = 0f;
+    
     // 語音命令接口
     public interface VoiceCommandCallback {
         void onCommandRecognized(String command);
@@ -75,14 +82,23 @@ public class GlobalVoiceCommandManager {
                 public void onRmsChanged(float rmsdB) {
                     // 音量變化，用於調試和語音檢測
                     if (rmsdB > 0) {
-                        Log.d(TAG, "音量變化: " + rmsdB + " dB");
+                        Log.d(TAG, "音量變化: " + String.format("%.2f", rmsdB) + " dB");
                         
-                        // 語音檢測邏輯
-                        if (rmsdB > 5.0f) {
-                            Log.d(TAG, "檢測到語音輸入，音量: " + rmsdB + " dB");
-                        } else if (rmsdB < 1.0f) {
-                            Log.d(TAG, "音量過低，可能無法識別");
+                        // 詳細語音檢測邏輯
+                        if (rmsdB > 8.0f) {
+                            Log.i(TAG, "🔊 強語音輸入檢測: " + String.format("%.2f", rmsdB) + " dB - 語音質量良好");
+                        } else if (rmsdB > 5.0f) {
+                            Log.d(TAG, "🎤 語音輸入檢測: " + String.format("%.2f", rmsdB) + " dB - 語音質量正常");
+                        } else if (rmsdB > 2.0f) {
+                            Log.w(TAG, "🔉 弱語音輸入: " + String.format("%.2f", rmsdB) + " dB - 語音質量較弱");
+                        } else if (rmsdB > 0.5f) {
+                            Log.w(TAG, "🔈 極弱語音: " + String.format("%.2f", rmsdB) + " dB - 可能無法識別");
+                        } else {
+                            Log.w(TAG, "🔇 音量過低: " + String.format("%.2f", rmsdB) + " dB - 無法識別");
                         }
+                        
+                        // 記錄音量統計
+                        recordVolumeStatistics(rmsdB);
                     }
                 }
 
@@ -138,6 +154,9 @@ public class GlobalVoiceCommandManager {
             handleMicrophonePermissionMissing();
             return;
         }
+        
+        // 重置音量統計
+        resetVolumeStatistics();
         
         if (speechRecognizer == null) {
             Log.e(TAG, "語音識別器未初始化");
@@ -929,6 +948,26 @@ public class GlobalVoiceCommandManager {
         // 檢查重試次數
         Log.d(TAG, "當前重試次數: " + retryCount + "/" + MAX_RETRY_ATTEMPTS);
         
+        // 音量統計診斷
+        if (volumeSampleCount > 0) {
+            Log.d(TAG, "📊 音量統計診斷:");
+            Log.d(TAG, "   - 樣本數量: " + volumeSampleCount);
+            Log.d(TAG, "   - 最大音量: " + String.format("%.2f", maxVolume) + " dB");
+            Log.d(TAG, "   - 最小音量: " + String.format("%.2f", minVolume) + " dB");
+            Log.d(TAG, "   - 平均音量: " + String.format("%.2f", avgVolume) + " dB");
+            
+            // 音量質量評估
+            if (avgVolume > 5.0f) {
+                Log.i(TAG, "   ✅ 音量質量良好");
+            } else if (avgVolume > 2.0f) {
+                Log.w(TAG, "   ⚠️ 音量質量較弱，建議提高說話音量");
+            } else {
+                Log.w(TAG, "   ❌ 音量質量過低，可能是識別失敗的原因");
+            }
+        } else {
+            Log.w(TAG, "📊 無音量統計數據 - 可能沒有檢測到語音輸入");
+        }
+        
         // 綜合診斷結果
         if (hasPermission && isAvailable && isConnected) {
             Log.i(TAG, "✅ 語音識別系統狀態正常");
@@ -953,6 +992,42 @@ public class GlobalVoiceCommandManager {
         }
         
         return hasPermission;
+    }
+    
+    /**
+     * 記錄音量統計
+     */
+    private void recordVolumeStatistics(float rmsdB) {
+        volumeSampleCount++;
+        volumeSum += rmsdB;
+        avgVolume = volumeSum / volumeSampleCount;
+        
+        if (rmsdB > maxVolume) {
+            maxVolume = rmsdB;
+        }
+        if (rmsdB < minVolume) {
+            minVolume = rmsdB;
+        }
+        
+        // 每10個樣本記錄一次統計
+        if (volumeSampleCount % 10 == 0) {
+            Log.d(TAG, "📊 音量統計 - 樣本: " + volumeSampleCount + 
+                      ", 最大: " + String.format("%.2f", maxVolume) + " dB" +
+                      ", 最小: " + String.format("%.2f", minVolume) + " dB" +
+                      ", 平均: " + String.format("%.2f", avgVolume) + " dB");
+        }
+    }
+    
+    /**
+     * 重置音量統計
+     */
+    private void resetVolumeStatistics() {
+        maxVolume = 0f;
+        minVolume = Float.MAX_VALUE;
+        avgVolume = 0f;
+        volumeSampleCount = 0;
+        volumeSum = 0f;
+        Log.d(TAG, "📊 音量統計已重置");
     }
     
     /**
@@ -1013,6 +1088,9 @@ public class GlobalVoiceCommandManager {
         }
         
         Log.d(TAG, "語音識別測試條件滿足，開始測試");
+        
+        // 執行完整診斷
+        performVoiceRecognitionDiagnostics();
         
         // 播放測試提示
         String testMessage = getTestMessage();
