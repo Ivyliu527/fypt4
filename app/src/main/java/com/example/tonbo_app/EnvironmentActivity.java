@@ -40,11 +40,13 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private TextView detectionResults;
     private Button backButton;
     private Button flashButton;
+    private Button startDetectionButton;
 
     private ExecutorService cameraExecutor;
     private ProcessCameraProvider cameraProvider;
     private boolean isFlashOn = false;
     private boolean isDetecting = false;
+    private boolean isDetectionActive = false;
 
     // 物體檢測相關變量
     private ObjectDetectorHelper objectDetectorHelper;
@@ -80,6 +82,16 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
 
         Log.d(TAG, "EnvironmentActivity onCreate開始");
         
+        // 強制初始化TTS，確保語音功能可用
+        Log.d(TAG, "🔊 強制初始化TTS...");
+        if (ttsManager != null) {
+            // 觸發TTS初始化
+            ttsManager.speak("TTS初始化測試", "TTS initialization test", true);
+            Log.d(TAG, "🔊 TTS初始化觸發完成");
+        } else {
+            Log.e(TAG, "❌ TTS管理器為空！");
+        }
+        
         // 檢查API版本兼容性
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             Log.e(TAG, "Android版本過舊，不支持CameraX");
@@ -109,9 +121,47 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
 
     @Override
     protected void announcePageTitle() {
-        String pageTitle = getString(R.string.environment_title);
-        announcePageTitle(pageTitle);
-        announceNavigation(getString(R.string.camera_started_message));
+        Log.d(TAG, "🔊 EnvironmentActivity announcePageTitle 被調用");
+        Log.d(TAG, "🔊 當前語言: " + currentLanguage);
+        Log.d(TAG, "🔊 TTS管理器狀態: " + (ttsManager != null ? "已初始化" : "未初始化"));
+        
+        // 使用更簡單的方式，直接播放頁面標題
+        if (ttsManager != null) {
+            Log.d(TAG, "🔊 直接播放頁面標題");
+            
+            // 根據當前語言播放對應的語音
+            if ("english".equals(currentLanguage)) {
+                ttsManager.speak("", "Current page: Environment Recognition", true);
+            } else if ("mandarin".equals(currentLanguage)) {
+                ttsManager.speak("", "當前頁面：環境識別", true);
+            } else {
+                // 默認廣東話
+                ttsManager.speak("當前頁面：環境識別", "", true);
+            }
+            
+            // 延遲播放相機啟動提示，確保頁面標題播放完成
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                Log.d(TAG, "🔊 播放相機啟動提示");
+                if ("english".equals(currentLanguage)) {
+                    ttsManager.speak("", "Camera started, ready for detection", false);
+                } else if ("mandarin".equals(currentLanguage)) {
+                    ttsManager.speak("", "相機已啟動，準備檢測", false);
+                } else {
+                    // 默認廣東話
+                    ttsManager.speak("相機已啟動，準備檢測", "", false);
+                }
+                
+                // 延遲開始檢測，確保語音播放完成
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                    Log.d(TAG, "🔊 語音播放完成，等待用戶點擊開始檢測");
+                    // 不再自動開始檢測，等待用戶點擊開始按鈕
+                }, 3000); // 再延遲3秒
+                
+            }, 4000); // 延遲4秒，確保頁面標題播放完成
+            
+        } else {
+            Log.e(TAG, "❌ TTS管理器為空，無法播放頁面標題");
+        }
     }
 
     private void initViews() {
@@ -121,22 +171,119 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         detectionResults = findViewById(R.id.detectionResults);
         backButton = findViewById(R.id.backButton);
         flashButton = findViewById(R.id.flashButton);
+        startDetectionButton = findViewById(R.id.startDetectionButton);
 
-        // 返回按鈕
+        // 設置按鈕點擊事件
         backButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
             announceNavigation(getString(R.string.go_home_announcement));
             finish();
         });
 
-        // 閃光燈按鈕
-        flashButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            toggleFlash();
-        });
+        flashButton.setOnClickListener(v -> toggleFlash());
+
+        startDetectionButton.setOnClickListener(v -> toggleDetection());
+
+        // 設置無障礙支持
+        backButton.setContentDescription(getString(R.string.back_to_home));
+        flashButton.setContentDescription(getString(R.string.flash_button_desc));
+        startDetectionButton.setContentDescription(getString(R.string.start_detection_desc));
+        
+        // 初始化按鈕文字
+        updateButtonText();
 
 
         // 移除了語音播報和清除顯示按鈕，因為已有實時報讀功能
+    }
+    
+    /**
+     * 更新按鈕文字和描述
+     */
+    private void updateButtonText() {
+        if (startDetectionButton != null) {
+            if (isDetectionActive) {
+                startDetectionButton.setText(getString(R.string.stop_detection));
+                startDetectionButton.setContentDescription(getString(R.string.stop_detection_desc));
+            } else {
+                startDetectionButton.setText(getString(R.string.start_detection));
+                startDetectionButton.setContentDescription(getString(R.string.start_detection_desc));
+            }
+        }
+    }
+    
+    /**
+     * 切換檢測狀態
+     */
+    private void toggleDetection() {
+        vibrationManager.vibrateClick();
+        
+        if (isDetectionActive) {
+            // 停止檢測
+            stopDetection();
+        } else {
+            // 開始檢測
+            startDetection();
+        }
+    }
+    
+    /**
+     * 開始檢測
+     */
+    private void startDetection() {
+        Log.d(TAG, "🔊 開始檢測");
+        isDetectionActive = true;
+        
+        // 更新按鈕文字
+        updateButtonText();
+        
+        // 更新狀態文字
+        detectionStatus.setText(getString(R.string.detection_started));
+        
+        // 播放開始檢測語音
+        if ("english".equals(currentLanguage)) {
+            announceInfo("Detection started");
+        } else if ("mandarin".equals(currentLanguage)) {
+            announceInfo("檢測已開始");
+        } else {
+            // 默認廣東話
+            announceInfo("檢測已開始");
+        }
+        
+        // 清除之前的檢測結果
+        detectionResults.setText(getString(R.string.point_to_objects_instruction));
+        lastDetectionResult = "";
+    }
+    
+    /**
+     * 停止檢測
+     */
+    private void stopDetection() {
+        Log.d(TAG, "🔊 停止檢測");
+        isDetectionActive = false;
+        
+        // 更新按鈕文字
+        updateButtonText();
+        
+        // 更新狀態文字
+        detectionStatus.setText(getString(R.string.detection_stopped));
+        
+        // 播放停止檢測語音
+        if ("english".equals(currentLanguage)) {
+            announceInfo("Detection stopped");
+        } else if ("mandarin".equals(currentLanguage)) {
+            announceInfo("檢測已停止");
+        } else {
+            // 默認廣東話
+            announceInfo("檢測已停止");
+        }
+        
+        // 清除檢測結果
+        detectionResults.setText(getString(R.string.point_to_objects_instruction));
+        lastDetectionResult = "";
+        
+        // 清除檢測覆蓋層
+        if (detectionOverlay != null) {
+            detectionOverlay.clearDetections();
+        }
     }
     
 
@@ -212,7 +359,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             legacyCameraHelper = new LegacyCameraHelper(this);
             if (legacyCameraHelper.initializeCamera()) {
                 useLegacyCamera = true;
-                announceSuccess("相機已啟動（兼容模式），開始偵測環境");
+                // 相機啟動成功，但不播放語音，避免與頁面標題衝突
+                Log.d(TAG, "相機啟動成功（兼容模式）");
                 updateDetectionStatus(getString(R.string.camera_started_compatibility));
                 updateDetectionResults(getString(R.string.camera_compatibility_message));
                 Log.d(TAG, "傳統相機啟動成功");
@@ -238,7 +386,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 cameraProvider = cameraProviderFuture.get();
                 Log.d(TAG, "ProcessCameraProvider獲取成功");
                 bindCameraUseCases();
-                announceSuccess("相機已啟動，開始偵測環境");
+                // 相機啟動成功，但不播放語音，避免與頁面標題衝突
+                Log.d(TAG, "相機啟動成功（CameraX模式）");
             } catch (NoSuchMethodError e) {
                 Log.e(TAG, "相機API兼容性錯誤: " + e.getMessage());
                 e.printStackTrace();
@@ -322,6 +471,12 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
 
     private void analyzeImage(ImageProxy image) {
         try {
+            // 只有在檢測激活時才進行分析
+            if (!isDetectionActive) {
+                image.close();
+                return;
+            }
+            
             detectionCount++;
             
             // 定期檢查記憶體使用情況
@@ -971,19 +1126,27 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
      * 語音播報檢測結果
      */
     private void speakDetectionResults(String speechText) {
+        Log.d(TAG, "🔊 speakDetectionResults 被調用，speechText: " + speechText);
+        Log.d(TAG, "🔊 ttsManager 狀態: " + (ttsManager != null ? "已初始化" : "未初始化"));
+        Log.d(TAG, "🔊 當前語言: " + currentLanguage);
+        
         if (ttsManager != null && speechText != null && !speechText.isEmpty()) {
             Log.d(TAG, "語音播報檢測結果: " + speechText);
             
             // 添加環境描述前綴
             String fullSpeechText = getEnvironmentDescriptionPrefix() + speechText;
+            Log.d(TAG, "🔊 完整語音文本: " + fullSpeechText);
             
-            // 播報檢測結果
-            ttsManager.speak(null, fullSpeechText, true);
+            // 播報檢測結果 - 使用優先播放確保檢測結果語音不被其他語音打斷
+            ttsManager.speak(fullSpeechText, fullSpeechText, true);
             
             // 震動反饋
             if (vibrationManager != null) {
                 vibrationManager.vibrateClick();
             }
+        } else {
+            Log.w(TAG, "❌ 語音播報條件不滿足 - ttsManager: " + (ttsManager != null) + 
+                  ", speechText: " + speechText + ", isEmpty: " + (speechText != null && speechText.isEmpty()));
         }
     }
     

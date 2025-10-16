@@ -172,6 +172,128 @@ public class MainActivity extends BaseAccessibleActivity {
         recreate();
     }
     
+    /**
+     * 平滑語言切換 - 避免畫面閃爍
+     */
+    private void smoothLanguageSwitch() {
+        // 選項1: 淡入淡出動畫
+        smoothFadeTransition();
+        
+        // 選項2: 滑動動畫 (可選)
+        // smoothSlideTransition();
+        
+        // 選項3: 縮放動畫 (可選)
+        // smoothScaleTransition();
+    }
+    
+    /**
+     * 淡入淡出動畫
+     */
+    private void smoothFadeTransition() {
+        getWindow().getDecorView().animate()
+                .alpha(0.3f)
+                .setDuration(200)
+                .withEndAction(() -> {
+                    // 更新UI文字
+                    updateUITexts();
+                    
+                    // 淡入動畫
+                    getWindow().getDecorView().animate()
+                            .alpha(1.0f)
+                            .setDuration(200)
+                            .start();
+                })
+                .start();
+    }
+    
+    /**
+     * 滑動動畫 (備選方案)
+     */
+    private void smoothSlideTransition() {
+        getWindow().getDecorView().animate()
+                .translationX(-getWindow().getDecorView().getWidth())
+                .setDuration(300)
+                .withEndAction(() -> {
+                    // 更新UI文字
+                    updateUITexts();
+                    
+                    // 重置位置並滑入
+                    getWindow().getDecorView().setTranslationX(getWindow().getDecorView().getWidth());
+                    getWindow().getDecorView().animate()
+                            .translationX(0)
+                            .setDuration(300)
+                            .start();
+                })
+                .start();
+    }
+    
+    /**
+     * 縮放動畫 (備選方案)
+     */
+    private void smoothScaleTransition() {
+        getWindow().getDecorView().animate()
+                .scaleX(0.8f)
+                .scaleY(0.8f)
+                .alpha(0.5f)
+                .setDuration(250)
+                .withEndAction(() -> {
+                    // 更新UI文字
+                    updateUITexts();
+                    
+                    // 恢復縮放
+                    getWindow().getDecorView().animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .alpha(1.0f)
+                            .setDuration(250)
+                            .start();
+                })
+                .start();
+    }
+    
+    /**
+     * 更新UI文字 - 不重新創建Activity
+     */
+    private void updateUITexts() {
+        // 更新標題
+        setTitle(getString(R.string.app_name));
+        
+        // 更新功能列表
+        updateFunctionList();
+        
+        // 更新語言按鈕
+        updateLanguageButton();
+        
+        // 更新操作指南
+        updateOperationGuide();
+        
+        // 更新無障礙內容描述
+        setupAccessibilityContent();
+        
+        Log.d("MainActivity", "UI文字已更新為: " + currentLanguage);
+    }
+    
+    /**
+     * 更新功能列表
+     */
+    private void updateFunctionList() {
+        if (adapter != null) {
+            // 重新創建功能列表
+            functionList.clear();
+            setupFunctionList();
+            adapter.notifyDataSetChanged();
+        }
+    }
+    
+    
+    /**
+     * 更新操作指南
+     */
+    private void updateOperationGuide() {
+        // 操作指南在布局中沒有單獨的ID，跳過更新
+        // 因為操作指南內容是通過strings.xml動態設置的
+    }
+    
     private void announceLanguageChange(String language) {
         // 立即播放語言切換確認語音，使用當前TTS語言
         String currentTTSLanguage = ttsManager.getCurrentLanguage();
@@ -179,21 +301,21 @@ public class MainActivity extends BaseAccessibleActivity {
         switch (language) {
             case "cantonese":
                 if ("english".equals(currentTTSLanguage)) {
-                    ttsManager.speak(null, "Switched to Cantonese", true);
+                    ttsManager.speak("已切換到廣東話", "Switched to Cantonese", true);
                 } else {
                     ttsManager.speak("已切換到廣東話", null, true);
                 }
                 break;
             case "english":
                 if ("english".equals(currentTTSLanguage)) {
-                    ttsManager.speak(null, "Switched to English", true);
+                    ttsManager.speak("已切換到英文", "Switched to English", true);
                 } else {
                     ttsManager.speak("已切換到英文", null, true);
                 }
                 break;
             case "mandarin":
                 if ("english".equals(currentTTSLanguage)) {
-                    ttsManager.speak(null, "Switched to Mandarin", true);
+                    ttsManager.speak("已切換到普通話", "Switched to Mandarin", true);
                 } else {
                     ttsManager.speak("已切換到普通話", null, true);
                 }
