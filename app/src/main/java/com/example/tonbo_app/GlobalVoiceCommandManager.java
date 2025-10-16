@@ -70,6 +70,10 @@ public class GlobalVoiceCommandManager {
                     Log.d(TAG, "語音識別準備就緒 - 語言: " + getCurrentLanguage());
                     isListening = true;
                     isRecognizerBusy = false;
+                    
+                    // 強制觸發音量檢測測試
+                    Log.d(TAG, "🔍 開始音量檢測測試");
+                    testVolumeDetection();
                 }
 
                 @Override
@@ -157,6 +161,13 @@ public class GlobalVoiceCommandManager {
         
         // 重置音量統計
         resetVolumeStatistics();
+        
+        // 檢查是否在模擬器上運行
+        if (isRunningOnEmulator()) {
+            Log.w(TAG, "⚠️ 檢測到模擬器環境 - 語音識別功能可能受限");
+            handleEmulatorLimitations();
+            return;
+        }
         
         if (speechRecognizer == null) {
             Log.e(TAG, "語音識別器未初始化");
@@ -818,24 +829,36 @@ public class GlobalVoiceCommandManager {
     private void optimizeSpeechRecognitionParams(Intent intent) {
         String currentLang = getCurrentLanguage();
         
-        // 通用參數
-        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10);
+        // 通用參數 - 極度放寬以提高識別率
+        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 20); // 大幅增加結果數量
         intent.putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true);
         intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
         intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, new String[]{currentLang});
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getListeningPrompt());
         
+        // 強制啟用部分結果
+        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        
+        // 添加更多識別參數
+        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 15000); // 15秒靜音
+        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 5000); // 5秒可能完成
+        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 50); // 0.05秒最小長度
+        
         if (currentLang.contains("en")) {
-            // 英文優化參數
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 6000); // 6秒靜音
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2500); // 2.5秒可能完成
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 300); // 0.3秒最小長度
+            // 英文優化參數 - 放寬限制以提高識別率
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 10000); // 10秒靜音
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 4000); // 4秒可能完成
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 100); // 0.1秒最小長度
             
             // 英文特定優化
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-US");
             intent.putExtra("android.speech.extra.DICTATION_MODE", false);
             
-            Log.d(TAG, "應用英文語音識別優化參數");
+            // 添加更多英文優化參數
+            intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 15); // 增加結果數量
+            
+            Log.d(TAG, "應用英文語音識別優化參數 - 放寬限制");
             
         } else if (currentLang.contains("zh")) {
             // 中文優化參數
@@ -1130,6 +1153,107 @@ public class GlobalVoiceCommandManager {
         }
     }
     
+    /**
+     * 測試音量檢測功能
+     */
+    private void testVolumeDetection() {
+        Log.d(TAG, "🔍 音量檢測測試開始");
+        
+        // 模擬音量檢測
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            Log.d(TAG, "🔍 音量檢測測試 - 模擬音量: 5.5 dB");
+            recordVolumeStatistics(5.5f);
+        }, 1000);
+        
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            Log.d(TAG, "🔍 音量檢測測試 - 模擬音量: 8.2 dB");
+            recordVolumeStatistics(8.2f);
+        }, 2000);
+        
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            Log.d(TAG, "🔍 音量檢測測試完成");
+        }, 3000);
+    }
+    
+    /**
+     * 檢查是否在模擬器上運行
+     */
+    private boolean isRunningOnEmulator() {
+        return android.os.Build.FINGERPRINT.startsWith("generic") ||
+               android.os.Build.FINGERPRINT.startsWith("unknown") ||
+               android.os.Build.MODEL.contains("google_sdk") ||
+               android.os.Build.MODEL.contains("Emulator") ||
+               android.os.Build.MODEL.contains("Android SDK built for x86") ||
+               android.os.Build.MANUFACTURER.contains("Genymotion") ||
+               (android.os.Build.BRAND.startsWith("generic") && android.os.Build.DEVICE.startsWith("generic")) ||
+               "google_sdk".equals(android.os.Build.PRODUCT);
+    }
+    
+    /**
+     * 處理模擬器語音識別限制
+     */
+    private void handleEmulatorLimitations() {
+        Log.w(TAG, "⚠️ 檢測到模擬器環境 - 語音識別功能可能受限");
+        
+        String warningMessage = getEmulatorWarningMessage();
+        if (callback != null) {
+            callback.onVoiceError(warningMessage);
+        }
+        
+        if (ttsManager != null) {
+            ttsManager.speak(null, warningMessage, true);
+        }
+        
+        // 提供實機測試建議
+        provideRealDeviceTestingAdvice();
+    }
+    
+    /**
+     * 獲取模擬器警告消息
+     */
+    private String getEmulatorWarningMessage() {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        switch (currentLang) {
+            case "english":
+                return "Voice recognition is limited on emulator. Please test on a real device for best results.";
+            case "mandarin":
+                return "模擬器上語音識別功能受限，建議在真實設備上測試。";
+            case "cantonese":
+            default:
+                return "模擬器上語音識別功能受限，建議喺真實設備上測試。";
+        }
+    }
+    
+    /**
+     * 提供實機測試建議
+     */
+    private void provideRealDeviceTestingAdvice() {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        String adviceMessage;
+        
+        switch (currentLang) {
+            case "english":
+                adviceMessage = "To test voice recognition properly, please connect a real Android device and install the app on it.";
+                break;
+            case "mandarin":
+                adviceMessage = "要正確測試語音識別功能，請連接真實的Android設備並在其上安裝應用。";
+                break;
+            case "cantonese":
+            default:
+                adviceMessage = "要正確測試語音識別功能，請連接真實嘅Android設備並喺上面安裝應用。";
+                break;
+        }
+        
+        Log.i(TAG, "實機測試建議: " + adviceMessage);
+        
+        // 延遲播放建議消息
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (ttsManager != null) {
+                ttsManager.speak(null, adviceMessage, true);
+            }
+        }, 5000); // 5秒後播放建議消息
+    }
+
     public void destroy() {
         if (speechRecognizer != null) {
             speechRecognizer.destroy();
