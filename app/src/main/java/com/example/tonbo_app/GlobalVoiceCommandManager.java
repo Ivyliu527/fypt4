@@ -33,12 +33,12 @@ public class GlobalVoiceCommandManager {
     private boolean isRecognizerBusy = false;
     private VoiceCommandCallback callback;
     
-    // 語音識別重試機制 - 優化版
+    // 語音識別重試機制 - 簡化版
     private int retryCount = 0;
-    private static final int MAX_RETRY_ATTEMPTS = 3; // 減少重試次數
-    private static final long RETRY_DELAY_MS = 1000; // 增加重試延遲
+    private static final int MAX_RETRY_ATTEMPTS = 2; // 進一步減少重試次數
+    private static final long RETRY_DELAY_MS = 2000; // 增加重試延遲
     private long lastErrorTime = 0;
-    private static final long ERROR_COOLDOWN_MS = 2000; // 增加錯誤冷卻期
+    private static final long ERROR_COOLDOWN_MS = 3000; // 增加錯誤冷卻期
     
     // 音量統計
     private float maxVolume = 0f;
@@ -1267,6 +1267,80 @@ public class GlobalVoiceCommandManager {
         }, 5000); // 5秒後播放建議消息
     }
 
+    
+    /**
+     * 語音識別診斷功能 - 幫助排查問題
+     */
+    public void diagnoseVoiceRecognition() {
+        Log.d(TAG, "🔍 開始語音識別診斷...");
+        
+        StringBuilder diagnosis = new StringBuilder();
+        diagnosis.append("語音識別診斷報告：\n");
+        
+        // 1. 檢查權限
+        boolean hasPermission = checkMicrophonePermission();
+        diagnosis.append("1. 麥克風權限: ").append(hasPermission ? "✅ 已授予" : "❌ 未授予").append("\n");
+        
+        // 2. 檢查設備支持
+        boolean isSupported = SpeechRecognizer.isRecognitionAvailable(context);
+        diagnosis.append("2. 設備支持: ").append(isSupported ? "✅ 支持" : "❌ 不支持").append("\n");
+        
+        // 3. 檢查識別器狀態
+        boolean recognizerReady = (speechRecognizer != null);
+        diagnosis.append("3. 識別器狀態: ").append(recognizerReady ? "✅ 已初始化" : "❌ 未初始化").append("\n");
+        
+        // 4. 檢查當前語言
+        String currentLang = getCurrentLanguage();
+        diagnosis.append("4. 當前語言: ").append(currentLang).append("\n");
+        
+        // 5. 檢查是否在模擬器
+        boolean isEmulator = isRunningOnEmulator();
+        diagnosis.append("5. 運行環境: ").append(isEmulator ? "⚠️ 模擬器" : "✅ 真實設備").append("\n");
+        
+        // 6. 檢查TTS狀態
+        boolean ttsReady = (ttsManager != null);
+        diagnosis.append("6. TTS狀態: ").append(ttsReady ? "✅ 可用" : "❌ 不可用").append("\n");
+        
+        Log.d(TAG, "🔍 診斷結果:\n" + diagnosis.toString());
+        
+        // 播放診斷結果
+        if (ttsManager != null) {
+            String diagnosisText = diagnosis.toString();
+            ttsManager.speak(null, diagnosisText, true);
+        }
+        
+        // 根據診斷結果提供建議
+        provideDiagnosisAdvice(hasPermission, isSupported, recognizerReady, isEmulator);
+    }
+    
+    /**
+     * 根據診斷結果提供建議
+     */
+    private void provideDiagnosisAdvice(boolean hasPermission, boolean isSupported, 
+                                      boolean recognizerReady, boolean isEmulator) {
+        final String advice;
+        
+        if (!hasPermission) {
+            advice = "請在設置中授予麥克風權限。";
+        } else if (!isSupported) {
+            advice = "您的設備不支持語音識別功能。";
+        } else if (!recognizerReady) {
+            advice = "語音識別器未正確初始化，請重啟應用。";
+        } else if (isEmulator) {
+            advice = "在模擬器上語音識別功能可能受限，建議在真實設備上測試。";
+        } else {
+            advice = "所有檢查都通過，語音識別應該可以正常工作。";
+        }
+        
+        Log.d(TAG, "🔍 診斷建議: " + advice);
+        
+        // 延遲播放建議
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (ttsManager != null) {
+                ttsManager.speak(null, "建議：" + advice, true);
+            }
+        }, 3000);
+    }
     
     /**
      * 銷毀實例（僅在應用退出時調用）

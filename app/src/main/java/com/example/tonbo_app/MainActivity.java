@@ -519,6 +519,13 @@ public class MainActivity extends BaseAccessibleActivity {
     
     public void startGlobalVoiceCommand() {
         announceInfo("開始聆聽語音命令，請說出您想要執行的操作");
+        
+        // 先進行診斷
+        GlobalVoiceCommandManager globalVoiceManager = GlobalVoiceCommandManager.getInstance();
+        if (globalVoiceManager != null) {
+            globalVoiceManager.diagnoseVoiceRecognition();
+        }
+        
         super.startGlobalVoiceCommand();
     }
 
