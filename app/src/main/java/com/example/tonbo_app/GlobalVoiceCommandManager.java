@@ -31,12 +31,12 @@ public class GlobalVoiceCommandManager {
     private boolean isRecognizerBusy = false;
     private VoiceCommandCallback callback;
     
-    // 語音識別重試機制 - 增強版
+    // 語音識別重試機制 - 優化版
     private int retryCount = 0;
-    private static final int MAX_RETRY_ATTEMPTS = 5; // 增加重試次數
-    private static final long RETRY_DELAY_MS = 500; // 減少重試延遲
+    private static final int MAX_RETRY_ATTEMPTS = 3; // 減少重試次數
+    private static final long RETRY_DELAY_MS = 1000; // 增加重試延遲
     private long lastErrorTime = 0;
-    private static final long ERROR_COOLDOWN_MS = 1000; // 減少錯誤冷卻期
+    private static final long ERROR_COOLDOWN_MS = 2000; // 增加錯誤冷卻期
     
     // 音量統計
     private float maxVolume = 0f;
@@ -211,6 +211,13 @@ public class GlobalVoiceCommandManager {
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, getCurrentLanguage());
             intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+            
+            // 優化語音識別參數
+            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+            intent.putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true);
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000);
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1000);
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
             
             // 根據語言優化語音識別參數
             optimizeSpeechRecognitionParams(intent);
@@ -716,13 +723,47 @@ public class GlobalVoiceCommandManager {
         
         switch (currentLang) {
             case "english":
-                return Locale.ENGLISH.toString();
+                return "en-US";
             case "mandarin":
-                return Locale.SIMPLIFIED_CHINESE.toString();
+                return "zh-CN";
             case "cantonese":
             default:
-                return Locale.TRADITIONAL_CHINESE.toString();
+                return "zh-HK";
         }
+    }
+    
+    /**
+     * 測試語音識別功能
+     */
+    public void testVoiceRecognition() {
+        Log.d(TAG, "🧪 開始測試語音識別功能");
+        
+        // 檢查權限
+        if (!checkMicrophonePermission()) {
+            Log.e(TAG, "❌ 麥克風權限不足");
+            ttsManager.speak(null, "麥克風權限不足，無法使用語音命令", true);
+            return;
+        }
+        
+        // 檢查語音識別可用性
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+            Log.e(TAG, "❌ 設備不支持語音識別");
+            ttsManager.speak(null, "設備不支持語音識別", true);
+            return;
+        }
+        
+        // 檢查識別器狀態
+        if (speechRecognizer == null) {
+            Log.e(TAG, "❌ 語音識別器未初始化");
+            ttsManager.speak(null, "語音識別器未初始化", true);
+            return;
+        }
+        
+        Log.d(TAG, "✅ 語音識別功能測試通過");
+        ttsManager.speak(null, "語音識別功能正常，請說出命令", true);
+        
+        // 開始測試聆聽
+        startListening(callback);
     }
     
     /**
@@ -1086,56 +1127,6 @@ public class GlobalVoiceCommandManager {
         return Math.min(baseDelay, 5000);
     }
     
-    /**
-     * 測試語音識別功能
-     */
-    public void testVoiceRecognition() {
-        Log.d(TAG, "開始語音識別測試");
-        
-        // 檢查權限
-        if (!checkMicrophonePermission()) {
-            Log.e(TAG, "麥克風權限不足，無法測試語音識別");
-            return;
-        }
-        
-        // 檢查語音識別器
-        if (speechRecognizer == null) {
-            Log.e(TAG, "語音識別器未初始化，無法測試");
-            return;
-        }
-        
-        // 檢查設備支持
-        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
-            Log.e(TAG, "設備不支持語音識別");
-            return;
-        }
-        
-        Log.d(TAG, "語音識別測試條件滿足，開始測試");
-        
-        // 執行完整診斷
-        performVoiceRecognitionDiagnostics();
-        
-        // 播放測試提示
-        String testMessage = getTestMessage();
-        ttsManager.speak(null, testMessage, true);
-        
-        // 延遲啟動語音識別
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            startListening(new VoiceCommandCallback() {
-                @Override
-                public void onCommandRecognized(String command) {
-                    Log.d(TAG, "語音識別測試成功: " + command);
-                    ttsManager.speak(null, "語音識別測試成功，識別到：" + command, true);
-                }
-                
-                @Override
-                public void onVoiceError(String error) {
-                    Log.e(TAG, "語音識別測試失敗: " + error);
-                    ttsManager.speak(null, "語音識別測試失敗：" + error, true);
-                }
-            });
-        }, 2000); // 2秒後開始測試
-    }
     
     /**
      * 獲取測試提示消息
