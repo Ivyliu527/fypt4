@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
@@ -50,6 +51,9 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
         // 設定TTSManager的語言
         ttsManager.setLanguageSilently(currentLanguage);
         
+        // 強制初始化TTS，確保語音播報可用
+        ttsManager.forceInitialize();
+        
         // 初始化全局語音命令管理器
         initializeGlobalVoiceManager();
         
@@ -61,7 +65,11 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
         
         // 頁面載入完成後播放頁面標題
         getWindow().getDecorView().post(() -> {
-            announcePageTitle();
+            // 延遲播報，確保TTS初始化完成
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                Log.d("BaseAccessibleActivity", "🔊 開始播報頁面標題");
+                announcePageTitle();
+            }, 1000); // 延遲1秒確保TTS初始化完成
         });
     }
     

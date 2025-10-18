@@ -50,6 +50,14 @@ public class TTSManager {
         return instance;
     }
     
+    /**
+     * 強制初始化TTS引擎
+     */
+    public void forceInitialize() {
+        Log.d(TAG, "🔊 強制初始化TTS引擎");
+        ensureTTSInitialized();
+    }
+    
     private void initTTS() {
         if (isInitializing) {
             Log.d(TAG, "TTS正在初始化中...");
