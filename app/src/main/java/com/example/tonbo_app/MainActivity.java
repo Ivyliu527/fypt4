@@ -529,7 +529,9 @@ public class MainActivity extends BaseAccessibleActivity {
     }
     
     public void startGlobalVoiceCommand() {
-        announceInfo("開始聆聽語音命令，請說出您想要執行的操作");
+        // 根據當前語言提供相應的語音提示
+        String announcement = getVoiceCommandStartAnnouncement();
+        announceInfo(announcement);
 
         // 先進行診斷
         GlobalVoiceCommandManager globalVoiceManager = GlobalVoiceCommandManager.getInstance();
@@ -547,42 +549,286 @@ public class MainActivity extends BaseAccessibleActivity {
                 @Override
                 public void onVoiceError(String error) {
                     Log.e("MainActivity", "🎤 語音識別錯誤: " + error);
-                    announceInfo("語音識別錯誤: " + error);
+                    String errorAnnouncement = getVoiceCommandErrorAnnouncement(error);
+                    announceInfo(errorAnnouncement);
                 }
             });
         }
     }
     
     /**
-     * 處理語音命令
+     * 獲取語音命令開始的語音提示
+     */
+    private String getVoiceCommandStartAnnouncement() {
+        switch (currentLanguage) {
+            case "english":
+                return "Starting voice command listening, please speak your desired operation";
+            case "mandarin":
+                return "開始聆聽語音命令，請說出您想要執行的操作";
+            case "cantonese":
+            default:
+                return "開始聆聽語音命令，請說出您想要執行的操作";
+        }
+    }
+    
+    /**
+     * 獲取語音命令錯誤的語音提示
+     */
+    private String getVoiceCommandErrorAnnouncement(String error) {
+        switch (currentLanguage) {
+            case "english":
+                return "Voice recognition error: " + error;
+            case "mandarin":
+                return "語音識別錯誤: " + error;
+            case "cantonese":
+            default:
+                return "語音識別錯誤: " + error;
+        }
+    }
+    
+    /**
+     * 處理語音命令 - 支持3種語言
      */
     private void handleVoiceCommand(String command) {
-        Log.d("MainActivity", "🎤 處理語音命令: " + command);
+        Log.d("MainActivity", "🎤 處理語音命令: " + command + " (當前語言: " + currentLanguage + ")");
         
         // 轉換為小寫以便比較
         String lowerCommand = command.toLowerCase().trim();
         
-        // 根據命令執行相應操作
-        if (lowerCommand.contains("環境") || lowerCommand.contains("environment")) {
-            announceInfo("正在打開環境識別");
+        // 根據當前語言和命令執行相應操作
+        if (isEnvironmentCommand(lowerCommand)) {
+            announceInfo(getEnvironmentCommandAnnouncement());
             startEnvironmentActivity();
-        } else if (lowerCommand.contains("閱讀") || lowerCommand.contains("document") || lowerCommand.contains("ocr")) {
-            announceInfo("正在打開閱讀助手");
+        } else if (isDocumentCommand(lowerCommand)) {
+            announceInfo(getDocumentCommandAnnouncement());
             startDocumentAssistantActivity();
-        } else if (lowerCommand.contains("設置") || lowerCommand.contains("settings")) {
-            announceInfo("正在打開設置");
+        } else if (isSettingsCommand(lowerCommand)) {
+            announceInfo(getSettingsCommandAnnouncement());
             openSettings();
-        } else if (lowerCommand.contains("緊急") || lowerCommand.contains("emergency")) {
-            announceInfo("正在打開緊急設置");
+        } else if (isEmergencyCommand(lowerCommand)) {
+            announceInfo(getEmergencyCommandAnnouncement());
             openEmergencySettings();
-        } else if (lowerCommand.contains("尋找") || lowerCommand.contains("find") || lowerCommand.contains("物品")) {
-            announceInfo("正在打開尋找物品");
+        } else if (isFindItemsCommand(lowerCommand)) {
+            announceInfo(getFindItemsCommandAnnouncement());
             startFindItemsActivity();
-        } else if (lowerCommand.contains("幫助") || lowerCommand.contains("help")) {
-            announceInfo("正在打開幫助");
+        } else if (isHelpCommand(lowerCommand)) {
+            announceInfo(getHelpCommandAnnouncement());
             // 可以添加幫助頁面
         } else {
-            announceInfo("未識別的命令: " + command + "，請重試");
+            announceInfo(getUnknownCommandAnnouncement(command));
+        }
+    }
+    
+    /**
+     * 檢查是否為環境識別命令
+     */
+    private boolean isEnvironmentCommand(String command) {
+        switch (currentLanguage) {
+            case "english":
+                return command.contains("environment") || command.contains("env") || 
+                       command.contains("detect") || command.contains("recognition");
+            case "mandarin":
+                return command.contains("环境") || command.contains("环境识别") || 
+                       command.contains("检测") || command.contains("识别");
+            case "cantonese":
+            default:
+                return command.contains("環境") || command.contains("環境識別") || 
+                       command.contains("檢測") || command.contains("識別");
+        }
+    }
+    
+    /**
+     * 檢查是否為閱讀助手命令
+     */
+    private boolean isDocumentCommand(String command) {
+        switch (currentLanguage) {
+            case "english":
+                return command.contains("document") || command.contains("read") || 
+                       command.contains("ocr") || command.contains("text") || command.contains("scan");
+            case "mandarin":
+                return command.contains("阅读") || command.contains("文档") || 
+                       command.contains("文字识别") || command.contains("扫描");
+            case "cantonese":
+            default:
+                return command.contains("閱讀") || command.contains("文檔") || 
+                       command.contains("文字識別") || command.contains("掃描");
+        }
+    }
+    
+    /**
+     * 檢查是否為設置命令
+     */
+    private boolean isSettingsCommand(String command) {
+        switch (currentLanguage) {
+            case "english":
+                return command.contains("settings") || command.contains("setting") || 
+                       command.contains("config") || command.contains("preference");
+            case "mandarin":
+                return command.contains("设置") || command.contains("配置") || 
+                       command.contains("系统设置");
+            case "cantonese":
+            default:
+                return command.contains("設置") || command.contains("配置") || 
+                       command.contains("系統設置");
+        }
+    }
+    
+    /**
+     * 檢查是否為緊急設置命令
+     */
+    private boolean isEmergencyCommand(String command) {
+        switch (currentLanguage) {
+            case "english":
+                return command.contains("emergency") || command.contains("urgent") || 
+                       command.contains("help") || command.contains("sos");
+            case "mandarin":
+                return command.contains("紧急") || command.contains("紧急设置") || 
+                       command.contains("求助") || command.contains("紧急求助");
+            case "cantonese":
+            default:
+                return command.contains("緊急") || command.contains("緊急設置") || 
+                       command.contains("求助") || command.contains("緊急求助");
+        }
+    }
+    
+    /**
+     * 檢查是否為尋找物品命令
+     */
+    private boolean isFindItemsCommand(String command) {
+        switch (currentLanguage) {
+            case "english":
+                return command.contains("find") || command.contains("search") || 
+                       command.contains("item") || command.contains("object") || command.contains("locate");
+            case "mandarin":
+                return command.contains("寻找") || command.contains("查找") || 
+                       command.contains("物品") || command.contains("物品寻找");
+            case "cantonese":
+            default:
+                return command.contains("尋找") || command.contains("查找") || 
+                       command.contains("物品") || command.contains("物品尋找");
+        }
+    }
+    
+    /**
+     * 檢查是否為幫助命令
+     */
+    private boolean isHelpCommand(String command) {
+        switch (currentLanguage) {
+            case "english":
+                return command.contains("help") || command.contains("assist") || 
+                       command.contains("guide") || command.contains("tutorial");
+            case "mandarin":
+                return command.contains("帮助") || command.contains("协助") || 
+                       command.contains("指南") || command.contains("教程");
+            case "cantonese":
+            default:
+                return command.contains("幫助") || command.contains("協助") || 
+                       command.contains("指南") || command.contains("教程");
+        }
+    }
+    
+    /**
+     * 獲取環境識別命令的語音提示
+     */
+    private String getEnvironmentCommandAnnouncement() {
+        switch (currentLanguage) {
+            case "english":
+                return "Opening Environment Recognition";
+            case "mandarin":
+                return "正在打开环境识别";
+            case "cantonese":
+            default:
+                return "正在打開環境識別";
+        }
+    }
+    
+    /**
+     * 獲取閱讀助手命令的語音提示
+     */
+    private String getDocumentCommandAnnouncement() {
+        switch (currentLanguage) {
+            case "english":
+                return "Opening Document Assistant";
+            case "mandarin":
+                return "正在打开阅读助手";
+            case "cantonese":
+            default:
+                return "正在打開閱讀助手";
+        }
+    }
+    
+    /**
+     * 獲取設置命令的語音提示
+     */
+    private String getSettingsCommandAnnouncement() {
+        switch (currentLanguage) {
+            case "english":
+                return "Opening Settings";
+            case "mandarin":
+                return "正在打开设置";
+            case "cantonese":
+            default:
+                return "正在打開設置";
+        }
+    }
+    
+    /**
+     * 獲取緊急設置命令的語音提示
+     */
+    private String getEmergencyCommandAnnouncement() {
+        switch (currentLanguage) {
+            case "english":
+                return "Opening Emergency Settings";
+            case "mandarin":
+                return "正在打开紧急设置";
+            case "cantonese":
+            default:
+                return "正在打開緊急設置";
+        }
+    }
+    
+    /**
+     * 獲取尋找物品命令的語音提示
+     */
+    private String getFindItemsCommandAnnouncement() {
+        switch (currentLanguage) {
+            case "english":
+                return "Opening Find Items";
+            case "mandarin":
+                return "正在打开寻找物品";
+            case "cantonese":
+            default:
+                return "正在打開尋找物品";
+        }
+    }
+    
+    /**
+     * 獲取幫助命令的語音提示
+     */
+    private String getHelpCommandAnnouncement() {
+        switch (currentLanguage) {
+            case "english":
+                return "Opening Help";
+            case "mandarin":
+                return "正在打开帮助";
+            case "cantonese":
+            default:
+                return "正在打開幫助";
+        }
+    }
+    
+    /**
+     * 獲取未知命令的語音提示
+     */
+    private String getUnknownCommandAnnouncement(String command) {
+        switch (currentLanguage) {
+            case "english":
+                return "Unknown command: " + command + ", please try again";
+            case "mandarin":
+                return "未识别的命令: " + command + "，请重试";
+            case "cantonese":
+            default:
+                return "未識別的命令: " + command + "，請重試";
         }
     }
 
