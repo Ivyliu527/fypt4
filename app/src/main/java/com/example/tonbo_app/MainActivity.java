@@ -460,6 +460,17 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
     
+    protected void startDocumentAssistantActivity() {
+        try {
+            Intent intent = new Intent(MainActivity.this, DocumentCurrencyActivity.class);
+            intent.putExtra("language", currentLanguage);
+            announceNavigation("正在進入閱讀助手頁面");
+            startActivity(intent);
+        } catch (Exception e) {
+            announceError("閱讀助手功能暫不可用");
+        }
+    }
+    
     protected void startFindItemsActivity() {
         try {
             Intent intent = new Intent(MainActivity.this, FindItemsActivity.class);
@@ -519,14 +530,60 @@ public class MainActivity extends BaseAccessibleActivity {
     
     public void startGlobalVoiceCommand() {
         announceInfo("開始聆聽語音命令，請說出您想要執行的操作");
-        
+
         // 先進行診斷
         GlobalVoiceCommandManager globalVoiceManager = GlobalVoiceCommandManager.getInstance();
         if (globalVoiceManager != null) {
             globalVoiceManager.diagnoseVoiceRecognition();
+            
+            // 使用React Native Voice風格的語音識別
+            globalVoiceManager.startListeningRNVoiceStyle(new GlobalVoiceCommandManager.VoiceCommandCallback() {
+                @Override
+                public void onCommandRecognized(String command) {
+                    Log.d("MainActivity", "🎤 識別到語音命令: " + command);
+                    handleVoiceCommand(command);
+                }
+
+                @Override
+                public void onVoiceError(String error) {
+                    Log.e("MainActivity", "🎤 語音識別錯誤: " + error);
+                    announceInfo("語音識別錯誤: " + error);
+                }
+            });
         }
+    }
+    
+    /**
+     * 處理語音命令
+     */
+    private void handleVoiceCommand(String command) {
+        Log.d("MainActivity", "🎤 處理語音命令: " + command);
         
-        super.startGlobalVoiceCommand();
+        // 轉換為小寫以便比較
+        String lowerCommand = command.toLowerCase().trim();
+        
+        // 根據命令執行相應操作
+        if (lowerCommand.contains("環境") || lowerCommand.contains("environment")) {
+            announceInfo("正在打開環境識別");
+            startEnvironmentActivity();
+        } else if (lowerCommand.contains("閱讀") || lowerCommand.contains("document") || lowerCommand.contains("ocr")) {
+            announceInfo("正在打開閱讀助手");
+            startDocumentAssistantActivity();
+        } else if (lowerCommand.contains("設置") || lowerCommand.contains("settings")) {
+            announceInfo("正在打開設置");
+            openSettings();
+        } else if (lowerCommand.contains("緊急") || lowerCommand.contains("emergency")) {
+            announceInfo("正在打開緊急設置");
+            openEmergencySettings();
+        } else if (lowerCommand.contains("尋找") || lowerCommand.contains("find") || lowerCommand.contains("物品")) {
+            announceInfo("正在打開尋找物品");
+            startFindItemsActivity();
+        } else if (lowerCommand.contains("幫助") || lowerCommand.contains("help")) {
+            announceInfo("正在打開幫助");
+            // 可以添加幫助頁面
+        } else {
+            announceInfo("未識別的命令: " + command + "，請重試");
+        }
     }
 
     @Override
