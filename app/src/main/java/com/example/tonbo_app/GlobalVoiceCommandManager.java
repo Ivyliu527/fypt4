@@ -1269,10 +1269,10 @@ public class GlobalVoiceCommandManager {
 
     
     /**
-     * 語音識別診斷功能 - 幫助排查問題
+     * 語音識別診斷功能 - 基於React Native Voice的實現方式
      */
     public void diagnoseVoiceRecognition() {
-        Log.d(TAG, "🔍 開始語音識別診斷...");
+        Log.d(TAG, "🔍 開始語音識別診斷（基於React Native Voice方式）...");
         
         StringBuilder diagnosis = new StringBuilder();
         diagnosis.append("語音識別診斷報告：\n");
@@ -1301,6 +1301,10 @@ public class GlobalVoiceCommandManager {
         boolean ttsReady = (ttsManager != null);
         diagnosis.append("6. TTS狀態: ").append(ttsReady ? "✅ 可用" : "❌ 不可用").append("\n");
         
+        // 7. 檢查Google語音識別服務（參考React Native Voice）
+        String[] services = getSpeechRecognitionServices();
+        diagnosis.append("7. 語音識別服務: ").append(services.length > 0 ? "✅ " + services.length + "個服務" : "❌ 無可用服務").append("\n");
+        
         Log.d(TAG, "🔍 診斷結果:\n" + diagnosis.toString());
         
         // 播放診斷結果
@@ -1310,14 +1314,32 @@ public class GlobalVoiceCommandManager {
         }
         
         // 根據診斷結果提供建議
-        provideDiagnosisAdvice(hasPermission, isSupported, recognizerReady, isEmulator);
+        provideDiagnosisAdvice(hasPermission, isSupported, recognizerReady, isEmulator, services.length > 0);
     }
     
     /**
-     * 根據診斷結果提供建議
+     * 獲取可用的語音識別服務（參考React Native Voice實現）
+     */
+    private String[] getSpeechRecognitionServices() {
+        try {
+            // 使用反射調用getSpeechRecognitionServices方法
+            java.lang.reflect.Method method = SpeechRecognizer.class.getMethod("getSpeechRecognitionServices");
+            Object result = method.invoke(null);
+            if (result instanceof java.util.List) {
+                java.util.List<?> services = (java.util.List<?>) result;
+                return services.toArray(new String[0]);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "無法獲取語音識別服務列表: " + e.getMessage());
+        }
+        return new String[0];
+    }
+    
+    /**
+     * 根據診斷結果提供建議（基於React Native Voice的建議）
      */
     private void provideDiagnosisAdvice(boolean hasPermission, boolean isSupported, 
-                                      boolean recognizerReady, boolean isEmulator) {
+                                      boolean recognizerReady, boolean isEmulator, boolean hasServices) {
         final String advice;
         
         if (!hasPermission) {
@@ -1326,6 +1348,8 @@ public class GlobalVoiceCommandManager {
             advice = "您的設備不支持語音識別功能。";
         } else if (!recognizerReady) {
             advice = "語音識別器未正確初始化，請重啟應用。";
+        } else if (!hasServices) {
+            advice = "設備沒有可用的語音識別服務，請安裝Google Search App。";
         } else if (isEmulator) {
             advice = "在模擬器上語音識別功能可能受限，建議在真實設備上測試。";
         } else {
@@ -1340,6 +1364,176 @@ public class GlobalVoiceCommandManager {
                 ttsManager.speak(null, "建議：" + advice, true);
             }
         }, 3000);
+    }
+    
+    /**
+     * 基於React Native Voice的語音識別實現
+     */
+    public void startListeningRNVoiceStyle(VoiceCommandCallback callback) {
+        this.callback = callback;
+        
+        Log.d(TAG, "🎤 使用React Native Voice風格的語音識別");
+        
+        // 1. 檢查權限
+        if (!checkMicrophonePermission()) {
+            Log.e(TAG, "麥克風權限不足");
+            handleMicrophonePermissionMissing();
+            return;
+        }
+        
+        // 2. 檢查設備支持
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+            Log.e(TAG, "設備不支持語音識別");
+            if (callback != null) {
+                callback.onVoiceError("設備不支持語音識別功能");
+            }
+            return;
+        }
+        
+        // 3. 檢查語音識別服務
+        String[] services = getSpeechRecognitionServices();
+        if (services.length == 0) {
+            Log.e(TAG, "沒有可用的語音識別服務");
+            if (callback != null) {
+                callback.onVoiceError("沒有可用的語音識別服務，請安裝Google Search App");
+            }
+            return;
+        }
+        
+        // 4. 重置識別器
+        if (speechRecognizer != null) {
+            try {
+                speechRecognizer.destroy();
+            } catch (Exception e) {
+                Log.w(TAG, "銷毀舊識別器時出現異常: " + e.getMessage());
+            }
+        }
+        
+        // 5. 創建新的識別器
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onReadyForSpeech(Bundle params) {
+                Log.d(TAG, "🎤 語音識別準備就緒");
+                isListening = true;
+                isRecognizerBusy = false;
+            }
+            
+            @Override
+            public void onBeginningOfSpeech() {
+                Log.d(TAG, "🎤 開始說話");
+                isRecognizerBusy = true;
+            }
+            
+            @Override
+            public void onRmsChanged(float rmsdB) {
+                // 音量變化
+                Log.d(TAG, "🎤 音量變化: " + rmsdB + " dB");
+            }
+            
+            @Override
+            public void onBufferReceived(byte[] buffer) {
+                // 接收緩衝區數據
+            }
+            
+            @Override
+            public void onEndOfSpeech() {
+                Log.d(TAG, "🎤 說話結束");
+                isListening = false;
+            }
+            
+            @Override
+            public void onError(int error) {
+                Log.e(TAG, "🎤 語音識別錯誤: " + error);
+                isListening = false;
+                isRecognizerBusy = false;
+                
+                String errorMessage = getErrorMessage(error);
+                if (callback != null) {
+                    callback.onVoiceError(errorMessage);
+                }
+            }
+            
+            @Override
+            public void onResults(Bundle results) {
+                Log.d(TAG, "🎤 語音識別結果");
+                ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                
+                if (matches != null && !matches.isEmpty()) {
+                    String recognizedText = matches.get(0);
+                    Log.d(TAG, "🎤 識別到的語音: " + recognizedText);
+                    
+                    if (callback != null) {
+                        callback.onCommandRecognized(recognizedText);
+                    }
+                } else {
+                    Log.w(TAG, "🎤 未識別到語音");
+                    if (callback != null) {
+                        callback.onVoiceError("未識別到語音");
+                    }
+                }
+            }
+            
+            @Override
+            public void onPartialResults(Bundle partialResults) {
+                // 部分結果
+                ArrayList<String> matches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (matches != null && !matches.isEmpty()) {
+                    Log.d(TAG, "🎤 部分識別結果: " + matches.get(0));
+                }
+            }
+            
+            @Override
+            public void onEvent(int eventType, Bundle params) {
+                // 其他事件
+            }
+        });
+        
+        // 6. 開始識別
+        try {
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, getCurrentLanguage());
+            intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+            
+            speechRecognizer.startListening(intent);
+            Log.d(TAG, "🎤 語音識別已啟動");
+            
+        } catch (Exception e) {
+            Log.e(TAG, "🎤 啟動語音識別失敗: " + e.getMessage());
+            if (callback != null) {
+                callback.onVoiceError("啟動語音識別失敗");
+            }
+        }
+    }
+    
+    /**
+     * 獲取錯誤消息（基於React Native Voice的錯誤處理）
+     */
+    private String getErrorMessage(int error) {
+        switch (error) {
+            case SpeechRecognizer.ERROR_AUDIO:
+                return "音頻錯誤";
+            case SpeechRecognizer.ERROR_CLIENT:
+                return "客戶端錯誤";
+            case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
+                return "權限不足";
+            case SpeechRecognizer.ERROR_NETWORK:
+                return "網絡錯誤";
+            case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
+                return "網絡超時";
+            case SpeechRecognizer.ERROR_NO_MATCH:
+                return "未識別到語音";
+            case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+                return "識別器忙碌";
+            case SpeechRecognizer.ERROR_SERVER:
+                return "服務器錯誤";
+            case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
+                return "語音超時";
+            default:
+                return "未知錯誤";
+        }
     }
     
     /**
