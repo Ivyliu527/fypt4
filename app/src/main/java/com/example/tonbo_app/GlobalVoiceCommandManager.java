@@ -1327,10 +1327,27 @@ public class GlobalVoiceCommandManager {
             Object result = method.invoke(null);
             if (result instanceof java.util.List) {
                 java.util.List<?> services = (java.util.List<?>) result;
-                return services.toArray(new String[0]);
+                String[] serviceArray = services.toArray(new String[0]);
+                
+                // 記錄找到的服務
+                Log.d(TAG, "🔍 找到 " + serviceArray.length + " 個語音識別服務:");
+                for (String service : serviceArray) {
+                    Log.d(TAG, "🔍 服務: " + service);
+                }
+                
+                return serviceArray;
             }
         } catch (Exception e) {
             Log.w(TAG, "無法獲取語音識別服務列表: " + e.getMessage());
+            
+            // 嘗試替代方法檢查語音識別支持
+            if (SpeechRecognizer.isRecognitionAvailable(context)) {
+                Log.d(TAG, "🔍 設備支持語音識別，但無法獲取服務列表");
+                return new String[]{"unknown_service"};
+            } else {
+                Log.w(TAG, "🔍 設備不支持語音識別");
+                return new String[0];
+            }
         }
         return new String[0];
     }
@@ -1393,11 +1410,16 @@ public class GlobalVoiceCommandManager {
         // 3. 檢查語音識別服務
         String[] services = getSpeechRecognitionServices();
         if (services.length == 0) {
-            Log.e(TAG, "沒有可用的語音識別服務");
-            if (callback != null) {
-                callback.onVoiceError("沒有可用的語音識別服務，請安裝Google Search App");
+            Log.w(TAG, "沒有可用的語音識別服務，嘗試使用備用方法");
+            // 即使沒有服務列表，也嘗試創建識別器
+            if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+                Log.e(TAG, "設備完全不支持語音識別");
+                if (callback != null) {
+                    callback.onVoiceError("設備不支持語音識別功能");
+                }
+                return;
             }
-            return;
+            Log.d(TAG, "設備支持語音識別，繼續嘗試創建識別器");
         }
         
         // 4. 重置識別器
