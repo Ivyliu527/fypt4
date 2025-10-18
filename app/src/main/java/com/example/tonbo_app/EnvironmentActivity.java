@@ -545,8 +545,11 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                     // 只在有新物體時播報（避免重複播報）
                                     if (!speechText.equals(lastDetectionResult)) {
                                         lastDetectionResult = speechText;
+                                        Log.d(TAG, "🔊 檢測到新物體，準備播報語音: " + speechText);
                                         // 自動播報檢測結果給視障人士
                                         speakDetectionResults(speechText);
+                                    } else {
+                                        Log.d(TAG, "🔊 檢測結果與上次相同，跳過語音播報");
                                     }
                                     
                                     // 定期進行顏色和光線分析
@@ -1138,7 +1141,10 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             Log.d(TAG, "🔊 完整語音文本: " + fullSpeechText);
             
             // 播報檢測結果 - 使用優先播放確保檢測結果語音不被其他語音打斷
-            ttsManager.speak(fullSpeechText, fullSpeechText, true);
+            // 根據當前語言選擇對應的語音內容
+            String cantoneseText = currentLanguage.equals("english") ? translateToChinese(fullSpeechText) : fullSpeechText;
+            String englishText = currentLanguage.equals("english") ? fullSpeechText : translateToEnglish(fullSpeechText);
+            ttsManager.speak(cantoneseText, englishText, true);
             
             // 震動反饋
             if (vibrationManager != null) {

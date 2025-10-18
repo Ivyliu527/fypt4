@@ -616,8 +616,9 @@ public class ObjectDetectorHelper {
             // 物體序號
             sb.append(getObjectNumberText(i + 1));
             
-            // 物體名稱
-            sb.append(result.getLabelZh());
+            // 物體名稱 - 根據當前語言選擇對應的標籤
+            String objectLabel = getObjectLabelForCurrentLanguage(result);
+            sb.append(objectLabel);
             
             // 置信度描述
             sb.append(getConfidenceDescription(result.getConfidence()));
@@ -704,6 +705,23 @@ public class ObjectDetectorHelper {
         }
         
         return "，" + confidenceText + "（" + percentage + "%）";
+    }
+    
+    /**
+     * 根據當前語言獲取物體標籤
+     */
+    private String getObjectLabelForCurrentLanguage(DetectionResult result) {
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
+        
+        switch (currentLang) {
+            case "english":
+                return result.getLabel() != null ? result.getLabel() : result.getLabelZh();
+            case "mandarin":
+                return result.getLabelZh() != null ? result.getLabelZh() : result.getLabel();
+            case "cantonese":
+            default:
+                return result.getLabelZh() != null ? result.getLabelZh() : result.getLabel();
+        }
     }
     
     /**
