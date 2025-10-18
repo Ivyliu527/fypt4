@@ -529,5 +529,10 @@ public class MainActivity extends BaseAccessibleActivity {
         if (ttsManager != null) {
             ttsManager.shutdown();
         }
+        // 銷毀全局語音命令管理器（應用退出時）
+        GlobalVoiceCommandManager globalVoiceManager = GlobalVoiceCommandManager.getInstance();
+        if (globalVoiceManager != null) {
+            globalVoiceManager.destroy();
+        }
     }
 }

@@ -20,10 +20,12 @@ import java.util.Locale;
 /**
  * 全局語音命令管理器
  * 在任何頁面都可以使用語音命令控制應用
+ * 使用單例模式確保全局可用
  */
 public class GlobalVoiceCommandManager {
     private static final String TAG = "GlobalVoiceManager";
     
+    private static GlobalVoiceCommandManager instance;
     private Context context;
     private SpeechRecognizer speechRecognizer;
     private TTSManager ttsManager;
@@ -52,9 +54,29 @@ public class GlobalVoiceCommandManager {
     }
     
     public GlobalVoiceCommandManager(Context context, TTSManager ttsManager) {
-        this.context = context;
+        this.context = context.getApplicationContext(); // 使用Application Context避免內存洩漏
         this.ttsManager = ttsManager;
         initializeSpeechRecognizer();
+    }
+    
+    /**
+     * 獲取單例實例
+     */
+    public static synchronized GlobalVoiceCommandManager getInstance(Context context, TTSManager ttsManager) {
+        if (instance == null) {
+            instance = new GlobalVoiceCommandManager(context, ttsManager);
+        }
+        return instance;
+    }
+    
+    /**
+     * 獲取現有實例（如果已初始化）
+     */
+    public static synchronized GlobalVoiceCommandManager getInstance() {
+        if (instance == null) {
+            Log.w(TAG, "GlobalVoiceCommandManager未初始化，請先調用getInstance(context, ttsManager)");
+        }
+        return instance;
     }
     
     public void setCallback(VoiceCommandCallback callback) {
@@ -1245,12 +1267,19 @@ public class GlobalVoiceCommandManager {
         }, 5000); // 5秒後播放建議消息
     }
 
+    
+    /**
+     * 銷毀實例（僅在應用退出時調用）
+     */
     public void destroy() {
         if (speechRecognizer != null) {
             speechRecognizer.destroy();
             speechRecognizer = null;
         }
         isListening = false;
+        isRecognizerBusy = false;
+        callback = null;
+        instance = null; // 清除單例實例
         Log.d(TAG, "全局語音命令管理器已銷毀");
     }
 }
