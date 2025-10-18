@@ -66,7 +66,7 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
     }
     
     private void initializeGlobalVoiceManager() {
-        globalVoiceManager = new GlobalVoiceCommandManager(this, ttsManager);
+        globalVoiceManager = GlobalVoiceCommandManager.getInstance(this, ttsManager);
         
         // 設置語音命令回調
         globalVoiceManager.setCallback(new GlobalVoiceCommandManager.VoiceCommandCallback() {
@@ -312,10 +312,10 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // 清理全局語音命令管理器
+        // 停止語音識別但不銷毀全局語音命令管理器（保持單例）
         if (globalVoiceManager != null) {
-            globalVoiceManager.destroy();
-            globalVoiceManager = null;
+            globalVoiceManager.stopListening();
+            // 不銷毀實例，保持全局可用
         }
         // 頁面銷毀時清理資源（但保持管理器實例）
         // ttsManager和vibrationManager是單例，由MainActivity統一管理
