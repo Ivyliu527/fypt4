@@ -260,10 +260,10 @@ public class YoloDetector {
                 right = Math.min(right, 1.0f);
                 bottom = Math.min(bottom, 1.0f);
                 
-                // 創建邊界框 - 使用相對座標 (0-1)
+                // 創建邊界框 - 使用相對座標 (0-1)，保持浮點數精度
                 android.graphics.Rect boundingBox = new android.graphics.Rect(
-                    (int)(left), (int)(top), 
-                    (int)(right), (int)(bottom)
+                    (int)(left * 1000), (int)(top * 1000), 
+                    (int)(right * 1000), (int)(bottom * 1000)
                 );
                 
                 results.add(new DetectionResult(obj[0], obj[1], confidence, boundingBox));

@@ -147,13 +147,19 @@ public class DetectionOverlayView extends View {
         float left, top, right, bottom;
         
                // 檢查座標範圍，判斷是否需要轉換
-               // 如果座標小於等於1，則認為是相對座標
-               boolean isRelativeCoords = (boundingBox.left <= 1.0f &&
-                                         boundingBox.top <= 1.0f &&
-                                         boundingBox.right <= 1.0f &&
-                                         boundingBox.bottom <= 1.0f);
+               // 如果座標大於1，則認為是像素座標（乘以1000的相對座標）
+               boolean isScaledCoords = (boundingBox.left > 1.0f || boundingBox.top > 1.0f ||
+                                       boundingBox.right > 1.0f || boundingBox.bottom > 1.0f);
                
-               if (isRelativeCoords) {
+               if (isScaledCoords) {
+                   // 縮放座標 (0-1000)，需要轉換為相對座標再轉為像素座標
+                   Log.d(TAG, "檢測到縮放座標，轉換為像素座標");
+                   left = (boundingBox.left / 1000.0f) * viewWidth;
+                   top = (boundingBox.top / 1000.0f) * viewHeight;
+                   right = (boundingBox.right / 1000.0f) * viewWidth;
+                   bottom = (boundingBox.bottom / 1000.0f) * viewHeight;
+               } else if (boundingBox.left <= 1.0f && boundingBox.top <= 1.0f &&
+                         boundingBox.right <= 1.0f && boundingBox.bottom <= 1.0f) {
                    // 相對座標 (0-1)，需要轉換為像素座標
                    Log.d(TAG, "檢測到相對座標，轉換為像素座標");
                    left = boundingBox.left * viewWidth;
