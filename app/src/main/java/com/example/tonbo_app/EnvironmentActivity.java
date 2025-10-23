@@ -695,7 +695,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format(getString(R.string.detection_results_format), results.size()));
         
-        for (int i = 0; i < Math.min(results.size(), 10); i++) {
+        for (int i = 0; i < Math.min(results.size(), 2); i++) {
             ObjectDetectorHelper.DetectionResult result = results.get(i);
             String label = getObjectLabel(result);
             sb.append(String.format("%d. %s (%.0f%%)\n", 
@@ -705,8 +705,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             ));
         }
         
-        if (results.size() > 10) {
-            sb.append(String.format("\n" + getString(R.string.more_objects_format), results.size() - 10));
+        if (results.size() > 2) {
+            sb.append(String.format("\n" + getString(R.string.more_objects_format), results.size() - 2));
         }
         
         return sb.toString();
