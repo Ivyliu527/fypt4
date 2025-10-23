@@ -25,10 +25,10 @@ public class ObjectDetectorHelper {
     private static final String TAG = "ObjectDetectorHelper";
     private static final String MODEL_FILE = "ssd_mobilenet_v1.tflite";
     private static final String YOLO_MODEL_FILE = "yolov8n.tflite";
-    private static final float SCORE_THRESHOLD = 0.4f;  // 提高閾值，專注於環境相關物體
-    private static final float HIGH_CONFIDENCE_THRESHOLD = 0.7f;  // 高置信度閾值
-    private static final int MAX_RESULTS = 15;  // 減少結果數，專注於重要物體
-    private static final float NMS_THRESHOLD = 0.5f;  // 非極大值抑制閾值
+    private static final float SCORE_THRESHOLD = 0.25f;  // 進一步降低閾值，檢測更多潛在物體
+    private static final float HIGH_CONFIDENCE_THRESHOLD = 0.55f;  // 降低高置信度閾值
+    private static final int MAX_RESULTS = 25;  // 增加結果數，檢測更多物體
+    private static final float NMS_THRESHOLD = 0.35f;  // 進一步降低NMS閾值，保留更多檢測結果
     
     // 環境識別相關的物體類別（優先檢測）
     private static final Set<String> ENVIRONMENT_RELEVANT_OBJECTS = new HashSet<>();
@@ -115,8 +115,8 @@ public class ObjectDetectorHelper {
     }
     
     // 穩定性增強參數
-    private static final int MAX_RETRY_ATTEMPTS = 3;  // 最大重試次數
-    private static final long RETRY_DELAY_MS = 100;  // 重試延遲
+    private static final int MAX_RETRY_ATTEMPTS = 4;  // 增加重試次數
+    private static final long RETRY_DELAY_MS = 50;   // 減少重試延遲
     private static final int MAX_CONSECUTIVE_FAILURES = 5;  // 最大連續失敗次數
     private static final long DETECTION_TIMEOUT_MS = 5000;  // 檢測超時時間
     
@@ -399,7 +399,7 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 過濾環境相關物體
+     * 過濾環境相關物體 - 增強版本，提高精準度
      */
     private List<DetectionResult> filterEnvironmentRelevantObjects(List<DetectionResult> results) {
         List<DetectionResult> filtered = new ArrayList<>();
@@ -407,12 +407,20 @@ public class ObjectDetectorHelper {
         for (DetectionResult result : results) {
             // 檢查是否為環境相關物體
             if (ENVIRONMENT_RELEVANT_OBJECTS.contains(result.getLabel())) {
-                filtered.add(result);
-                Log.d(TAG, "保留環境相關物體: " + result.getLabelZh());
+                // 額外檢查置信度，確保檢測質量
+                if (result.getConfidence() >= SCORE_THRESHOLD) {
+                    filtered.add(result);
+                    Log.d(TAG, "保留環境相關物體: " + result.getLabelZh() + " (置信度: " + result.getConfidence() + ")");
+                } else {
+                    Log.d(TAG, "過濾低置信度環境物體: " + result.getLabelZh() + " (置信度: " + result.getConfidence() + ")");
+                }
             } else {
                 Log.d(TAG, "過濾非環境物體: " + result.getLabelZh());
             }
         }
+        
+        // 按置信度排序，優先顯示高置信度結果
+        filtered.sort((a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
         
         Log.d(TAG, String.format("環境物體過濾: %d -> %d", results.size(), filtered.size()));
         return filtered;
@@ -597,7 +605,7 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 格式化檢測結果為語音文本 - 專為視障人士優化
+     * 格式化檢測結果為語音文本 - 專為視障人士優化（簡潔版本）
      */
     public String formatResultsForSpeech(List<DetectionResult> results) {
         if (results.isEmpty()) {
@@ -606,35 +614,30 @@ public class ObjectDetectorHelper {
         
         StringBuilder sb = new StringBuilder();
         
-        // 檢測到物體數量
-        sb.append(getDetectedObjectsCountText(results.size()));
+        // 簡潔的物體描述，最多3個物體
+        int maxObjects = Math.min(results.size(), 3);
         
-        // 詳細描述每個物體
-        for (int i = 0; i < Math.min(results.size(), 5); i++) {
+        for (int i = 0; i < maxObjects; i++) {
             DetectionResult result = results.get(i);
-            
-            // 物體序號
-            sb.append(getObjectNumberText(i + 1));
             
             // 物體名稱 - 根據當前語言選擇對應的標籤
             String objectLabel = getObjectLabelForCurrentLanguage(result);
             sb.append(objectLabel);
             
-            // 置信度描述
-            sb.append(getConfidenceDescription(result.getConfidence()));
-            
-            // 位置描述（基於邊界框）
-            sb.append(getPositionDescription(result.getBoundingBox()));
+            // 簡潔的置信度描述
+            if (result.getConfidence() > 0.7f) {
+                sb.append("（高置信度）");
+            }
             
             // 分隔符
-            if (i < Math.min(results.size(), 5) - 1) {
-                sb.append("，");
+            if (i < maxObjects - 1) {
+                sb.append("、");
             }
         }
         
-        // 如果物體超過5個，添加總數
-        if (results.size() > 5) {
-            sb.append("等共").append(results.size()).append("個物體");
+        // 如果物體超過3個，添加總數
+        if (results.size() > 3) {
+            sb.append("等").append(results.size()).append("個物體");
         }
         
         return sb.toString();

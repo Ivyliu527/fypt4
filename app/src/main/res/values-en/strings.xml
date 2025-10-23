@@ -358,6 +358,13 @@
     <string name="detection_started">Detection Started</string>
     <string name="detection_stopped">Detection Stopped</string>
     
+    <!-- High Precision Mode -->
+    <string name="high_precision_mode_on">High Precision Mode: ON</string>
+    <string name="high_precision_mode_off">High Precision Mode: OFF</string>
+    <string name="high_precision_mode_desc">Toggle high precision detection mode</string>
+    <string name="high_precision_enabled">High precision mode enabled, more frequent detection</string>
+    <string name="high_precision_disabled">High precision mode disabled, save battery</string>
+    
     <!-- Accessibility Description -->
     <string name="accessibility_service_description">Tonbo accessibility service to assist visually impaired users</string>
 </resources>

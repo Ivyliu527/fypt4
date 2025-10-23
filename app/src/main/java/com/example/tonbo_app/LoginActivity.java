@@ -253,3 +253,4 @@ public class LoginActivity extends BaseAccessibleActivity {
         announceInfo(getString(R.string.operation_stopped));
     }
 }
+
