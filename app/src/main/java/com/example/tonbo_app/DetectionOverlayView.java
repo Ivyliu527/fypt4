@@ -23,6 +23,7 @@ public class DetectionOverlayView extends View {
     private Paint boxPaint;
     private Paint textPaint;
     private Paint backgroundPaint;
+    private String currentLanguage = "cantonese"; // 當前語言
     
     // 繪製參數 - 優化為更高精度和清晰度
     private static final int BOX_COLOR = Color.BLUE;
@@ -103,6 +104,14 @@ public class DetectionOverlayView extends View {
     public void clearDetections() {
         this.detections.clear();
         postInvalidate(); // 觸發重繪
+    }
+    
+    /**
+     * 設置當前語言
+     */
+    public void setCurrentLanguage(String language) {
+        this.currentLanguage = language;
+        postInvalidate(); // 重新繪製以更新標籤語言
     }
     
     @Override
@@ -203,9 +212,10 @@ public class DetectionOverlayView extends View {
         // 繪製角落標記
         drawCornerMarkers(canvas, rect, boxColor);
         
-        // 準備標籤文字（類似圖片中的格式）
+        // 準備標籤文字（根據當前語言選擇對應的標籤）
+        String displayLabel = getDisplayLabel(detection);
         String label = String.format("%s %.2f", 
-            detection.getLabel(), 
+            displayLabel, 
             detection.getConfidence());
         
         // 計算文字尺寸
@@ -286,5 +296,20 @@ public class DetectionOverlayView extends View {
      */
     public int getDetectionCount() {
         return detections.size();
+    }
+    
+    /**
+     * 根據當前語言獲取顯示標籤
+     */
+    private String getDisplayLabel(ObjectDetectorHelper.DetectionResult detection) {
+        switch (currentLanguage) {
+            case "english":
+                return detection.getLabel() != null ? detection.getLabel() : detection.getLabelZh();
+            case "mandarin":
+                return detection.getLabelZh() != null ? detection.getLabelZh() : detection.getLabel();
+            case "cantonese":
+            default:
+                return detection.getLabelZh() != null ? detection.getLabelZh() : detection.getLabel();
+        }
     }
 }

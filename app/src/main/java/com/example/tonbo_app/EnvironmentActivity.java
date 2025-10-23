@@ -533,6 +533,9 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                     // 更新覆蓋層顯示檢測框
                                     detectionOverlay.updateDetections(results);
                                     
+                                    // 設置覆蓋層的語言
+                                    detectionOverlay.setCurrentLanguage(currentLanguage);
+                                    
                                     // 添加測試邊界框（用於調試）
                                     if (results.isEmpty()) {
                                         Log.d(TAG, "沒有檢測到物體，添加測試邊界框");
