@@ -614,8 +614,8 @@ public class ObjectDetectorHelper {
         
         StringBuilder sb = new StringBuilder();
         
-        // 簡潔的物體描述，最多3個物體
-        int maxObjects = Math.min(results.size(), 3);
+        // 簡潔的物體描述，最多2個物體
+        int maxObjects = Math.min(results.size(), 2);
         
         for (int i = 0; i < maxObjects; i++) {
             DetectionResult result = results.get(i);
@@ -635,8 +635,8 @@ public class ObjectDetectorHelper {
             }
         }
         
-        // 如果物體超過3個，添加總數
-        if (results.size() > 3) {
+        // 如果物體超過2個，添加總數
+        if (results.size() > 2) {
             sb.append("等").append(results.size()).append("個物體");
         }
         

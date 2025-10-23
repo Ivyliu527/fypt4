@@ -572,15 +572,15 @@ public class YoloDetector {
         }
         
         StringBuilder sb = new StringBuilder("偵測到：");
-        for (int i = 0; i < Math.min(results.size(), 3); i++) {
+        for (int i = 0; i < Math.min(results.size(), 2); i++) {
             DetectionResult result = results.get(i);
             sb.append(result.getLabelZh());
-            if (i < Math.min(results.size(), 3) - 1) {
+            if (i < Math.min(results.size(), 2) - 1) {
                 sb.append("、");
             }
         }
         
-        if (results.size() > 3) {
+        if (results.size() > 2) {
             sb.append("等").append(results.size()).append("個物體");
         }
         
