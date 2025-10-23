@@ -84,6 +84,43 @@
     <string name="language_switch_feature_coming_soon">Language switch feature under development</string>
     <string name="operation_stopped">Operation stopped</string>
     
+    <!-- Login -->
+    <string name="login_title">Login</string>
+    <string name="login_title_desc">Login page title</string>
+    <string name="login_description">Please enter your email and password to login, or continue as guest</string>
+    <string name="login_status_ready">Ready to login</string>
+    <string name="login_status_desc">Login status information</string>
+    <string name="login_instruction">Enter your account information or choose guest mode to continue</string>
+    <string name="login_instruction_desc">Login usage instructions</string>
+    
+    <!-- Login Form -->
+    <string name="email_label">Email</string>
+    <string name="email_label_desc">Email label</string>
+    <string name="email_hint">Enter email address</string>
+    <string name="email_input_desc">Email input field</string>
+    <string name="password_label">Password</string>
+    <string name="password_label_desc">Password label</string>
+    <string name="password_hint">Enter password</string>
+    <string name="password_input_desc">Password input field</string>
+    
+    <!-- Login Buttons -->
+    <string name="login_button">Login</string>
+    <string name="login_button_desc">Login button</string>
+    <string name="register_button">Register</string>
+    <string name="register_button_desc">Register button</string>
+    <string name="guest_login_button">Guest Login</string>
+    <string name="guest_login_button_desc">Guest login button</string>
+    
+    <!-- Login Messages -->
+    <string name="email_required">Please enter email</string>
+    <string name="password_required">Please enter password</string>
+    <string name="invalid_email">Invalid email format</string>
+    <string name="logging_in">Logging in...</string>
+    <string name="login_success">Login successful</string>
+    <string name="login_failed">Login failed, please check your account information</string>
+    <string name="logging_in_as_guest">Logging in as guest</string>
+    <string name="register_feature_coming_soon">Register feature under development</string>
+    
     <!-- Accessibility Descriptions -->
     <string name="camera_preview_desc">Camera preview screen</string>
     <string name="object_detection_overlay_desc">Object detection result overlay, showing detection boxes and labels</string>

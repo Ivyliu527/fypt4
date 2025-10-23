@@ -146,6 +146,43 @@
     <string name="language_switch_feature_coming_soon">语言切换功能开发中</string>
     <string name="operation_stopped">操作已停止</string>
     
+    <!-- Login / 登录 -->
+    <string name="login_title">登录</string>
+    <string name="login_title_desc">登录页面标题</string>
+    <string name="login_description">请输入您的电子邮件和密码登录，或继续以访客身份使用</string>
+    <string name="login_status_ready">准备登录</string>
+    <string name="login_status_desc">登录状态信息</string>
+    <string name="login_instruction">输入您的账户信息或选择访客模式继续</string>
+    <string name="login_instruction_desc">登录使用说明</string>
+    
+    <!-- Login Form -->
+    <string name="email_label">电子邮件</string>
+    <string name="email_label_desc">电子邮件标签</string>
+    <string name="email_hint">请输入电子邮件</string>
+    <string name="email_input_desc">电子邮件输入框</string>
+    <string name="password_label">密码</string>
+    <string name="password_label_desc">密码标签</string>
+    <string name="password_hint">请输入密码</string>
+    <string name="password_input_desc">密码输入框</string>
+    
+    <!-- Login Buttons -->
+    <string name="login_button">登录</string>
+    <string name="login_button_desc">登录按钮</string>
+    <string name="register_button">注册</string>
+    <string name="register_button_desc">注册按钮</string>
+    <string name="guest_login_button">访客登录</string>
+    <string name="guest_login_button_desc">访客登录按钮</string>
+    
+    <!-- Login Messages -->
+    <string name="email_required">请输入电子邮件</string>
+    <string name="password_required">请输入密码</string>
+    <string name="invalid_email">电子邮件格式不正确</string>
+    <string name="logging_in">正在登录...</string>
+    <string name="login_success">登录成功</string>
+    <string name="login_failed">登录失败，请检查您的账户信息</string>
+    <string name="logging_in_as_guest">正在以访客身份登录</string>
+    <string name="register_feature_coming_soon">注册功能开发中</string>
+    
     <!-- 功能描述 -->
     <string name="desc_environment">描述周围环境和物体</string>
     <string name="desc_document">扫描文件和识别货币</string>

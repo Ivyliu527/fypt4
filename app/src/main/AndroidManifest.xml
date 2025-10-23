@@ -90,6 +90,12 @@
             android:name=".TravelAssistantActivity"
             android:label="@string/travel_assistant_title"
             android:exported="false" />
+            
+        <!-- Login Activity - 登入 -->
+        <activity
+            android:name=".LoginActivity"
+            android:label="@string/login_title"
+            android:exported="false" />
     </application>
 
 </manifest>
