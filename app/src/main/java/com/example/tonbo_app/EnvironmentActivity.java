@@ -696,7 +696,6 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         }
         
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format(getString(R.string.detection_results_format), results.size()));
         
         for (int i = 0; i < Math.min(results.size(), 2); i++) {
             ObjectDetectorHelper.DetectionResult result = results.get(i);
