@@ -160,9 +160,3 @@ The development process has been both challenging and rewarding, with continuous
 As technology continues to evolve, the Tonbo App will continue to adapt and improve, ensuring that accessibility remains at the forefront of mobile application development.
 
 隨著技術的不斷發展，蜻蜓應用程式將繼續適應和改進，確保無障礙性始終處於移動應用程式開發的前沿。
-
----
-
-**Report prepared by:** Development Team / 開發團隊  
-**Date:** January 2025 / 2025年1月  
-**Version:** 1.0 / 版本1.0

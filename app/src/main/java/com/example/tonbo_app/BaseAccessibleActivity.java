@@ -1,9 +1,7 @@
 package com.example.tonbo_app;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -12,18 +10,12 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 public abstract class BaseAccessibleActivity extends AppCompatActivity {
     protected TTSManager ttsManager;
     protected VibrationManager vibrationManager;
     protected LocaleManager localeManager;
-    protected GlobalVoiceCommandManager globalVoiceManager;
     protected String currentLanguage;
-    
-    // 權限請求常數
-    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 1001;
     
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -54,12 +46,6 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
         // 強制初始化TTS，確保語音播報可用
         ttsManager.forceInitialize();
         
-        // 初始化全局語音命令管理器
-        initializeGlobalVoiceManager();
-        
-        // 檢查並請求麥克風權限
-        checkAndRequestMicrophonePermission();
-        
         // 設置無障礙支持
         setupAccessibility();
         
@@ -71,83 +57,6 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
                 announcePageTitle();
             }, 1000); // 延遲1秒確保TTS初始化完成
         });
-    }
-    
-    private void initializeGlobalVoiceManager() {
-        globalVoiceManager = GlobalVoiceCommandManager.getInstance(this, ttsManager);
-        
-        // 設置語音命令回調
-        globalVoiceManager.setCallback(new GlobalVoiceCommandManager.VoiceCommandCallback() {
-            @Override
-            public void onCommandRecognized(String command) {
-                handleGlobalVoiceCommand(command);
-            }
-            
-            @Override
-            public void onVoiceError(String error) {
-                announceError("語音命令錯誤: " + error);
-            }
-        });
-    }
-    
-    /**
-     * 處理全局語音命令
-     * 子類可以重寫此方法來處理特定的語音命令
-     */
-    protected void handleGlobalVoiceCommand(String command) {
-        switch (command) {
-            case "environment":
-                startEnvironmentActivity();
-                break;
-            case "document":
-                startDocumentCurrencyActivity();
-                break;
-            case "find_items":
-                startFindItemsActivity();
-                break;
-            case "live_assistance":
-                announceInfo("即時協助功能開發中");
-                break;
-            case "emergency":
-                handleEmergencyCommand();
-                break;
-            case "home":
-                goToHome();
-                break;
-            case "settings":
-                startSettingsActivity();
-                break;
-            case "language":
-                handleLanguageSwitch();
-                break;
-            case "time":
-                announceCurrentTime();
-                break;
-            case "stop":
-                stopCurrentOperation();
-                break;
-            default:
-                announceInfo("未識別的語音命令: " + command);
-                break;
-        }
-    }
-    
-    /**
-     * 啟動全局語音命令聆聽
-     */
-    public void startGlobalVoiceCommand() {
-        if (globalVoiceManager != null) {
-            globalVoiceManager.startListening(null);
-        }
-    }
-    
-    /**
-     * 停止全局語音命令聆聽
-     */
-    public void stopGlobalVoiceCommand() {
-        if (globalVoiceManager != null) {
-            globalVoiceManager.stopListening();
-        }
     }
     
     // 默認的Activity啟動方法，子類可以重寫
@@ -320,11 +229,6 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // 停止語音識別但不銷毀全局語音命令管理器（保持單例）
-        if (globalVoiceManager != null) {
-            globalVoiceManager.stopListening();
-            // 不銷毀實例，保持全局可用
-        }
         // 頁面銷毀時清理資源（但保持管理器實例）
         // ttsManager和vibrationManager是單例，由MainActivity統一管理
     }
@@ -332,43 +236,6 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
     // 獲取當前語言
     protected String getCurrentLanguage() {
         return currentLanguage;
-    }
-    
-    /**
-     * 檢查並請求麥克風權限
-     */
-    private void checkAndRequestMicrophonePermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) 
-                != PackageManager.PERMISSION_GRANTED) {
-            
-            // 權限未授予，請求權限
-            ActivityCompat.requestPermissions(this, 
-                new String[]{Manifest.permission.RECORD_AUDIO}, 
-                REQUEST_RECORD_AUDIO_PERMISSION);
-        } else {
-            // 權限已授予
-            android.util.Log.d("BaseAccessibleActivity", "麥克風權限已授予");
-        }
-    }
-    
-    /**
-     * 處理權限請求結果
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        
-        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // 麥克風權限已授予
-                android.util.Log.d("BaseAccessibleActivity", "麥克風權限請求成功");
-                announceInfo("麥克風權限已授予，語音命令功能已啟用");
-            } else {
-                // 麥克風權限被拒絕
-                android.util.Log.w("BaseAccessibleActivity", "麥克風權限請求被拒絕");
-                announceInfo("麥克風權限被拒絕，語音命令功能將不可用");
-            }
-        }
     }
     
     // 切換語言

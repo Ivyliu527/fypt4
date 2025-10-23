@@ -94,15 +94,6 @@ public class MainActivity extends BaseAccessibleActivity {
             announceInfo("這是緊急求助按鈕，請長按三秒發送求助信息。點擊右上角紅色緊急按鈕可配置緊急聯絡人");
         });
 
-        // 全局語音命令按鈕
-        Button globalVoiceButton = findViewById(R.id.globalVoiceButton);
-        if (globalVoiceButton != null) {
-            globalVoiceButton.setOnClickListener(v -> {
-                vibrationManager.vibrateClick();
-                startGlobalVoiceCommand();
-            });
-        }
-
         // 緊急求助設置按鈕
         Button emergencySettingsButton = findViewById(R.id.emergencySettingsButton);
         if (emergencySettingsButton != null) {
@@ -517,29 +508,12 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
     
-    public void startGlobalVoiceCommand() {
-        announceInfo("開始聆聽語音命令，請說出您想要執行的操作");
-        
-        // 先進行診斷
-        GlobalVoiceCommandManager globalVoiceManager = GlobalVoiceCommandManager.getInstance();
-        if (globalVoiceManager != null) {
-            globalVoiceManager.diagnoseVoiceRecognition();
-        }
-        
-        super.startGlobalVoiceCommand();
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         // 清理資源
         if (ttsManager != null) {
             ttsManager.shutdown();
-        }
-        // 銷毀全局語音命令管理器（應用退出時）
-        GlobalVoiceCommandManager globalVoiceManager = GlobalVoiceCommandManager.getInstance();
-        if (globalVoiceManager != null) {
-            globalVoiceManager.destroy();
         }
     }
 }
