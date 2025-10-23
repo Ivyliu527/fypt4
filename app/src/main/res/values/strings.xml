@@ -84,6 +84,43 @@
     <string name="language_switch_feature_coming_soon">語言切換功能開發中</string>
     <string name="operation_stopped">操作已停止</string>
     
+    <!-- Login / 登入 -->
+    <string name="login_title">登入</string>
+    <string name="login_title_desc">登入頁面標題</string>
+    <string name="login_description">請輸入您的電子郵件和密碼登入，或繼續以訪客身份使用</string>
+    <string name="login_status_ready">準備登入</string>
+    <string name="login_status_desc">登入狀態信息</string>
+    <string name="login_instruction">輸入您的帳戶信息或選擇訪客模式繼續</string>
+    <string name="login_instruction_desc">登入使用說明</string>
+    
+    <!-- Login Form -->
+    <string name="email_label">電子郵件</string>
+    <string name="email_label_desc">電子郵件標籤</string>
+    <string name="email_hint">請輸入電子郵件</string>
+    <string name="email_input_desc">電子郵件輸入框</string>
+    <string name="password_label">密碼</string>
+    <string name="password_label_desc">密碼標籤</string>
+    <string name="password_hint">請輸入密碼</string>
+    <string name="password_input_desc">密碼輸入框</string>
+    
+    <!-- Login Buttons -->
+    <string name="login_button">登入</string>
+    <string name="login_button_desc">登入按鈕</string>
+    <string name="register_button">註冊</string>
+    <string name="register_button_desc">註冊按鈕</string>
+    <string name="guest_login_button">訪客登入</string>
+    <string name="guest_login_button_desc">訪客登入按鈕</string>
+    
+    <!-- Login Messages -->
+    <string name="email_required">請輸入電子郵件</string>
+    <string name="password_required">請輸入密碼</string>
+    <string name="invalid_email">電子郵件格式不正確</string>
+    <string name="logging_in">正在登入...</string>
+    <string name="login_success">登入成功</string>
+    <string name="login_failed">登入失敗，請檢查您的帳戶信息</string>
+    <string name="logging_in_as_guest">正在以訪客身份登入</string>
+    <string name="register_feature_coming_soon">註冊功能開發中</string>
+    
     <!-- Environment Recognition -->
     <string name="flash_on">Flash: On</string>
     <string name="flash_off">Flash: Off</string>

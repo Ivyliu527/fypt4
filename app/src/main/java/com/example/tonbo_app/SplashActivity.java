@@ -27,12 +27,26 @@ public class SplashActivity extends AppCompatActivity {
         // 啟動動畫
         startEntranceAnimation();
 
-        // 3秒後跳轉到主頁
+        // 3秒後檢查登入狀態並跳轉
         new Handler().postDelayed(() -> {
+            checkLoginStatusAndNavigate();
+        }, 3000);
+    }
+    
+    private void checkLoginStatusAndNavigate() {
+        UserManager userManager = UserManager.getInstance(this);
+        
+        // 檢查是否需要登入
+        if (userManager.needsLogin()) {
+            // 需要登入，跳轉到登入頁面
+            Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+            startActivity(intent);
+        } else {
+            // 已登入或訪客模式，跳轉到主頁
             Intent intent = new Intent(SplashActivity.this, MainActivity.class);
             startActivity(intent);
-            finish();
-        }, 3000);
+        }
+        finish();
     }
 
     private void startEntranceAnimation() {
