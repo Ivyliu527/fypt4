@@ -358,6 +358,12 @@ public class YoloDetector {
             }
         });
         
+        // 只返回置信度最高的2個物體
+        if (results.size() > 2) {
+            results = results.subList(0, 2);
+            Log.d(TAG, "YOLO檢測限制為2個物體");
+        }
+        
         return results;
     }
     

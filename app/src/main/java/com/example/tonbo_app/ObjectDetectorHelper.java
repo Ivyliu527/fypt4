@@ -11,6 +11,7 @@ import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -321,6 +322,19 @@ public class ObjectDetectorHelper {
         long detectionTime = System.currentTimeMillis() - startTime;
         if (detectionTime > 1000) {
             Log.w(TAG, "檢測時間過長: " + detectionTime + "ms");
+        }
+        
+        // 只返回置信度最高的2個物體
+        if (results.size() > 2) {
+            // 按置信度排序
+            Collections.sort(results, new Comparator<DetectionResult>() {
+                @Override
+                public int compare(DetectionResult a, DetectionResult b) {
+                    return Float.compare(b.getConfidence(), a.getConfidence());
+                }
+            });
+            results = results.subList(0, 2);
+            Log.d(TAG, "限制檢測結果為2個物體");
         }
         
         return results;
