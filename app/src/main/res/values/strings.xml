@@ -362,6 +362,13 @@
     <string name="detection_started">檢測已開始</string>
     <string name="detection_stopped">檢測已停止</string>
     
+    <!-- High Precision Mode -->
+    <string name="high_precision_mode_on">高精度模式：開啟</string>
+    <string name="high_precision_mode_off">高精度模式：關閉</string>
+    <string name="high_precision_mode_desc">切換高精度檢測模式</string>
+    <string name="high_precision_enabled">高精度模式已啟用，檢測更頻繁</string>
+    <string name="high_precision_disabled">高精度模式已關閉，節省電量</string>
+    
     <!-- 權限相關 -->
     <string name="microphone_permission_granted">Microphone permission granted, voice commands enabled</string>
     <string name="microphone_permission_denied">Microphone permission denied, voice commands will be unavailable</string>

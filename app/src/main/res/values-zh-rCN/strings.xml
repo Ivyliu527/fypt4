@@ -349,5 +349,13 @@
     
     <!-- 无障碍描述 -->
     <string name="accessibility_service_description">瞳伴无障碍服务，协助视障用户使用应用功能</string>
+    
+    <!-- High Precision Mode -->
+    <string name="high_precision_mode_on">高精度模式：开启</string>
+    <string name="high_precision_mode_off">高精度模式：关闭</string>
+    <string name="high_precision_mode_desc">切换高精度检测模式</string>
+    <string name="high_precision_enabled">高精度模式已启用，检测更频繁</string>
+    <string name="high_precision_disabled">高精度模式已关闭，节省电量</string>
+    
 </resources>
 

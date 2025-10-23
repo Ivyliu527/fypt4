@@ -200,3 +200,4 @@ public class UserManager {
                !getCurrentUserEmail().isEmpty();
     }
 }
+

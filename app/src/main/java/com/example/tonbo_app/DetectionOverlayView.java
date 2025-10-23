@@ -24,14 +24,14 @@ public class DetectionOverlayView extends View {
     private Paint textPaint;
     private Paint backgroundPaint;
     
-    // 繪製參數
-    private static final int BOX_COLOR = Color.RED;
-    private static final int BOX_COLOR_ALT = Color.YELLOW;
+    // 繪製參數 - 優化為更高精度和清晰度
+    private static final int BOX_COLOR = Color.BLUE;
+    private static final int BOX_COLOR_ALT = Color.MAGENTA;
     private static final int TEXT_COLOR = Color.WHITE;
     private static final int BACKGROUND_COLOR = Color.BLACK;
-    private static final int BOX_THICKNESS = 12;
-    private static final int TEXT_SIZE = 36;
-    private static final int TEXT_PADDING = 16;
+    private static final int BOX_THICKNESS = 6;  // 適中的邊界框粗細
+    private static final int TEXT_SIZE = 28;    // 適中的文字大小
+    private static final int TEXT_PADDING = 16; // 適中的文字內邊距
     
     public DetectionOverlayView(Context context) {
         super(context);
@@ -146,52 +146,39 @@ public class DetectionOverlayView extends View {
         // 檢查邊界框座標是否已經是像素座標還是相對座標
         float left, top, right, bottom;
         
-               // 檢查座標範圍，判斷是否需要轉換
-               // 如果座標大於1，則認為是像素座標（乘以1000的相對座標）
-               boolean isScaledCoords = (boundingBox.left > 1.0f || boundingBox.top > 1.0f ||
-                                       boundingBox.right > 1.0f || boundingBox.bottom > 1.0f);
-               
-               if (isScaledCoords) {
-                   // 縮放座標 (0-1000)，需要轉換為相對座標再轉為像素座標
-                   Log.d(TAG, "檢測到縮放座標，轉換為像素座標");
-                   left = (boundingBox.left / 1000.0f) * viewWidth;
-                   top = (boundingBox.top / 1000.0f) * viewHeight;
-                   right = (boundingBox.right / 1000.0f) * viewWidth;
-                   bottom = (boundingBox.bottom / 1000.0f) * viewHeight;
-               } else if (boundingBox.left <= 1.0f && boundingBox.top <= 1.0f &&
-                         boundingBox.right <= 1.0f && boundingBox.bottom <= 1.0f) {
-                   // 相對座標 (0-1)，需要轉換為像素座標
-                   Log.d(TAG, "檢測到相對座標，轉換為像素座標");
-                   left = boundingBox.left * viewWidth;
-                   top = boundingBox.top * viewHeight;
-                   right = boundingBox.right * viewWidth;
-                   bottom = boundingBox.bottom * viewHeight;
-               } else {
-                   // 已經是像素座標，直接使用
-                   Log.d(TAG, "檢測到像素座標，直接使用");
-                   left = boundingBox.left;
-                   top = boundingBox.top;
-                   right = boundingBox.right;
-                   bottom = boundingBox.bottom;
-               }
+        // 更精確的座標轉換邏輯
+        boolean isScaledCoords = (boundingBox.left > 1.0f || boundingBox.top > 1.0f ||
+                                boundingBox.right > 1.0f || boundingBox.bottom > 1.0f);
         
-        Log.d(TAG, "轉換後座標: left=" + left + ", top=" + top + ", right=" + right + ", bottom=" + bottom);
-        
-        // 檢查座標是否在有效範圍內
-        if (left < 0 || top < 0 || right > viewWidth || bottom > viewHeight) {
-            Log.w(TAG, "邊界框座標超出視圖範圍，調整中...");
-            left = Math.max(0, Math.min(left, viewWidth));
-            top = Math.max(0, Math.min(top, viewHeight));
-            right = Math.max(0, Math.min(right, viewWidth));
-            bottom = Math.max(0, Math.min(bottom, viewHeight));
-            Log.d(TAG, "調整後座標: left=" + left + ", top=" + top + ", right=" + right + ", bottom=" + bottom);
+        if (isScaledCoords) {
+            // 縮放座標 (0-1000)，需要轉換為相對座標再轉為像素座標
+            Log.d(TAG, "檢測到縮放座標，轉換為像素座標");
+            left = (boundingBox.left / 1000.0f) * viewWidth;
+            top = (boundingBox.top / 1000.0f) * viewHeight;
+            right = (boundingBox.right / 1000.0f) * viewWidth;
+            bottom = (boundingBox.bottom / 1000.0f) * viewHeight;
+        } else if (boundingBox.left <= 1.0f && boundingBox.top <= 1.0f &&
+                  boundingBox.right <= 1.0f && boundingBox.bottom <= 1.0f) {
+            // 相對座標 (0-1)，需要轉換為像素座標
+            Log.d(TAG, "檢測到相對座標，轉換為像素座標");
+            left = boundingBox.left * viewWidth;
+            top = boundingBox.top * viewHeight;
+            right = boundingBox.right * viewWidth;
+            bottom = boundingBox.bottom * viewHeight;
+        } else {
+            // 已經是像素座標，直接使用
+            Log.d(TAG, "檢測到像素座標，直接使用");
+            left = boundingBox.left;
+            top = boundingBox.top;
+            right = boundingBox.right;
+            bottom = boundingBox.bottom;
         }
         
-        // 檢查邊界框是否有效
-        if (right <= left || bottom <= top) {
-            Log.w(TAG, "無效的邊界框尺寸，跳過繪製");
-            return;
-        }
+        // 精確的邊界檢查和調整
+        left = Math.max(0, Math.min(left, viewWidth - 1));
+        top = Math.max(0, Math.min(top, viewHeight - 1));
+        right = Math.max(left + 1, Math.min(right, viewWidth));
+        bottom = Math.max(top + 1, Math.min(bottom, viewHeight));
         
         // 創建邊界框矩形
         RectF rect = new RectF(left, top, right, bottom);

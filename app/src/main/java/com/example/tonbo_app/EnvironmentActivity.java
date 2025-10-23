@@ -56,15 +56,19 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private List<ObjectDetectorHelper.DetectionResult> lastDetections;
     private long lastDetectionTime = 0;
     private boolean isAnalyzing = false;
-    private int frameSkipCount = 2; // 每2幀檢測一次，提高檢測頻率
+    private int frameSkipCount = 3; // 每3幀檢測一次，平衡性能和精準度
     private long lastStabilityCheck = 0; // 上次穩定性檢查時間
+    
+    // 語音播報控制
+    private long lastSpeechTime = 0;
+    private static final long SPEECH_INTERVAL_MS = 2000; // 語音播報間隔2秒
     
     // 顏色和光線分析
     private ColorLightingAnalyzer colorLightingAnalyzer;
     private ColorLightingAnalyzer.ColorAnalysisResult lastColorAnalysis;
     private ColorLightingAnalyzer.LightingAnalysisResult lastLightingAnalysis;
     private long lastColorAnalysisTime = 0;
-    private int colorAnalysisSkipCount = 30; // 每30幀分析一次顏色和光線
+    private int colorAnalysisSkipCount = 45; // 每45幀分析一次顏色和光線，減少頻率
     
     // 備用相機實現
     private LegacyCameraHelper legacyCameraHelper;
@@ -542,12 +546,20 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                         (int)detectionTime
                                     ));
                                     
-                                    // 只在有新物體時播報（避免重複播報）
+                                    // 實時語音播報檢測結果（優化版本）
                                     if (!speechText.equals(lastDetectionResult)) {
                                         lastDetectionResult = speechText;
                                         Log.d(TAG, "🔊 檢測到新物體，準備播報語音: " + speechText);
-                                        // 自動播報檢測結果給視障人士
-                                        speakDetectionResults(speechText);
+                                        
+                                        // 檢查語音播報間隔，避免過於頻繁
+                                        long currentTime = System.currentTimeMillis();
+                                        if (currentTime - lastSpeechTime >= SPEECH_INTERVAL_MS) {
+                                            lastSpeechTime = currentTime;
+                                            // 立即播報檢測結果
+                                            speakDetectionResultsImmediate(speechText);
+                                        } else {
+                                            Log.d(TAG, "🔊 語音播報間隔太短，跳過此次播報");
+                                        }
                                     } else {
                                         Log.d(TAG, "🔊 檢測結果與上次相同，跳過語音播報");
                                     }
@@ -1126,7 +1138,33 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     }
     
     /**
-     * 語音播報檢測結果
+     * 立即語音播報檢測結果（優化版本）
+     */
+    private void speakDetectionResultsImmediate(String speechText) {
+        Log.d(TAG, "🔊 speakDetectionResultsImmediate 被調用，speechText: " + speechText);
+        
+        if (ttsManager != null && speechText != null && !speechText.isEmpty()) {
+            // 直接播報檢測結果，不添加前綴，讓語音更簡潔
+            Log.d(TAG, "🔊 立即播報檢測結果: " + speechText);
+            
+            // 根據當前語言選擇對應的語音內容
+            String cantoneseText = currentLanguage.equals("english") ? translateToChinese(speechText) : speechText;
+            String englishText = currentLanguage.equals("english") ? speechText : translateToEnglish(speechText);
+            
+            // 使用優先播放，確保檢測結果語音不被其他語音打斷
+            ttsManager.speak(cantoneseText, englishText, true);
+            
+            // 震動反饋
+            if (vibrationManager != null) {
+                vibrationManager.vibrateClick();
+            }
+        } else {
+            Log.w(TAG, "❌ 立即語音播報條件不滿足");
+        }
+    }
+    
+    /**
+     * 語音播報檢測結果（原版本，保留用於其他場景）
      */
     private void speakDetectionResults(String speechText) {
         Log.d(TAG, "🔊 speakDetectionResults 被調用，speechText: " + speechText);

@@ -288,4 +288,11 @@
     <string name="delete">刪除</string>
     <string name="edit">編輯</string>
     
+    <!-- High Precision Mode -->
+    <string name="high_precision_mode_on">高精度模式：開啟</string>
+    <string name="high_precision_mode_off">高精度模式：關閉</string>
+    <string name="high_precision_mode_desc">切換高精度檢測模式</string>
+    <string name="high_precision_enabled">高精度模式已啟用，檢測更頻繁</string>
+    <string name="high_precision_disabled">高精度模式已關閉，節省電量</string>
+    
 </resources>
