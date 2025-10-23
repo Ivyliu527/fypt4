@@ -46,15 +46,6 @@
     <string name="selected_item">選中物品：%1$s</string>
     <string name="going_back_to_home">返回主頁</string>
     
-    <!-- Global Voice Command -->
-    <string name="global_voice_command">🎤 全局語音命令</string>
-    <string name="global_voice_command_desc">全局語音命令按鈕，點擊開始語音控制</string>
-    <string name="voice_command_listening">正在聆聽語音命令</string>
-    <string name="voice_command_recognized">語音命令已識別</string>
-    <string name="voice_command_error">語音命令錯誤</string>
-    <string name="voice_command_unknown">未知語音命令</string>
-    <string name="voice_command_stop">停止語音命令</string>
-    
     <!-- 功能描述 -->
     <string name="desc_environment">描述周圍環境和物體</string>
     <string name="desc_document">掃描文件和識別貨幣</string>

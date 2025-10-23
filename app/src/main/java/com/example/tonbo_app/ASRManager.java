@@ -311,34 +311,22 @@ public class ASRManager {
  */
 class AndroidNativeASR {
     private Context context;
-    private GlobalVoiceCommandManager voiceCommandManager;
     
     public AndroidNativeASR(Context context) {
         this.context = context;
-        // 使用現有的GlobalVoiceCommandManager
-        this.voiceCommandManager = new GlobalVoiceCommandManager(context, null);
     }
     
     public void startRecognition(ASRManager.ASRCallback callback) {
-        voiceCommandManager.startListening(new GlobalVoiceCommandManager.VoiceCommandCallback() {
-            @Override
-            public void onCommandRecognized(String command) {
-                callback.onResult(command, 0.9f); // 假設置信度為0.9
-            }
-            
-            @Override
-            public void onVoiceError(String error) {
-                callback.onError(error);
-            }
-        });
+        // 語音識別功能已移除
+        callback.onError("語音識別功能已停用");
     }
     
     public void stopRecognition() {
-        voiceCommandManager.stopListening();
+        // 語音識別功能已移除
     }
     
     public void release() {
-        voiceCommandManager.destroy();
+        // 語音識別功能已移除
     }
 }
 
