@@ -45,5 +45,6 @@
     <!-- Find Items 功能顏色 -->
     <color name="button_green">#FF4CAF50</color>
     <color name="button_orange">#FFFF9800</color>
+    <color name="button_purple">#FF9C27B0</color>
 
 </resources>

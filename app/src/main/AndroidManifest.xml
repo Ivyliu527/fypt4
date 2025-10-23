@@ -84,6 +84,12 @@
             android:name=".FindItemsActivity"
             android:label="@string/find_items_title"
             android:exported="false" />
+            
+        <!-- Travel Assistant Activity - 出行協助 -->
+        <activity
+            android:name=".TravelAssistantActivity"
+            android:label="@string/travel_assistant_title"
+            android:exported="false" />
     </application>
 
 </manifest>

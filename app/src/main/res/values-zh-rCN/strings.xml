@@ -116,6 +116,36 @@
     <string name="selected_item">选中物品：%1$s</string>
     <string name="going_back_to_home">返回主页</string>
     
+    <!-- Travel Assistant / 出行协助 -->
+    <string name="travel_assistant_title">出行协助</string>
+    <string name="travel_assistant_title_desc">出行协助页面标题</string>
+    <string name="travel_assistant_description">提供导航、路线规划、交通信息、天气更新和紧急位置分享服务</string>
+    <string name="travel_assistant_status">出行协助功能准备就绪</string>
+    <string name="travel_assistant_status_desc">出行协助状态信息</string>
+    <string name="travel_assistant_instruction">点击下方按钮使用各项出行协助功能</string>
+    <string name="travel_assistant_instruction_desc">出行协助使用说明</string>
+    
+    <!-- Travel Assistant Features -->
+    <string name="navigation">导航</string>
+    <string name="navigation_desc">导航功能按钮</string>
+    <string name="route_planning">路线规划</string>
+    <string name="route_planning_desc">路线规划功能按钮</string>
+    <string name="traffic_info">交通信息</string>
+    <string name="traffic_info_desc">交通信息功能按钮</string>
+    <string name="weather_info">天气信息</string>
+    <string name="weather_info_desc">天气信息功能按钮</string>
+    <string name="emergency_location">紧急位置分享</string>
+    <string name="emergency_location_desc">紧急位置分享功能按钮</string>
+    
+    <!-- Feature Status Messages -->
+    <string name="navigation_feature_coming_soon">导航功能开发中</string>
+    <string name="route_planning_feature_coming_soon">路线规划功能开发中</string>
+    <string name="traffic_info_feature_coming_soon">交通信息功能开发中</string>
+    <string name="weather_info_feature_coming_soon">天气信息功能开发中</string>
+    <string name="emergency_location_feature_coming_soon">紧急位置分享功能开发中</string>
+    <string name="language_switch_feature_coming_soon">语言切换功能开发中</string>
+    <string name="operation_stopped">操作已停止</string>
+    
     <!-- 功能描述 -->
     <string name="desc_environment">描述周围环境和物体</string>
     <string name="desc_document">扫描文件和识别货币</string>
