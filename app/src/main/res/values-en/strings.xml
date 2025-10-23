@@ -54,6 +54,36 @@
     <string name="selected_item">Selected item: %1$s</string>
     <string name="going_back_to_home">Going back to home</string>
     
+    <!-- Travel Assistant -->
+    <string name="travel_assistant_title">Travel Assistant</string>
+    <string name="travel_assistant_title_desc">Travel assistant page title</string>
+    <string name="travel_assistant_description">Provides navigation, route planning, traffic information, weather updates, and emergency location sharing services</string>
+    <string name="travel_assistant_status">Travel assistant features ready</string>
+    <string name="travel_assistant_status_desc">Travel assistant status information</string>
+    <string name="travel_assistant_instruction">Tap the buttons below to use various travel assistant features</string>
+    <string name="travel_assistant_instruction_desc">Travel assistant usage instructions</string>
+    
+    <!-- Travel Assistant Features -->
+    <string name="navigation">Navigation</string>
+    <string name="navigation_desc">Navigation feature button</string>
+    <string name="route_planning">Route Planning</string>
+    <string name="route_planning_desc">Route planning feature button</string>
+    <string name="traffic_info">Traffic Info</string>
+    <string name="traffic_info_desc">Traffic information feature button</string>
+    <string name="weather_info">Weather Info</string>
+    <string name="weather_info_desc">Weather information feature button</string>
+    <string name="emergency_location">Emergency Location</string>
+    <string name="emergency_location_desc">Emergency location sharing feature button</string>
+    
+    <!-- Feature Status Messages -->
+    <string name="navigation_feature_coming_soon">Navigation feature under development</string>
+    <string name="route_planning_feature_coming_soon">Route planning feature under development</string>
+    <string name="traffic_info_feature_coming_soon">Traffic information feature under development</string>
+    <string name="weather_info_feature_coming_soon">Weather information feature under development</string>
+    <string name="emergency_location_feature_coming_soon">Emergency location sharing feature under development</string>
+    <string name="language_switch_feature_coming_soon">Language switch feature under development</string>
+    <string name="operation_stopped">Operation stopped</string>
+    
     <!-- Accessibility Descriptions -->
     <string name="camera_preview_desc">Camera preview screen</string>
     <string name="object_detection_overlay_desc">Object detection result overlay, showing detection boxes and labels</string>

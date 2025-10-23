@@ -382,6 +382,11 @@ public class MainActivity extends BaseAccessibleActivity {
             getString(R.string.function_live_assistance), 
             getString(R.string.desc_live_assistance), 
             R.drawable.ic_assistance));
+        functionList.add(new HomeFunction(
+            "travel_assistant",
+            getString(R.string.travel_assistant_title), 
+            getString(R.string.travel_assistant_description), 
+            R.drawable.ic_travel));
     }
 
     private void setupRecyclerView() {
@@ -426,6 +431,9 @@ public class MainActivity extends BaseAccessibleActivity {
             case "live_assistance":
                 announceInfo(getString(R.string.function_live_assistance) + "功能開發中");
                 break;
+            case "travel_assistant":
+                startTravelAssistantActivity();
+                break;
         }
     }
 
@@ -462,6 +470,18 @@ public class MainActivity extends BaseAccessibleActivity {
             Log.e("MainActivity", "打開尋找物品失敗: " + e.getMessage());
         }
     }
+    
+    protected void startTravelAssistantActivity() {
+        try {
+            Intent intent = new Intent(MainActivity.this, TravelAssistantActivity.class);
+            intent.putExtra("language", currentLanguage);
+            announceNavigation("正在進入出行協助頁面");
+            startActivity(intent);
+        } catch (Exception e) {
+            announceError("出行協助功能暫不可用");
+            Log.e("MainActivity", "打開出行協助失敗: " + e.getMessage());
+        }
+    }
 
     private String getEnglishFunctionName(String chineseName) {
         switch (chineseName) {
@@ -470,6 +490,7 @@ public class MainActivity extends BaseAccessibleActivity {
             case "語音命令": return "Voice Command";
             case "尋找物品": return "Find Items";
             case "即時協助": return "Live Assistance";
+            case "出行協助": return "Travel Assistant";
             default: return chineseName;
         }
     }
@@ -481,6 +502,7 @@ public class MainActivity extends BaseAccessibleActivity {
             case "語音控制應用功能": return "Voice control app functions";
             case "尋找標記的個人物品": return "Find marked personal items";
             case "視訊連線志工協助": return "Video call with volunteers";
+            case "提供導航、路線規劃、交通信息、天氣更新和緊急位置分享服務": return "Provides navigation, route planning, traffic information, weather updates, and emergency location sharing services";
             default: return chineseDescription;
         }
     }
