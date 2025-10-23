@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -79,7 +81,23 @@ public class DetectionOverlayView extends View {
      */
     public void updateDetections(List<ObjectDetectorHelper.DetectionResult> newDetections) {
         Log.d(TAG, "updateDetections called with " + (newDetections != null ? newDetections.size() : 0) + " detections");
-        this.detections = newDetections != null ? new ArrayList<>(newDetections) : new ArrayList<>();
+        
+        // 只顯示最多2個檢測結果
+        if (newDetections != null && newDetections.size() > 2) {
+            // 按置信度排序並只取前2個
+            List<ObjectDetectorHelper.DetectionResult> sortedDetections = new ArrayList<>(newDetections);
+            Collections.sort(sortedDetections, new Comparator<ObjectDetectorHelper.DetectionResult>() {
+                @Override
+                public int compare(ObjectDetectorHelper.DetectionResult a, ObjectDetectorHelper.DetectionResult b) {
+                    return Float.compare(b.getConfidence(), a.getConfidence());
+                }
+            });
+            this.detections = new ArrayList<>(sortedDetections.subList(0, 2));
+            Log.d(TAG, "限制檢測結果為2個，按置信度排序");
+        } else {
+            this.detections = newDetections != null ? new ArrayList<>(newDetections) : new ArrayList<>();
+        }
+        
         Log.d(TAG, "Updated detections list size: " + this.detections.size());
         
         // 確保視圖可見
