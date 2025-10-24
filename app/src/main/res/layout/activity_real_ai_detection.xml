@@ -5,17 +5,49 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <!-- 標題 -->
-    <TextView
+    <!-- 標題欄 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="真實AI檢測演示"
-        android:textSize="24sp"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold"
-        android:gravity="center"
+        android:orientation="horizontal"
+        android:background="#333333"
         android:padding="16dp"
-        android:background="#333333" />
+        android:gravity="center_vertical">
+
+        <!-- 回上一頁按鈕 -->
+        <Button
+            android:id="@+id/backButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:text="←"
+            android:textSize="28sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/button_modern_background"
+            android:backgroundTint="@null"
+            android:contentDescription="返回主頁"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="8dp" />
+
+        <!-- 標題 -->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="真實AI檢測演示"
+            android:textSize="24sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginHorizontal="16dp" />
+
+        <!-- 佔位符保持對稱 -->
+        <View
+            android:layout_width="60dp"
+            android:layout_height="60dp" />
+
+    </LinearLayout>
 
     <!-- 相機預覽區域 -->
     <FrameLayout

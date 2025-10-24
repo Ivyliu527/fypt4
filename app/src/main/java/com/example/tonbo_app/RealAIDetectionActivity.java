@@ -37,6 +37,7 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     private OptimizedDetectionOverlayView detectionOverlay;
     private TextView statusText;
     private TextView performanceText;
+    private Button backButton;
     private Button startButton;
     private Button stopButton;
     private Button performanceButton;
@@ -62,11 +63,21 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         detectionOverlay = findViewById(R.id.detectionOverlay);
         statusText = findViewById(R.id.statusText);
         performanceText = findViewById(R.id.performanceText);
+        backButton = findViewById(R.id.backButton);
         startButton = findViewById(R.id.startButton);
         stopButton = findViewById(R.id.stopButton);
         performanceButton = findViewById(R.id.performanceButton);
         
         // 設置按鈕點擊事件
+        backButton.setOnClickListener(v -> {
+            // 停止檢測
+            if (isDetecting) {
+                stopDetection();
+            }
+            // 返回主頁
+            finish();
+        });
+        
         startButton.setOnClickListener(v -> startDetection());
         stopButton.setOnClickListener(v -> stopDetection());
         performanceButton.setOnClickListener(v -> showPerformanceReport());
