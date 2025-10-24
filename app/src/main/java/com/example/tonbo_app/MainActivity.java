@@ -83,8 +83,8 @@ public class MainActivity extends BaseAccessibleActivity {
         recyclerView = findViewById(R.id.recyclerView);
         emergencyButton = findViewById(R.id.emergencyButton);
 
-        // 初始化底部導航欄
-        initBottomNavigation();
+        // 初始化頂部導航欄
+        initTopNavigation();
 
         // 設置緊急按鈕
         emergencyButton.setOnLongClickListener(v -> {
@@ -363,7 +363,7 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
 
-    private void initBottomNavigation() {
+    private void initTopNavigation() {
         // 環境識別按鈕
         LinearLayout navEnvironment = findViewById(R.id.nav_environment);
         navEnvironment.setOnClickListener(v -> {
@@ -394,14 +394,6 @@ public class MainActivity extends BaseAccessibleActivity {
             vibrationManager.vibrateClick();
             announceInfo("出行協助功能");
             startTravelAssistantActivity();
-        });
-
-        // 設定按鈕
-        LinearLayout navSettings = findViewById(R.id.nav_settings);
-        navSettings.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            announceInfo("系統設定");
-            openSettings();
         });
     }
     
