@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <!-- 頂部導航欄 - 包含標題和所有功能按鈕 -->
+    <!-- 頂部標題和按鈕區域 - 固定不動 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -28,138 +28,6 @@
             android:importantForAccessibility="yes"
             android:focusable="true"
             android:minHeight="48dp" />
-
-        <!-- 環境識別按鈕 -->
-        <LinearLayout
-            android:id="@+id/nav_environment"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="8dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="@string/environment_recognition_desc"
-            android:layout_marginEnd="8dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_environment"
-                android:tint="@color/white"
-                android:contentDescription="@string/environment_recognition_desc" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/function_environment"
-                android:textSize="8sp"
-                android:textColor="@color/white"
-                android:layout_marginTop="2dp"
-                android:maxLines="1"
-                android:ellipsize="end" />
-
-        </LinearLayout>
-
-        <!-- 文件助手按鈕 -->
-        <LinearLayout
-            android:id="@+id/nav_document"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="8dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="@string/document_currency_desc"
-            android:layout_marginEnd="8dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_document"
-                android:tint="@color/white"
-                android:contentDescription="@string/document_currency_desc" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/function_document"
-                android:textSize="8sp"
-                android:textColor="@color/white"
-                android:layout_marginTop="2dp"
-                android:maxLines="1"
-                android:ellipsize="end" />
-
-        </LinearLayout>
-
-        <!-- 尋找物品按鈕 -->
-        <LinearLayout
-            android:id="@+id/nav_find"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="8dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="@string/find_items_desc"
-            android:layout_marginEnd="8dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_find"
-                android:tint="@color/white"
-                android:contentDescription="@string/find_items_desc" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/function_find_items"
-                android:textSize="8sp"
-                android:textColor="@color/white"
-                android:layout_marginTop="2dp"
-                android:maxLines="1"
-                android:ellipsize="end" />
-
-        </LinearLayout>
-
-        <!-- 出行協助按鈕 -->
-        <LinearLayout
-            android:id="@+id/nav_travel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="8dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="@string/travel_assistant_desc"
-            android:layout_marginEnd="8dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_travel"
-                android:tint="@color/white"
-                android:contentDescription="@string/travel_assistant_desc" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/function_travel"
-                android:textSize="8sp"
-                android:textColor="@color/white"
-                android:layout_marginTop="2dp"
-                android:maxLines="1"
-                android:ellipsize="end" />
-
-        </LinearLayout>
 
         <!-- 緊急求助設置按鈕 - 方形設計 -->
         <Button
