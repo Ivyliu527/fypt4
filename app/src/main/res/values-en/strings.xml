@@ -205,6 +205,7 @@
     <string name="function_document">Document Assistant</string>
     <string name="function_find_items">Find Items</string>
     <string name="function_live_assistance">Live Assistance</string>
+    <string name="function_travel">Travel Assistant</string>
     
     <!-- Function Descriptions -->
     <string name="desc_environment">Describe surroundings and objects</string>
