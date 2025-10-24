@@ -439,12 +439,13 @@ public class MainActivity extends BaseAccessibleActivity {
 
     protected void startEnvironmentActivity() {
         try {
-            Intent intent = new Intent(MainActivity.this, EnvironmentActivity.class);
+            // 啟動真實AI檢測演示
+            Intent intent = new Intent(MainActivity.this, RealAIDetectionActivity.class);
             intent.putExtra("language", currentLanguage);
-            announceNavigation("正在進入環境識別頁面");
+            announceNavigation("正在進入真實AI檢測頁面");
             startActivity(intent);
         } catch (Exception e) {
-            announceError("環境識別功能暫不可用");
+            announceError("AI檢測功能暫不可用");
         }
     }
 
