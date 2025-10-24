@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background_simple_dark">
+    android:background="@color/background_dark">
 
     <!-- Camera Preview -->
     <androidx.camera.view.PreviewView
@@ -34,26 +34,25 @@
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/background_simple_dark"
+        android:background="#80000000"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:elevation="8dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <Button
             android:id="@+id/backButton"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:background="@drawable/button_high_contrast_selector"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/button_simple_background"
             android:backgroundTint="@null"
             android:contentDescription="@string/back_to_home"
             android:gravity="center"
             android:includeFontPadding="false"
             android:padding="8dp"
             android:text="←"
-            android:textColor="#FFFFFF"
-            android:textSize="36sp"
+            android:textColor="@color/white"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <TextView
@@ -70,16 +69,16 @@
 
         <Button
             android:id="@+id/flashButton"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:background="@drawable/button_high_contrast_selector"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/button_simple_background"
             android:backgroundTint="@null"
             android:contentDescription="@string/flash_button_desc"
             android:gravity="center"
             android:includeFontPadding="false"
             android:padding="8dp"
             android:text="💡"
-            android:textSize="32sp"
+            android:textSize="24sp"
             android:textStyle="bold"
             android:layout_marginEnd="8dp" />
 
@@ -91,7 +90,7 @@
         android:id="@+id/infoContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/background_simple_dark"
+        android:background="@color/background_dark"
         android:orientation="vertical"
         android:padding="20dp"
         app:layout_constraintBottom_toBottomOf="parent">
@@ -125,8 +124,8 @@
             android:layout_width="match_parent"
             android:layout_height="64dp"
             android:layout_marginTop="16dp"
-            android:background="@drawable/button_high_contrast_selector"
-            android:backgroundTint="@null"
+            android:background="@drawable/button_square_background"
+            android:backgroundTint="@color/menu_blue"
             android:contentDescription="@string/start_detection_desc"
             android:text="@string/start_detection"
             android:textColor="@color/white"
