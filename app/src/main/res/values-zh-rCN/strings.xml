@@ -86,7 +86,6 @@
     <string name="function_document">阅读助手</string>
     <string name="function_find_items">寻找物品</string>
     <string name="function_live_assistance">即时协助</string>
-    <string name="function_travel">出行协助</string>
     
     <!-- Find Items Page -->
     <string name="find_items_title">寻找物品</string>
