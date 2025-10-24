@@ -11,73 +11,83 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="20dp"
-        android:paddingBottom="16dp"
+        android:padding="24dp"
+        android:paddingBottom="20dp"
         android:background="#000000">
 
+        <!-- Tonbo標題 - 左側對齊 -->
         <TextView
             android:id="@+id/appTitle"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="@string/app_name"
             android:textColor="#FFFFFF"
-            android:textSize="45sp"
+            android:textSize="42sp"
             android:textStyle="bold"
             android:contentDescription="@string/app_name"
             android:importantForAccessibility="yes"
             android:focusable="true"
-            android:minHeight="48dp" />
+            android:minHeight="48dp"
+            android:layout_marginEnd="24dp" />
 
-        <!-- 緊急求助設置按鈕 - 現代化設計 -->
-        <Button
-            android:id="@+id/emergencySettingsButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:text="🚨"
-            android:textSize="24sp"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/button_emergency_background"
-            android:backgroundTint="@null"
-            android:contentDescription="@string/emergency_settings_desc"
-            android:layout_marginEnd="12dp"
-            android:minHeight="64dp"
-            android:minWidth="64dp"
-            android:elevation="4dp"
-            android:stateListAnimator="@null" />
+        <!-- 按鈕組 - 右側對齊 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <!-- 系統設定按鈕 - 現代化設計 -->
-        <Button
-            android:id="@+id/systemSettingsButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:text="⚙"
-            android:textSize="24sp"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/button_modern_background"
-            android:backgroundTint="@null"
-            android:contentDescription="@string/system_settings_desc"
-            android:layout_marginEnd="12dp"
-            android:minHeight="64dp"
-            android:minWidth="64dp"
-            android:elevation="4dp"
-            android:stateListAnimator="@null" />
+            <!-- 緊急求助設置按鈕 - 現代化設計 -->
+            <Button
+                android:id="@+id/emergencySettingsButton"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:text="🚨"
+                android:textSize="22sp"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/button_emergency_background"
+                android:backgroundTint="@null"
+                android:contentDescription="@string/emergency_settings_desc"
+                android:layout_marginEnd="8dp"
+                android:minHeight="60dp"
+                android:minWidth="60dp"
+                android:elevation="4dp"
+                android:stateListAnimator="@null" />
 
-        <!-- 語言切換按鈕 - 現代化設計 -->
-        <Button
-            android:id="@+id/languageButton"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:text="廣"
-            android:textSize="22sp"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/button_language_background"
-            android:backgroundTint="@null"
-            android:contentDescription="@string/language_button_desc_prefix"
-            android:minHeight="72dp"
-            android:minWidth="72dp"
-            android:elevation="4dp"
-            android:stateListAnimator="@null" />
+            <!-- 系統設定按鈕 - 現代化設計 -->
+            <Button
+                android:id="@+id/systemSettingsButton"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:text="⚙"
+                android:textSize="22sp"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/button_modern_background"
+                android:backgroundTint="@null"
+                android:contentDescription="@string/system_settings_desc"
+                android:layout_marginEnd="8dp"
+                android:minHeight="60dp"
+                android:minWidth="60dp"
+                android:elevation="4dp"
+                android:stateListAnimator="@null" />
+
+            <!-- 語言切換按鈕 - 現代化設計 -->
+            <Button
+                android:id="@+id/languageButton"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:text="廣"
+                android:textSize="20sp"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/button_language_background"
+                android:backgroundTint="@null"
+                android:contentDescription="@string/language_button_desc_prefix"
+                android:minHeight="60dp"
+                android:minWidth="60dp"
+                android:elevation="4dp"
+                android:stateListAnimator="@null" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
