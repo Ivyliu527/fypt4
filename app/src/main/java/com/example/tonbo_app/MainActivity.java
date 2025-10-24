@@ -83,9 +83,6 @@ public class MainActivity extends BaseAccessibleActivity {
         recyclerView = findViewById(R.id.recyclerView);
         emergencyButton = findViewById(R.id.emergencyButton);
 
-        // 初始化頂部導航欄
-        initTopNavigation();
-
         // 設置緊急按鈕
         emergencyButton.setOnLongClickListener(v -> {
             emergencyManager.triggerEmergencyAlert();
@@ -361,40 +358,6 @@ public class MainActivity extends BaseAccessibleActivity {
             String languageDesc = getLanguageDescription(currentLanguage);
             languageButton.setContentDescription(getString(R.string.language_button_desc_prefix) + languageDesc + getString(R.string.language_button_desc_suffix));
         }
-    }
-
-    private void initTopNavigation() {
-        // 環境識別按鈕
-        LinearLayout navEnvironment = findViewById(R.id.nav_environment);
-        navEnvironment.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            announceInfo("環境識別功能");
-            startEnvironmentActivity();
-        });
-
-        // 文件助手按鈕
-        LinearLayout navDocument = findViewById(R.id.nav_document);
-        navDocument.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            announceInfo("文件助手功能");
-            startDocumentCurrencyActivity();
-        });
-
-        // 尋找物品按鈕
-        LinearLayout navFind = findViewById(R.id.nav_find);
-        navFind.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            announceInfo("尋找物品功能");
-            startFindItemsActivity();
-        });
-
-        // 出行協助按鈕
-        LinearLayout navTravel = findViewById(R.id.nav_travel);
-        navTravel.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            announceInfo("出行協助功能");
-            startTravelAssistantActivity();
-        });
     }
     
     private void setupFunctionList() {
