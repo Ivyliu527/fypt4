@@ -4,14 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/function_item_background"
-    android:elevation="3dp"
-    android:padding="18dp"
-    android:layout_marginBottom="12dp"
+    android:background="@drawable/card_background_selector"
+    android:elevation="6dp"
+    android:padding="20dp"
+    android:layout_marginBottom="16dp"
     android:clickable="true"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    android:minHeight="80dp">
+    android:minHeight="90dp"
+    android:stateListAnimator="@null">
 
     <!-- 圖標 - 垂直居中 -->
     <ImageView
