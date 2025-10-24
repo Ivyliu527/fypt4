@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/gradient_background">
+    android:background="@drawable/background_simple_dark">
 
     <!-- 頂部標題和按鈕區域 - 固定不動 -->
     <LinearLayout
@@ -13,7 +13,7 @@
         android:gravity="center_vertical"
         android:padding="20dp"
         android:paddingBottom="16dp"
-        android:background="@drawable/gradient_background"
+        android:background="@drawable/background_simple_dark"
         android:elevation="8dp">
 
         <TextView
@@ -30,54 +30,54 @@
             android:focusable="true"
             android:minHeight="48dp" />
 
-        <!-- 緊急求助設置按鈕 - 現代化設計 -->
+        <!-- 緊急求助設置按鈕 - 高對比度設計 -->
         <Button
             android:id="@+id/emergencySettingsButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:text="🚨"
-            android:textSize="24sp"
+            android:textSize="32sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/button_emergency_background"
+            android:background="@drawable/button_high_contrast_selector"
             android:backgroundTint="@null"
             android:contentDescription="@string/emergency_settings_desc"
             android:layout_marginEnd="12dp"
-            android:minHeight="64dp"
-            android:minWidth="64dp"
-            android:elevation="4dp"
+            android:minHeight="80dp"
+            android:minWidth="80dp"
+            android:elevation="6dp"
             android:stateListAnimator="@null" />
 
-        <!-- 系統設定按鈕 - 現代化設計 -->
+        <!-- 系統設定按鈕 - 高對比度設計 -->
         <Button
             android:id="@+id/systemSettingsButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:text="⚙"
-            android:textSize="24sp"
+            android:textSize="32sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/button_modern_background"
+            android:background="@drawable/button_high_contrast_selector"
             android:backgroundTint="@null"
             android:contentDescription="@string/system_settings_desc"
             android:layout_marginEnd="12dp"
-            android:minHeight="64dp"
-            android:minWidth="64dp"
-            android:elevation="4dp"
+            android:minHeight="80dp"
+            android:minWidth="80dp"
+            android:elevation="6dp"
             android:stateListAnimator="@null" />
 
-        <!-- 語言切換按鈕 - 現代化設計 -->
+        <!-- 語言切換按鈕 - 高對比度設計 -->
         <Button
             android:id="@+id/languageButton"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:text="廣"
-            android:textSize="22sp"
+            android:textSize="28sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/button_language_background"
+            android:background="@drawable/button_high_contrast_selector"
             android:backgroundTint="@null"
             android:contentDescription="@string/language_button_desc_prefix"
-            android:minHeight="72dp"
-            android:minWidth="72dp"
-            android:elevation="4dp"
+            android:minHeight="80dp"
+            android:minWidth="80dp"
+            android:elevation="6dp"
             android:stateListAnimator="@null" />
 
     </LinearLayout>
@@ -123,7 +123,7 @@
         android:id="@+id/emergencyButton"
         android:layout_width="match_parent"
         android:layout_height="90dp"
-        android:background="@drawable/emergency_button_gradient_selector"
+        android:background="@drawable/emergency_button_high_contrast"
         android:gravity="center"
         android:orientation="vertical"
         android:clickable="true"
@@ -156,7 +156,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginTop="24dp"
-        android:background="@drawable/guidance_background_enhanced"
+        android:background="@drawable/background_simple_dark"
         android:padding="16dp">
 
         <TextView
