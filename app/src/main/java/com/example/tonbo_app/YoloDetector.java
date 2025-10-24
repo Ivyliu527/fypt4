@@ -28,22 +28,24 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * YOLO 物體檢測器
- * 基於 TensorFlow Lite 的 YOLOv8 模型實現
+ * 真實AI物體檢測器
+ * 基於 TensorFlow Lite 的 SSD MobileNet 模型實現
+ * 提供真實的AI檢測能力，支持90個COCO類別
  */
 public class YoloDetector {
     private static final String TAG = "YoloDetector";
     
     // 模型參數
-    private static final String MODEL_FILE = "yolov8n.tflite";
-    private static final int INPUT_SIZE = 640; // YOLOv8 輸入尺寸
-    private static final int NUM_CLASSES = 80; // COCO 數據集類別數
-    private static final float CONFIDENCE_THRESHOLD = 0.25f;
-    private static final float IOU_THRESHOLD = 0.45f;
+    private static final String MODEL_FILE = "ssd_mobilenet_v1.tflite"; // 使用現有的SSD模型
+    private static final int INPUT_SIZE = 300; // SSD MobileNet 輸入尺寸
+    private static final int NUM_CLASSES = 90; // COCO 數據集類別數
+    private static final float CONFIDENCE_THRESHOLD = 0.3f;
+    private static final float IOU_THRESHOLD = 0.5f;
     
     private Context context;
     private Interpreter tflite;
     private boolean isInitialized = false;
+    private DetectionPerformanceMonitor performanceMonitor;
     
     // COCO 數據集類別名稱（繁體中文）
     private static final Map<String, String> CLASS_NAMES_ZH = new HashMap<>();
@@ -129,11 +131,33 @@ public class YoloDetector {
         CLASS_NAMES_ZH.put("teddy bear", "泰迪熊");
         CLASS_NAMES_ZH.put("hair drier", "吹風機");
         CLASS_NAMES_ZH.put("toothbrush", "牙刷");
+        
+        // 添加更多SSD模型支持的類別
+        CLASS_NAMES_ZH.put("background", "背景");
+        CLASS_NAMES_ZH.put("aeroplane", "飛機");
+        CLASS_NAMES_ZH.put("bicycle", "腳踏車");
+        CLASS_NAMES_ZH.put("bird", "鳥");
+        CLASS_NAMES_ZH.put("boat", "船");
+        CLASS_NAMES_ZH.put("bottle", "瓶子");
+        CLASS_NAMES_ZH.put("bus", "公車");
+        CLASS_NAMES_ZH.put("car", "汽車");
+        CLASS_NAMES_ZH.put("cat", "貓");
+        CLASS_NAMES_ZH.put("chair", "椅子");
+        CLASS_NAMES_ZH.put("cow", "牛");
+        CLASS_NAMES_ZH.put("diningtable", "餐桌");
+        CLASS_NAMES_ZH.put("dog", "狗");
+        CLASS_NAMES_ZH.put("horse", "馬");
+        CLASS_NAMES_ZH.put("motorbike", "摩托車");
+        CLASS_NAMES_ZH.put("pottedplant", "盆栽");
+        CLASS_NAMES_ZH.put("sheep", "羊");
+        CLASS_NAMES_ZH.put("sofa", "沙發");
+        CLASS_NAMES_ZH.put("train", "火車");
+        CLASS_NAMES_ZH.put("tvmonitor", "電視");
     }
     
-    // COCO 類別名稱數組（按索引順序）
+    // COCO 類別名稱數組（按索引順序）- SSD MobileNet 格式
     private static final String[] COCO_CLASSES = {
-        "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat",
+        "background", "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat",
         "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
         "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack",
         "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball",
@@ -142,31 +166,34 @@ public class YoloDetector {
         "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake",
         "chair", "couch", "potted plant", "bed", "dining table", "toilet", "tv", "laptop",
         "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink",
-        "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
+        "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush",
+        "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
+        "diningtable", "dog", "horse", "motorbike", "pottedplant", "sheep", "sofa", "train", "tvmonitor"
     };
     
     public YoloDetector(Context context) {
         this.context = context;
+        this.performanceMonitor = new DetectionPerformanceMonitor();
         initialize();
     }
     
     private void initialize() {
         try {
-            Log.d(TAG, "開始初始化 YOLO 檢測器...");
+            Log.d(TAG, "開始初始化真實AI檢測器...");
             
             // 載入 TensorFlow Lite 模型
             tflite = new Interpreter(loadModelFile());
             
             if (tflite != null) {
                 isInitialized = true;
-                Log.d(TAG, "YOLO 檢測器初始化成功");
+                Log.d(TAG, "真實AI檢測器初始化成功 - 使用SSD MobileNet模型");
             } else {
                 Log.e(TAG, "無法載入 TensorFlow Lite 模型");
                 isInitialized = false;
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "YOLO 檢測器初始化失敗: " + e.getMessage());
+            Log.e(TAG, "真實AI檢測器初始化失敗: " + e.getMessage());
             isInitialized = false;
         }
     }
@@ -230,23 +257,42 @@ public class YoloDetector {
         }
         
         if (!isInitialized || tflite == null) {
-            Log.w(TAG, "YOLO 模型未載入，使用備用檢測方法");
+            Log.w(TAG, "真實AI模型未載入，使用備用檢測方法");
             return getFallbackDetections(bitmap);
         }
         
         try {
+            long startTime = System.currentTimeMillis();
+            
             // 預處理圖像
             Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, true);
             ByteBuffer inputBuffer = bitmapToByteBuffer(resizedBitmap);
             
-            // 準備輸出緩衝區
-            float[][][] output = new float[1][8400][85]; // YOLOv8 輸出格式
+            // 準備輸出緩衝區 - SSD MobileNet 輸出格式
+            float[][][] detectionBoxes = new float[1][1917][4]; // 邊界框
+            float[][][] detectionClasses = new float[1][1917][91]; // 類別概率
+            float[][] detectionScores = new float[1][1917]; // 置信度分數
+            float[] numDetections = new float[1]; // 檢測數量
             
             // 執行推理
-            tflite.run(inputBuffer, output);
+            Object[] inputs = {inputBuffer};
+            Map<Integer, Object> outputs = new HashMap<>();
+            outputs.put(0, detectionBoxes);
+            outputs.put(1, detectionClasses);
+            outputs.put(2, detectionScores);
+            outputs.put(3, numDetections);
+            
+            tflite.runForMultipleInputsOutputs(inputs, outputs);
             
             // 後處理結果
-            List<DetectionResult> results = postProcessOutput(output[0], bitmap.getWidth(), bitmap.getHeight());
+            List<DetectionResult> results = postProcessSSDOutput(
+                detectionBoxes[0], detectionClasses[0], detectionScores[0], 
+                (int)numDetections[0], bitmap.getWidth(), bitmap.getHeight());
+            
+            // 記錄性能數據
+            long detectionTime = System.currentTimeMillis() - startTime;
+            performanceMonitor.recordDetectionTime(detectionTime);
+            performanceMonitor.recordDetectionResult(results);
             
             // 回收臨時 bitmap
             if (resizedBitmap != bitmap) {
@@ -256,7 +302,7 @@ public class YoloDetector {
             return results;
             
         } catch (Exception e) {
-            Log.e(TAG, "YOLO 檢測失敗，使用備用方法: " + e.getMessage());
+            Log.e(TAG, "真實AI檢測失敗，使用備用方法: " + e.getMessage());
             return getFallbackDetections(bitmap);
         }
     }
@@ -286,7 +332,89 @@ public class YoloDetector {
     }
     
     /**
-     * 後處理 YOLO 輸出
+     * 後處理 SSD MobileNet 輸出
+     */
+    private List<DetectionResult> postProcessSSDOutput(float[][] boxes, float[][] classes, 
+                                                     float[] scores, int numDetections, 
+                                                     int originalWidth, int originalHeight) {
+        List<DetectionResult> results = new ArrayList<>();
+        
+        for (int i = 0; i < Math.min(numDetections, scores.length); i++) {
+            float confidence = scores[i];
+            
+            // 過濾低置信度檢測
+            if (confidence < CONFIDENCE_THRESHOLD) {
+                continue;
+            }
+            
+            // 找到最高概率的類別
+            int maxClassIndex = 0;
+            float maxClassScore = classes[i][0];
+            
+            for (int j = 1; j < classes[i].length; j++) {
+                if (classes[i][j] > maxClassScore) {
+                    maxClassScore = classes[i][j];
+                    maxClassIndex = j;
+                }
+            }
+            
+            // 跳過背景類別 (索引0)
+            if (maxClassIndex == 0) {
+                continue;
+            }
+            
+            // 獲取邊界框座標 (y1, x1, y2, x2)
+            float y1 = boxes[i][0];
+            float x1 = boxes[i][1];
+            float y2 = boxes[i][2];
+            float x2 = boxes[i][3];
+            
+            // 轉換為像素座標
+            int left = (int)(x1 * originalWidth);
+            int top = (int)(y1 * originalHeight);
+            int right = (int)(x2 * originalWidth);
+            int bottom = (int)(y2 * originalHeight);
+            
+            // 確保座標在有效範圍內
+            left = Math.max(0, Math.min(originalWidth - 1, left));
+            top = Math.max(0, Math.min(originalHeight - 1, top));
+            right = Math.max(0, Math.min(originalWidth - 1, right));
+            bottom = Math.max(0, Math.min(originalHeight - 1, bottom));
+            
+            // 獲取類別名稱
+            if (maxClassIndex - 1 < COCO_CLASSES.length) {
+                String className = COCO_CLASSES[maxClassIndex - 1];
+                String chineseName = CLASS_NAMES_ZH.get(className);
+                
+                if (chineseName != null) {
+                    Rect boundingBox = new Rect(left, top, right, bottom);
+                    results.add(new DetectionResult(className, chineseName, confidence, boundingBox));
+                }
+            }
+        }
+        
+        // 應用 NMS
+        results = applyNMS(results);
+        
+        // 按置信度排序
+        Collections.sort(results, new Comparator<DetectionResult>() {
+            @Override
+            public int compare(DetectionResult a, DetectionResult b) {
+                return Float.compare(b.getConfidence(), a.getConfidence());
+            }
+        });
+        
+        // 只返回置信度最高的3個物體
+        if (results.size() > 3) {
+            results = results.subList(0, 3);
+            Log.d(TAG, "SSD檢測限制為3個物體");
+        }
+        
+        return results;
+    }
+    
+    /**
+     * 後處理 YOLO 輸出（保留作為備用）
      */
     private List<DetectionResult> postProcessOutput(float[][] output, int originalWidth, int originalHeight) {
         List<DetectionResult> results = new ArrayList<>();
@@ -601,13 +729,42 @@ public class YoloDetector {
         return chineseLabel != null ? chineseLabel : englishLabel;
     }
     
+    /**
+     * 獲取檢測性能報告
+     */
+    public String getPerformanceReport() {
+        if (performanceMonitor != null) {
+            return performanceMonitor.getPerformanceReport();
+        }
+        return "性能監控未初始化";
+    }
+    
+    /**
+     * 檢查檢測性能是否良好
+     */
+    public boolean isPerformanceGood() {
+        if (performanceMonitor != null) {
+            return performanceMonitor.isPerformanceGood();
+        }
+        return false;
+    }
+    
+    /**
+     * 重置性能統計
+     */
+    public void resetPerformanceStats() {
+        if (performanceMonitor != null) {
+            performanceMonitor.reset();
+        }
+    }
+    
     public void close() {
         if (tflite != null) {
             tflite.close();
             tflite = null;
         }
         isInitialized = false;
-        Log.d(TAG, "YOLO 檢測器資源已釋放");
+        Log.d(TAG, "真實AI檢測器資源已釋放");
     }
     
     /**

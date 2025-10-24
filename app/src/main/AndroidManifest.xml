@@ -96,6 +96,12 @@
             android:name=".LoginActivity"
             android:label="@string/login_title"
             android:exported="false" />
+            
+        <!-- Real AI Detection Activity - 真實AI檢測 -->
+        <activity
+            android:name=".RealAIDetectionActivity"
+            android:label="真實AI檢測"
+            android:exported="false" />
     </application>
 
 </manifest>
