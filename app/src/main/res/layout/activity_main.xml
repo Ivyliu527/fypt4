@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#000000">
+    android:background="@drawable/gradient_background">
 
     <!-- 頂部標題和按鈕區域 - 固定不動 -->
     <LinearLayout
@@ -13,7 +13,8 @@
         android:gravity="center_vertical"
         android:padding="20dp"
         android:paddingBottom="16dp"
-        android:background="#000000">
+        android:background="@drawable/gradient_background"
+        android:elevation="8dp">
 
         <TextView
             android:id="@+id/appTitle"
@@ -122,7 +123,7 @@
         android:id="@+id/emergencyButton"
         android:layout_width="match_parent"
         android:layout_height="90dp"
-        android:background="@drawable/emergency_button_selector"
+        android:background="@drawable/emergency_button_gradient_selector"
         android:gravity="center"
         android:orientation="vertical"
         android:clickable="true"
@@ -155,7 +156,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginTop="24dp"
-        android:background="@drawable/guidance_background"
+        android:background="@drawable/guidance_background_enhanced"
         android:padding="16dp">
 
         <TextView
