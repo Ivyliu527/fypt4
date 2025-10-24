@@ -29,49 +29,55 @@
             android:focusable="true"
             android:minHeight="48dp" />
 
-        <!-- 緊急求助設置按鈕 - 方形設計 -->
+        <!-- 緊急求助設置按鈕 - 現代化設計 -->
         <Button
             android:id="@+id/emergencySettingsButton"
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:text="🚨"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/button_square_background"
+            android:background="@drawable/button_emergency_background"
             android:backgroundTint="@null"
             android:contentDescription="@string/emergency_settings_desc"
             android:layout_marginEnd="12dp"
             android:minHeight="64dp"
-            android:minWidth="64dp" />
+            android:minWidth="64dp"
+            android:elevation="4dp"
+            android:stateListAnimator="@null" />
 
-        <!-- 系統設定按鈕 - 方形設計 -->
+        <!-- 系統設定按鈕 - 現代化設計 -->
         <Button
             android:id="@+id/systemSettingsButton"
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:text="⚙"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/button_square_background"
+            android:background="@drawable/button_modern_background"
             android:backgroundTint="@null"
             android:contentDescription="@string/system_settings_desc"
             android:layout_marginEnd="12dp"
             android:minHeight="64dp"
-            android:minWidth="64dp" />
+            android:minWidth="64dp"
+            android:elevation="4dp"
+            android:stateListAnimator="@null" />
 
-        <!-- 語言切換按鈕 - 方形設計 -->
+        <!-- 語言切換按鈕 - 現代化設計 -->
         <Button
             android:id="@+id/languageButton"
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:text="廣"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/button_square_background"
+            android:background="@drawable/button_language_background"
             android:backgroundTint="@null"
             android:contentDescription="@string/language_button_desc_prefix"
             android:minHeight="72dp"
-            android:minWidth="72dp" />
+            android:minWidth="72dp"
+            android:elevation="4dp"
+            android:stateListAnimator="@null" />
 
     </LinearLayout>
 
