@@ -226,6 +226,13 @@
     <string name="scan_area">Scan Area</string>
     <string name="recognition_result">Recognition Result</string>
     
+    <!-- Bottom Navigation -->
+    <string name="environment_recognition_desc">Environment Recognition</string>
+    <string name="document_currency_desc">Document and Currency Assistant</string>
+    <string name="find_items_desc">Find Items</string>
+    <string name="travel_assistant_desc">Travel Assistant</string>
+    <string name="settings_desc">System Settings</string>
+    
     <!-- Emergency Settings Page -->
     <string name="emergency_settings_title">Emergency Settings</string>
     <string name="emergency_contacts">Emergency Contacts</string>

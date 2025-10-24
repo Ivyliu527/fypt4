@@ -182,4 +182,7 @@
 
     </ScrollView>
 
+    <!-- 底部導航欄 -->
+    <include layout="@layout/bottom_navigation" />
+
 </LinearLayout>

@@ -193,7 +193,9 @@
     <string name="function_environment">Environment Recognition</string>
     <string name="function_document">Document Assistant</string>
     <string name="function_find_items">Find Items</string>
+    <string name="function_travel">Travel Assistant</string>
     <string name="function_live_assistance">Live Assistance</string>
+    <string name="function_settings">System Settings</string>
     
     <!-- Function Descriptions -->
     <string name="desc_environment">Describe surroundings and objects</string>
@@ -214,6 +216,13 @@
     <string name="currency_recognition">Currency Recognition</string>
     <string name="scan_area">Scan Area</string>
     <string name="recognition_result">Recognition Result</string>
+    
+    <!-- Bottom Navigation -->
+    <string name="environment_recognition_desc">Environment Recognition</string>
+    <string name="document_currency_desc">Document and Currency Assistant</string>
+    <string name="find_items_desc">Find Items</string>
+    <string name="travel_assistant_desc">Travel Assistant</string>
+    <string name="settings_desc">System Settings</string>
     
     <!-- Emergency Settings Page -->
     <string name="emergency_settings_title">Emergency Settings</string>
