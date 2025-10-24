@@ -3,23 +3,38 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:background="@color/primary_dark"
-    android:padding="8dp"
-    android:elevation="8dp">
+    android:gravity="center_vertical"
+    android:padding="20dp"
+    android:paddingBottom="16dp"
+    android:background="#000000">
+
+    <TextView
+        android:id="@+id/appTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/app_name"
+        android:textColor="#FFFFFF"
+        android:textSize="45sp"
+        android:textStyle="bold"
+        android:contentDescription="@string/app_name"
+        android:importantForAccessibility="yes"
+        android:focusable="true"
+        android:minHeight="48dp" />
 
     <!-- 環境識別按鈕 -->
     <LinearLayout
         android:id="@+id/nav_environment"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
         android:padding="8dp"
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
-        android:contentDescription="@string/environment_recognition_desc">
+        android:contentDescription="@string/environment_recognition_desc"
+        android:layout_marginEnd="8dp">
 
         <ImageView
             android:layout_width="24dp"
@@ -32,9 +47,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/function_environment"
-            android:textSize="10sp"
+            android:textSize="8sp"
             android:textColor="@color/white"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="2dp"
             android:maxLines="1"
             android:ellipsize="end" />
 
@@ -43,16 +58,16 @@
     <!-- 文件助手按鈕 -->
     <LinearLayout
         android:id="@+id/nav_document"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
         android:padding="8dp"
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
-        android:contentDescription="@string/document_currency_desc">
+        android:contentDescription="@string/document_currency_desc"
+        android:layout_marginEnd="8dp">
 
         <ImageView
             android:layout_width="24dp"
@@ -65,9 +80,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/function_document"
-            android:textSize="10sp"
+            android:textSize="8sp"
             android:textColor="@color/white"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="2dp"
             android:maxLines="1"
             android:ellipsize="end" />
 
@@ -76,16 +91,16 @@
     <!-- 尋找物品按鈕 -->
     <LinearLayout
         android:id="@+id/nav_find"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
         android:padding="8dp"
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
-        android:contentDescription="@string/find_items_desc">
+        android:contentDescription="@string/find_items_desc"
+        android:layout_marginEnd="8dp">
 
         <ImageView
             android:layout_width="24dp"
@@ -98,9 +113,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/function_find_items"
-            android:textSize="10sp"
+            android:textSize="8sp"
             android:textColor="@color/white"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="2dp"
             android:maxLines="1"
             android:ellipsize="end" />
 
@@ -109,16 +124,16 @@
     <!-- 出行協助按鈕 -->
     <LinearLayout
         android:id="@+id/nav_travel"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
         android:padding="8dp"
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
-        android:contentDescription="@string/travel_assistant_desc">
+        android:contentDescription="@string/travel_assistant_desc"
+        android:layout_marginEnd="8dp">
 
         <ImageView
             android:layout_width="24dp"
@@ -131,45 +146,56 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/function_travel"
-            android:textSize="10sp"
+            android:textSize="8sp"
             android:textColor="@color/white"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="2dp"
             android:maxLines="1"
             android:ellipsize="end" />
 
     </LinearLayout>
 
-    <!-- 設定按鈕 -->
-    <LinearLayout
-        android:id="@+id/nav_settings"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="8dp"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:contentDescription="@string/settings_desc">
+    <!-- 緊急求助設置按鈕 - 方形設計 -->
+    <Button
+        android:id="@+id/emergencySettingsButton"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:text="🚨"
+        android:textSize="20sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_square_background"
+        android:backgroundTint="@null"
+        android:contentDescription="@string/emergency_settings_desc"
+        android:layout_marginEnd="12dp"
+        android:minHeight="64dp"
+        android:minWidth="64dp" />
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_settings"
-            android:tint="@color/white"
-            android:contentDescription="@string/settings_desc" />
+    <!-- 系統設定按鈕 - 方形設計 -->
+    <Button
+        android:id="@+id/systemSettingsButton"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:text="⚙"
+        android:textSize="22sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_square_background"
+        android:backgroundTint="@null"
+        android:contentDescription="@string/system_settings_desc"
+        android:layout_marginEnd="12dp"
+        android:minHeight="64dp"
+        android:minWidth="64dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/function_settings"
-            android:textSize="10sp"
-            android:textColor="@color/white"
-            android:layout_marginTop="4dp"
-            android:maxLines="1"
-            android:ellipsize="end" />
-
-    </LinearLayout>
+    <!-- 語言切換按鈕 - 方形設計 -->
+    <Button
+        android:id="@+id/languageButton"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:text="廣"
+        android:textSize="20sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_square_background"
+        android:backgroundTint="@null"
+        android:contentDescription="@string/language_button_desc_prefix"
+        android:minHeight="72dp"
+        android:minWidth="72dp" />
 
 </LinearLayout>
