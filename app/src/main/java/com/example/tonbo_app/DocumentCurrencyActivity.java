@@ -30,8 +30,6 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
     private static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.CAMERA};
 
     private PreviewView cameraPreview;
-    private TextView statusText;
-    private TextView resultText;
     private Button backButton;
     private Button flashButton;
     private Button textModeButton;
@@ -85,8 +83,6 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
 
     private void initViews() {
         cameraPreview = findViewById(R.id.cameraPreview);
-        statusText = findViewById(R.id.statusText);
-        resultText = findViewById(R.id.resultText);
         backButton = findViewById(R.id.backButton);
         flashButton = findViewById(R.id.flashButton);
         textModeButton = findViewById(R.id.textModeButton);
@@ -345,20 +341,20 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
     }
 
     private void clearResults() {
-        resultText.setText(getString(R.string.scan_results_placeholder));
         lastRecognitionResult = "";
         lastOCRResults = null;
         lastCurrencyResults = null;
-        updateStatus(getString(R.string.ready_to_scan));
         announceInfo(getString(R.string.results_cleared));
     }
 
     private void updateStatus(String status) {
-        statusText.setText(status);
+        // 狀態更新現在通過語音播報
+        announceInfo(status);
     }
 
     private void updateResults(String results) {
-        resultText.setText(results);
+        // 結果更新現在通過語音播報
+        announceInfo("掃描完成：" + results);
     }
 
     private void toggleFlash() {
@@ -400,14 +396,10 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
             // 文字模式
             textModeButton.setBackgroundResource(R.drawable.button_modern_background);
             currencyModeButton.setBackgroundResource(R.drawable.button_emergency_background);
-            statusText.setText("準備掃描");
-            resultText.setText("掃描結果將顯示在這裡...");
         } else {
             // 錢幣模式
             textModeButton.setBackgroundResource(R.drawable.button_emergency_background);
             currencyModeButton.setBackgroundResource(R.drawable.button_modern_background);
-            statusText.setText("準備掃描");
-            resultText.setText("掃描結果將顯示在這裡...");
         }
     }
 
