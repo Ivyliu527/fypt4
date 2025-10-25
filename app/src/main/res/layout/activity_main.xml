@@ -149,35 +149,6 @@
             
     </LinearLayout>
 
-    <!-- 操作指引區域 - 更詳細的指引 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/guidance_background"
-        android:padding="16dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/operation_guide_title"
-            android:textColor="#4FC3F7"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"
-            android:contentDescription="@string/operation_guide_title" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/operation_guide_content"
-            android:textColor="#CCCCCC"
-            android:textSize="16sp"
-            android:lineSpacingExtra="4dp"
-            android:contentDescription="@string/operation_guide_content" />
-
-    </LinearLayout>
 
             <!-- 底部間距 -->
             <View
