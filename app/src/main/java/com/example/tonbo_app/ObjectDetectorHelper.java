@@ -24,12 +24,6 @@ import java.util.Set;
  */
 public class ObjectDetectorHelper {
     private static final String TAG = "ObjectDetectorHelper";
-    private static final String MODEL_FILE = "ssd_mobilenet_v1.tflite";
-    private static final String YOLO_MODEL_FILE = "yolov8n.tflite";
-    private static final float SCORE_THRESHOLD = 0.25f;  // 進一步降低閾值，檢測更多潛在物體
-    private static final float HIGH_CONFIDENCE_THRESHOLD = 0.55f;  // 降低高置信度閾值
-    private static final int MAX_RESULTS = 25;  // 增加結果數，檢測更多物體
-    private static final float NMS_THRESHOLD = 0.35f;  // 進一步降低NMS閾值，保留更多檢測結果
     
     // 環境識別相關的物體類別（優先檢測）
     private static final Set<String> ENVIRONMENT_RELEVANT_OBJECTS = new HashSet<>();
@@ -230,13 +224,13 @@ public class ObjectDetectorHelper {
         try {
             ObjectDetector.ObjectDetectorOptions options =
                     ObjectDetector.ObjectDetectorOptions.builder()
-                            .setScoreThreshold(SCORE_THRESHOLD)
-                            .setMaxResults(MAX_RESULTS)
+                            .setScoreThreshold(AppConstants.SCORE_THRESHOLD)
+                            .setMaxResults(AppConstants.MAX_RESULTS)
                             .build();
             
             objectDetector = ObjectDetector.createFromFileAndOptions(
                     context,
-                    MODEL_FILE,
+                    AppConstants.MODEL_FILE,
                     options
             );
             
@@ -405,8 +399,8 @@ public class ObjectDetectorHelper {
         Collections.sort(results, (a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
         
         // 限制結果數量
-        if (results.size() > MAX_RESULTS) {
-            results = results.subList(0, MAX_RESULTS);
+        if (results.size() > AppConstants.MAX_RESULTS) {
+            results = results.subList(0, AppConstants.MAX_RESULTS);
         }
         
         return results;
@@ -422,7 +416,7 @@ public class ObjectDetectorHelper {
             // 檢查是否為環境相關物體
             if (ENVIRONMENT_RELEVANT_OBJECTS.contains(result.getLabel())) {
                 // 額外檢查置信度，確保檢測質量
-                if (result.getConfidence() >= SCORE_THRESHOLD) {
+                if (result.getConfidence() >= AppConstants.SCORE_THRESHOLD) {
                     filtered.add(result);
                     Log.d(TAG, "保留環境相關物體: " + result.getLabelZh() + " (置信度: " + result.getConfidence() + ")");
                 } else {
@@ -514,7 +508,7 @@ public class ObjectDetectorHelper {
             List<YoloDetector.DetectionResult> yoloResults = yoloDetector.detect(bitmap);
             
             for (YoloDetector.DetectionResult yoloResult : yoloResults) {
-                if (yoloResult.getConfidence() >= SCORE_THRESHOLD) {
+                if (yoloResult.getConfidence() >= AppConstants.SCORE_THRESHOLD) {
                     String labelZh = LABEL_MAP_ZH.get(yoloResult.getLabel());
                     if (labelZh == null) {
                         labelZh = yoloResult.getLabel();
@@ -586,7 +580,7 @@ public class ObjectDetectorHelper {
                 float iou = calculateIoU(current.getBoundingBox(), other.getBoundingBox());
                 
                 // 如果IoU超過閾值且是同類物體，抑制置信度較低的檢測
-                if (iou > NMS_THRESHOLD && current.getLabel().equals(other.getLabel())) {
+                if (iou > AppConstants.NMS_THRESHOLD && current.getLabel().equals(other.getLabel())) {
                     if (other.getConfidence() < current.getConfidence()) {
                         suppressed[j] = true;
                     }

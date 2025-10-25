@@ -1,38 +1,47 @@
 package com.example.tonbo_app;
 
 import android.util.Log;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 
 /**
- * 檢測性能監控器
- * 監控AI檢測的性能指標，包括檢測時間、準確率等
+ * 檢測性能監控器 - 優化版本
+ * 使用更高效的數據結構和算法
  */
 public class DetectionPerformanceMonitor {
     private static final String TAG = "DetectionPerformance";
     
-    private List<Long> detectionTimes = new ArrayList<>();
-    private List<Float> confidenceScores = new ArrayList<>();
+    // 使用Deque替代ArrayList，提供更好的性能
+    private final Deque<Long> detectionTimes = new ArrayDeque<>();
+    private final Deque<Float> confidenceScores = new ArrayDeque<>();
+    
     private int totalDetections = 0;
     private int successfulDetections = 0;
+    private long totalDetectionTime = 0;
+    private float totalConfidence = 0f;
     
     /**
-     * 記錄檢測時間
+     * 記錄檢測時間 - 優化版本
      */
     public void recordDetectionTime(long detectionTimeMs) {
-        detectionTimes.add(detectionTimeMs);
+        detectionTimes.offerLast(detectionTimeMs);
+        totalDetectionTime += detectionTimeMs;
         totalDetections++;
         
-        // 保持最近100次檢測的記錄
-        if (detectionTimes.size() > 100) {
-            detectionTimes.remove(0);
+        // 保持最近N次檢測的記錄，移除最舊的
+        if (detectionTimes.size() > AppConstants.MAX_DETECTION_TIME_RECORDS) {
+            Long removed = detectionTimes.pollFirst();
+            if (removed != null) {
+                totalDetectionTime -= removed;
+            }
         }
         
         Log.d(TAG, "檢測時間: " + detectionTimeMs + "ms");
     }
     
     /**
-     * 記錄檢測結果
+     * 記錄檢測結果 - 優化版本
      */
     public void recordDetectionResult(List<YoloDetector.DetectionResult> results) {
         if (results != null && !results.isEmpty()) {
@@ -40,11 +49,16 @@ public class DetectionPerformanceMonitor {
             
             // 記錄置信度分數
             for (YoloDetector.DetectionResult result : results) {
-                confidenceScores.add(result.getConfidence());
+                float confidence = result.getConfidence();
+                confidenceScores.offerLast(confidence);
+                totalConfidence += confidence;
                 
-                // 保持最近200個置信度記錄
-                if (confidenceScores.size() > 200) {
-                    confidenceScores.remove(0);
+                // 保持最近N個置信度記錄
+                if (confidenceScores.size() > AppConstants.MAX_CONFIDENCE_RECORDS) {
+                    Float removed = confidenceScores.pollFirst();
+                    if (removed != null) {
+                        totalConfidence -= removed;
+                    }
                 }
             }
             
@@ -53,92 +67,52 @@ public class DetectionPerformanceMonitor {
     }
     
     /**
-     * 獲取平均檢測時間
+     * 獲取平均檢測時間 - 優化版本
      */
     public float getAverageDetectionTime() {
-        if (detectionTimes.isEmpty()) {
-            return 0f;
-        }
-        
-        long total = 0;
-        for (Long time : detectionTimes) {
-            total += time;
-        }
-        
-        return (float) total / detectionTimes.size();
+        return detectionTimes.isEmpty() ? 0f : (float) totalDetectionTime / detectionTimes.size();
     }
     
     /**
      * 獲取檢測成功率
      */
-    public float getDetectionSuccessRate() {
-        if (totalDetections == 0) {
-            return 0f;
-        }
-        
-        return (float) successfulDetections / totalDetections;
+    public float getSuccessRate() {
+        return totalDetections == 0 ? 0f : (float) successfulDetections / totalDetections * 100f;
     }
     
     /**
-     * 獲取平均置信度
+     * 獲取平均置信度 - 優化版本
      */
     public float getAverageConfidence() {
-        if (confidenceScores.isEmpty()) {
-            return 0f;
-        }
-        
-        float total = 0;
-        for (Float confidence : confidenceScores) {
-            total += confidence;
-        }
-        
-        return total / confidenceScores.size();
+        return confidenceScores.isEmpty() ? 0f : totalConfidence / confidenceScores.size();
     }
     
     /**
      * 獲取性能報告
      */
     public String getPerformanceReport() {
-        StringBuilder report = new StringBuilder();
-        report.append("=== AI檢測性能報告 ===\n");
-        report.append("總檢測次數: ").append(totalDetections).append("\n");
-        report.append("成功檢測次數: ").append(successfulDetections).append("\n");
-        report.append("檢測成功率: ").append(String.format("%.1f%%", getDetectionSuccessRate() * 100)).append("\n");
-        report.append("平均檢測時間: ").append(String.format("%.1f", getAverageDetectionTime())).append("ms\n");
-        report.append("平均置信度: ").append(String.format("%.2f", getAverageConfidence())).append("\n");
-        
-        if (!detectionTimes.isEmpty()) {
-            report.append("最快檢測時間: ").append(getMinDetectionTime()).append("ms\n");
-            report.append("最慢檢測時間: ").append(getMaxDetectionTime()).append("ms\n");
-        }
-        
-        return report.toString();
+        return String.format(
+            "檢測性能報告:\n" +
+            "- 總檢測次數: %d\n" +
+            "- 成功檢測次數: %d\n" +
+            "- 成功率: %.1f%%\n" +
+            "- 平均檢測時間: %.1fms\n" +
+            "- 平均置信度: %.3f",
+            totalDetections,
+            successfulDetections,
+            getSuccessRate(),
+            getAverageDetectionTime(),
+            getAverageConfidence()
+        );
     }
     
     /**
-     * 獲取最快檢測時間
+     * 檢查性能是否良好
      */
-    private long getMinDetectionTime() {
-        long min = Long.MAX_VALUE;
-        for (Long time : detectionTimes) {
-            if (time < min) {
-                min = time;
-            }
-        }
-        return min == Long.MAX_VALUE ? 0 : min;
-    }
-    
-    /**
-     * 獲取最慢檢測時間
-     */
-    private long getMaxDetectionTime() {
-        long max = 0;
-        for (Long time : detectionTimes) {
-            if (time > max) {
-                max = time;
-            }
-        }
-        return max;
+    public boolean isPerformanceGood() {
+        return getSuccessRate() > 70f && 
+               getAverageDetectionTime() < 500f && 
+               getAverageConfidence() > 0.5f;
     }
     
     /**
@@ -149,21 +123,8 @@ public class DetectionPerformanceMonitor {
         confidenceScores.clear();
         totalDetections = 0;
         successfulDetections = 0;
-        Log.d(TAG, "性能監控數據已重置");
-    }
-    
-    /**
-     * 檢查性能是否良好
-     */
-    public boolean isPerformanceGood() {
-        float avgTime = getAverageDetectionTime();
-        float successRate = getDetectionSuccessRate();
-        float avgConfidence = getAverageConfidence();
-        
-        // 性能良好的標準：
-        // 1. 平均檢測時間 < 500ms
-        // 2. 檢測成功率 > 80%
-        // 3. 平均置信度 > 0.6
-        return avgTime < 500 && successRate > 0.8f && avgConfidence > 0.6f;
+        totalDetectionTime = 0;
+        totalConfidence = 0f;
+        Log.d(TAG, "性能統計已重置");
     }
 }
