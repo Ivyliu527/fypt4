@@ -72,7 +72,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
             vibrationManager.vibrateClick();
             toggleListening();
         });
-
+        
         // 返回按鈕
         Button backButton = findViewById(R.id.backButton);
         if (backButton != null) {
@@ -82,7 +82,77 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
             });
         }
         
+        // 根據當前語言更新界面文字
+        updateLanguageUI();
+        
         updateUI(false);
+    }
+    
+    /**
+     * 更新語言UI
+     */
+    private void updateLanguageUI() {
+        if (statusText != null) {
+            statusText.setText(getLocalizedString("listening_status"));
+        }
+        
+        if (hintText != null) {
+            hintText.setText(getLocalizedString("commands_list"));
+        }
+    }
+    
+    /**
+     * 根據當前語言獲取本地化字符串
+     */
+    private String getLocalizedString(String key) {
+        String currentLang = LocaleManager.getInstance(this).getCurrentLanguage();
+        
+        switch (key) {
+            case "listening_status":
+                if ("english".equals(currentLang)) {
+                    return "Click to Start";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "点击开始";
+                } else {
+                    return "點擊開始";
+                }
+            case "listening_active":
+                if ("english".equals(currentLang)) {
+                    return "Listening...";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "正在监听...";
+                } else {
+                    return "正在監聽...";
+                }
+            case "commands_list":
+                if ("english".equals(currentLang)) {
+                    return "• Environment Recognition: Look around, Environment Recognition\n" +
+                           "• Document Assistant: Read document, Scan document\n" +
+                           "• Find Items: Find things, Find items\n" +
+                           "• Emergency Assistance: Help, Emergency Assistance\n" +
+                           "• System Settings: Settings, Open settings\n" +
+                           "• Language Switch: Change language, Switch language\n" +
+                           "• Return to Home: Home, Return to home";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "• 环境识别：看看周围、环境识别\n" +
+                           "• 阅读助手：读文件、扫描文件\n" +
+                           "• 寻找物品：找东西、寻找物品\n" +
+                           "• 紧急求助：救命、紧急求助\n" +
+                           "• 系统设置：设置、打开设置\n" +
+                           "• 语言切换：转换语言、切换语言\n" +
+                           "• 返回主页：主页、返回主页";
+                } else {
+                    return "• 環境識別：睇下周圍、環境識別\n" +
+                           "• 閱讀助手：讀文件、掃描文件\n" +
+                           "• 尋找物品：搵嘢、尋找物品\n" +
+                           "• 緊急求助：救命、緊急求助\n" +
+                           "• 系統設定：設定、打開設定\n" +
+                           "• 語言切換：轉語言、切換語言\n" +
+                           "• 返回主頁：主頁、返回主頁";
+                }
+            default:
+                return getString(R.string.app_name);
+        }
     }
     
     private void initVoiceCommandManager() {
@@ -185,13 +255,13 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         isListening = listening;
         if (listening) {
             listenButton.setText("⏸️");
-            listenButton.setContentDescription(getString(R.string.listening_active));
-            statusText.setText(getString(R.string.listening_active));
+            listenButton.setContentDescription(getLocalizedString("listening_active"));
+            statusText.setText(getLocalizedString("listening_active"));
             statusText.setTextColor(getResources().getColor(android.R.color.holo_green_light));
         } else {
             listenButton.setText("🎤");
-            listenButton.setContentDescription(getString(R.string.listening_status));
-            statusText.setText(getString(R.string.listening_status));
+            listenButton.setContentDescription(getLocalizedString("listening_status"));
+            statusText.setText(getLocalizedString("listening_status"));
             statusText.setTextColor(getResources().getColor(android.R.color.white));
         }
     }
