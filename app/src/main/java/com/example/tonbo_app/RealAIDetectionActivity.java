@@ -35,7 +35,6 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 1001;
     
     private PreviewView previewView;
-    private OptimizedDetectionOverlayView detectionOverlay;
     private View statusIndicator;
     private Button backButton;
     private Button startButton;
@@ -74,7 +73,6 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     
     private void initViews() {
         previewView = findViewById(R.id.previewView);
-        detectionOverlay = findViewById(R.id.detectionOverlay);
         statusIndicator = findViewById(R.id.statusIndicator);
         backButton = findViewById(R.id.backButton);
         startButton = findViewById(R.id.startButton);
@@ -202,11 +200,9 @@ public class RealAIDetectionActivity extends AppCompatActivity {
             // 在主線程更新UI
             runOnUiThread(() -> {
                 if (results != null && !results.isEmpty()) {
-                    detectionOverlay.setDetectionResultsWithRelativeCoords(results);
                     updateStatusIndicator("scanning");
                     announceDetectionResults(results);
                 } else {
-                    detectionOverlay.clearDetectionResults();
                     updateStatusIndicator("scanning");
                 }
             });
@@ -237,9 +233,6 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         startButton.setEnabled(true);
         stopButton.setEnabled(false);
         updateStatusIndicator("ready");
-        
-        // 清除檢測結果
-        detectionOverlay.clearDetectionResults();
         
         Toast.makeText(this, "環境識別已停止", Toast.LENGTH_SHORT).show();
     }
