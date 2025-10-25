@@ -56,6 +56,7 @@ public class FindItemsActivity extends BaseAccessibleActivity {
     private TextView statusText;
     private LinearLayout itemsListLayout;
     private TextView itemsListTitle;
+    private TextView pageTitle;
 
     // 相機相關
     private ImageCapture imageCapture;
@@ -95,6 +96,7 @@ public class FindItemsActivity extends BaseAccessibleActivity {
         statusText = findViewById(R.id.status_text);
         itemsListLayout = findViewById(R.id.items_list_layout);
         itemsListTitle = findViewById(R.id.items_list_title);
+        pageTitle = findViewById(R.id.page_title);
 
         // 設置按鈕點擊事件
         backButton.setOnClickListener(v -> {
@@ -108,8 +110,98 @@ public class FindItemsActivity extends BaseAccessibleActivity {
 
         // 設置內容描述
         setupAccessibility();
+        
+        // 根據當前語言更新界面文字
+        updateLanguageUI();
     }
-
+    
+    /**
+     * 更新語言UI
+     */
+    private void updateLanguageUI() {
+        if (pageTitle != null) {
+            pageTitle.setText(getLocalizedString("find_items_title"));
+        }
+        
+        if (captureButton != null) {
+            captureButton.setText(getLocalizedString("capture_photo"));
+        }
+        
+        if (markItemButton != null) {
+            markItemButton.setText(getLocalizedString("mark_item"));
+        }
+        
+        if (findItemButton != null) {
+            findItemButton.setText(getLocalizedString("find_items"));
+        }
+        
+        if (statusText != null) {
+            statusText.setText(getLocalizedString("camera_ready"));
+        }
+        
+        if (itemNameInput != null) {
+            itemNameInput.setHint(getLocalizedString("enter_item_name"));
+        }
+    }
+    
+    /**
+     * 根據當前語言獲取本地化字符串
+     */
+    private String getLocalizedString(String key) {
+        switch (key) {
+            case "find_items_title":
+                if ("english".equals(currentLanguage)) {
+                    return "Find Items";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "查找物品";
+                } else {
+                    return "尋找物品";
+                }
+            case "capture_photo":
+                if ("english".equals(currentLanguage)) {
+                    return "Capture Photo";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "拍照";
+                } else {
+                    return "拍照";
+                }
+            case "mark_item":
+                if ("english".equals(currentLanguage)) {
+                    return "Mark Item";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "标记物品";
+                } else {
+                    return "標記物品";
+                }
+            case "find_items":
+                if ("english".equals(currentLanguage)) {
+                    return "Find Items";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "查找物品";
+                } else {
+                    return "尋找物品";
+                }
+            case "camera_ready":
+                if ("english".equals(currentLanguage)) {
+                    return "Camera ready";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "相机就绪";
+                } else {
+                    return "相機就緒";
+                }
+            case "enter_item_name":
+                if ("english".equals(currentLanguage)) {
+                    return "Enter item name";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "输入物品名称";
+                } else {
+                    return "輸入物品名稱";
+                }
+            default:
+                return "";
+        }
+    }
+    
     private void setupAccessibility() {
         cameraPreview.setContentDescription(getString(R.string.camera_preview_desc));
         capturedImage.setContentDescription(getString(R.string.captured_image_desc));
