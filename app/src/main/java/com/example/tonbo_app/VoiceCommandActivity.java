@@ -28,6 +28,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     private TextView statusText;
     private TextView commandText;
     private TextView hintText;
+    private TextView pageTitle;
+    private TextView availableCommandsTitle;
     
     private boolean isListening = false;
     
@@ -66,6 +68,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         statusText = findViewById(R.id.statusText);
         commandText = findViewById(R.id.commandText);
         hintText = findViewById(R.id.hintText);
+        pageTitle = findViewById(R.id.pageTitle);
+        availableCommandsTitle = findViewById(R.id.availableCommandsTitle);
         
         // 設置監聽按鈕
         listenButton.setOnClickListener(v -> {
@@ -92,8 +96,16 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
      * 更新語言UI
      */
     private void updateLanguageUI() {
+        if (pageTitle != null) {
+            pageTitle.setText(getLocalizedString("voice_command_title"));
+        }
+        
         if (statusText != null) {
             statusText.setText(getLocalizedString("listening_status"));
+        }
+        
+        if (availableCommandsTitle != null) {
+            availableCommandsTitle.setText(getLocalizedString("available_commands"));
         }
         
         if (hintText != null) {
@@ -108,6 +120,14 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         String currentLang = LocaleManager.getInstance(this).getCurrentLanguage();
         
         switch (key) {
+            case "voice_command_title":
+                if ("english".equals(currentLang)) {
+                    return "Voice Command";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "语音命令";
+                } else {
+                    return "語音命令";
+                }
             case "listening_status":
                 if ("english".equals(currentLang)) {
                     return "Click to Start";
@@ -123,6 +143,14 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                     return "正在监听...";
                 } else {
                     return "正在監聽...";
+                }
+            case "available_commands":
+                if ("english".equals(currentLang)) {
+                    return "Available Commands";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "可用指令";
+                } else {
+                    return "可用指令";
                 }
             case "commands_list":
                 if ("english".equals(currentLang)) {
