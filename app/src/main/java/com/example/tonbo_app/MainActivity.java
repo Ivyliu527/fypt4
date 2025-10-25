@@ -137,18 +137,7 @@ public class MainActivity extends BaseAccessibleActivity {
 
 
     public void toggleLanguage() {
-        switch (currentLanguage) {
-            case "cantonese":
-                currentLanguage = "english";
-                break;
-            case "english":
-                currentLanguage = "mandarin";
-                break;
-            case "mandarin":
-            default:
-                currentLanguage = "cantonese";
-                break;
-        }
+        currentLanguage = getNextLanguage(currentLanguage);
         
         // 保存語言設置
         localeManager.setLanguage(this, currentLanguage);
@@ -161,6 +150,21 @@ public class MainActivity extends BaseAccessibleActivity {
         
         // 重新創建Activity以應用新語言
         recreate();
+    }
+    
+    /**
+     * 獲取下一個語言
+     */
+    private String getNextLanguage(String currentLang) {
+        switch (currentLang) {
+            case AppConstants.LANGUAGE_CANTONESE:
+                return AppConstants.LANGUAGE_ENGLISH;
+            case AppConstants.LANGUAGE_ENGLISH:
+                return AppConstants.LANGUAGE_MANDARIN;
+            case AppConstants.LANGUAGE_MANDARIN:
+            default:
+                return AppConstants.LANGUAGE_CANTONESE;
+        }
     }
     
     /**
@@ -286,40 +290,42 @@ public class MainActivity extends BaseAccessibleActivity {
     }
     
     private void announceLanguageChange(String language) {
-        // 立即播放語言切換確認語音，使用當前TTS語言
         String currentTTSLanguage = ttsManager.getCurrentLanguage();
+        boolean isEnglishTTS = AppConstants.LANGUAGE_ENGLISH.equals(currentTTSLanguage);
         
+        String[] messages = getLanguageChangeMessages(language);
+        String cantoneseText = messages[0];
+        String englishText = isEnglishTTS ? messages[1] : null;
+        
+        ttsManager.speak(cantoneseText, englishText, true);
+    }
+    
+    /**
+     * 獲取語言切換消息
+     */
+    private String[] getLanguageChangeMessages(String language) {
         switch (language) {
-            case "cantonese":
-                if ("english".equals(currentTTSLanguage)) {
-                    ttsManager.speak("已切換到廣東話", "Switched to Cantonese", true);
-                } else {
-                    ttsManager.speak("已切換到廣東話", null, true);
-                }
-                break;
-            case "english":
-                if ("english".equals(currentTTSLanguage)) {
-                    ttsManager.speak("已切換到英文", "Switched to English", true);
-                } else {
-                    ttsManager.speak("已切換到英文", null, true);
-                }
-                break;
-            case "mandarin":
-                if ("english".equals(currentTTSLanguage)) {
-                    ttsManager.speak("已切換到普通話", "Switched to Mandarin", true);
-                } else {
-                    ttsManager.speak("已切換到普通話", null, true);
-                }
-                break;
+            case AppConstants.LANGUAGE_CANTONESE:
+                return new String[]{"已切換到廣東話", "Switched to Cantonese"};
+            case AppConstants.LANGUAGE_ENGLISH:
+                return new String[]{"已切換到英文", "Switched to English"};
+            case AppConstants.LANGUAGE_MANDARIN:
+                return new String[]{"已切換到普通話", "Switched to Mandarin"};
+            default:
+                return new String[]{"語言切換完成", "Language switched"};
         }
     }
     
     private String getLanguageDescription(String language) {
         switch (language) {
-            case "cantonese": return getString(R.string.language_cantonese_desc);
-            case "english": return getString(R.string.language_english_desc);
-            case "mandarin": return getString(R.string.language_mandarin_desc);
-            default: return getString(R.string.language_english_desc);
+            case AppConstants.LANGUAGE_CANTONESE: 
+                return getString(R.string.language_cantonese_desc);
+            case AppConstants.LANGUAGE_ENGLISH: 
+                return getString(R.string.language_english_desc);
+            case AppConstants.LANGUAGE_MANDARIN: 
+                return getString(R.string.language_mandarin_desc);
+            default: 
+                return getString(R.string.language_english_desc);
         }
     }
 
@@ -341,10 +347,14 @@ public class MainActivity extends BaseAccessibleActivity {
     
     private String getLanguageButtonText(String language) {
         switch (language) {
-            case "cantonese": return getString(R.string.language_button_cantonese);
-            case "english": return getString(R.string.language_button_english);
-            case "mandarin": return getString(R.string.language_button_mandarin);
-            default: return getString(R.string.language_button_cantonese);
+            case AppConstants.LANGUAGE_CANTONESE: 
+                return getString(R.string.language_button_cantonese);
+            case AppConstants.LANGUAGE_ENGLISH: 
+                return getString(R.string.language_button_english);
+            case AppConstants.LANGUAGE_MANDARIN: 
+                return getString(R.string.language_button_mandarin);
+            default: 
+                return getString(R.string.language_button_cantonese);
         }
     }
     

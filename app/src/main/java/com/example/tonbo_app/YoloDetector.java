@@ -35,12 +35,7 @@ import java.util.Map;
 public class YoloDetector {
     private static final String TAG = "YoloDetector";
     
-    // 模型參數
-    private static final String MODEL_FILE = "ssd_mobilenet_v1.tflite"; // 使用現有的SSD模型
-    private static final int INPUT_SIZE = 300; // SSD MobileNet 輸入尺寸
-    private static final int NUM_CLASSES = 90; // COCO 數據集類別數
-    private static final float CONFIDENCE_THRESHOLD = 0.3f;
-    private static final float IOU_THRESHOLD = 0.5f;
+    // 模型參數 - 使用AppConstants
     
     private Context context;
     private Interpreter tflite;
@@ -216,7 +211,7 @@ public class YoloDetector {
      */
     private MappedByteBuffer loadModelFromAssets() throws IOException {
         android.content.res.AssetFileDescriptor fileDescriptor = 
-            context.getAssets().openFd(MODEL_FILE);
+            context.getAssets().openFd(AppConstants.MODEL_FILE);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();
         long startOffset = fileDescriptor.getStartOffset();
@@ -265,7 +260,7 @@ public class YoloDetector {
             long startTime = System.currentTimeMillis();
             
             // 預處理圖像
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, true);
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, AppConstants.INPUT_SIZE, AppConstants.INPUT_SIZE, true);
             ByteBuffer inputBuffer = bitmapToByteBuffer(resizedBitmap);
             
             // 準備輸出緩衝區 - SSD MobileNet 輸出格式
@@ -311,11 +306,11 @@ public class YoloDetector {
      * 將 Bitmap 轉換為 ByteBuffer
      */
     private ByteBuffer bitmapToByteBuffer(Bitmap bitmap) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * INPUT_SIZE * INPUT_SIZE * 3);
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * AppConstants.INPUT_SIZE * AppConstants.INPUT_SIZE * 3);
         byteBuffer.order(ByteOrder.nativeOrder());
         
-        int[] pixels = new int[INPUT_SIZE * INPUT_SIZE];
-        bitmap.getPixels(pixels, 0, INPUT_SIZE, 0, 0, INPUT_SIZE, INPUT_SIZE);
+        int[] pixels = new int[AppConstants.INPUT_SIZE * AppConstants.INPUT_SIZE];
+        bitmap.getPixels(pixels, 0, AppConstants.INPUT_SIZE, 0, 0, AppConstants.INPUT_SIZE, AppConstants.INPUT_SIZE);
         
         for (int pixel : pixels) {
             // 提取 RGB 值並正規化到 [0, 1]
@@ -343,7 +338,7 @@ public class YoloDetector {
             float confidence = scores[i];
             
             // 過濾低置信度檢測
-            if (confidence < CONFIDENCE_THRESHOLD) {
+            if (confidence < AppConstants.CONFIDENCE_THRESHOLD) {
                 continue;
             }
             
@@ -443,15 +438,15 @@ public class YoloDetector {
             float confidence = maxConfidence;
             
             // 過濾低置信度檢測
-            if (confidence < CONFIDENCE_THRESHOLD) {
+            if (confidence < AppConstants.CONFIDENCE_THRESHOLD) {
                 continue;
             }
             
             // 轉換為邊界框座標
-            float left = (x_center - width / 2) / INPUT_SIZE;
-            float top = (y_center - height / 2) / INPUT_SIZE;
-            float right = (x_center + width / 2) / INPUT_SIZE;
-            float bottom = (y_center + height / 2) / INPUT_SIZE;
+            float left = (x_center - width / 2) / AppConstants.INPUT_SIZE;
+            float top = (y_center - height / 2) / AppConstants.INPUT_SIZE;
+            float right = (x_center + width / 2) / AppConstants.INPUT_SIZE;
+            float bottom = (y_center + height / 2) / AppConstants.INPUT_SIZE;
             
             // 確保座標在有效範圍內
             left = Math.max(0, Math.min(1, left));
@@ -507,7 +502,7 @@ public class YoloDetector {
             for (DetectionResult existing : filtered) {
                 if (detection.getLabel().equals(existing.getLabel())) {
                     float iou = calculateIoU(detection.getBoundingBox(), existing.getBoundingBox());
-                    if (iou > IOU_THRESHOLD) {
+                    if (iou > AppConstants.IOU_THRESHOLD) {
                         shouldKeep = false;
                         break;
                     }
