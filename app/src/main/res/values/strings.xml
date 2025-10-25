@@ -25,6 +25,15 @@
     <string name="language_english_desc">English</string>
     <string name="language_mandarin_desc">Mandarin</string>
     
+    <!-- Voice Command -->
+    <string name="voice_command">Voice Command</string>
+    <string name="voice_command_desc">Voice command button, tap to start voice recognition</string>
+    <string name="voice_command_help">Voice command help: You can say environment recognition, document assistant, find items, emergency help, system settings, language switch and other commands</string>
+    <string name="voice_recognition_starting">Starting voice recognition</string>
+    <string name="voice_recognition_listening">Listening...</string>
+    <string name="voice_recognition_error">Voice recognition error</string>
+    <string name="voice_command_not_recognized">Command not recognized, please say a valid command</string>
+    
     <!-- Find Items Page -->
     <string name="find_items_title">Find Items</string>
     <string name="find_items_title_desc">Find Items page title</string>
