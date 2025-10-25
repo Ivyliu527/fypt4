@@ -30,7 +30,8 @@ public class MainActivity extends BaseAccessibleActivity {
         emergencyManager = EmergencyManager.getInstance(this);
         
         // 初始化語音命令管理器
-        voiceCommandManager = new VoiceCommandManager(this);
+        voiceCommandManager = VoiceCommandManager.getInstance(this);
+        voiceCommandManager.setLanguage(currentLanguage);
         
         // 確保currentLanguage正確初始化
         if (currentLanguage == null) {
