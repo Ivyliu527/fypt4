@@ -407,6 +407,11 @@ cd Tonbo_App/Tonbo_App/Tonbo_App
 
 本項目採用 MIT 授權，詳細信息請查看 [LICENSE](LICENSE) 文件。
 
+## 👥 Contributors
+
+- **Charlieppy2** - 主要開發者
+- **Ricaryar** - 協作開發者
+
 ## 📞 聯繫方式
 
 - **項目維護者**: Charlie
