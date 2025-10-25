@@ -412,8 +412,6 @@ cd Tonbo_App/Tonbo_App/Tonbo_App
 - **Charlieppy2** (charlie.ppy2@gmail.com) - 主要開發者
 - **Ricaryar** (lxiaojing931@gmail.com) - 協作開發者
 
-詳細貢獻者信息請查看 [CONTRIBUTORS.md](CONTRIBUTORS.md)
-
 ## 📞 聯繫方式
 
 - **項目維護者**: Charlie
