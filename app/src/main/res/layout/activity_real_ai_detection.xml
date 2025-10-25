@@ -78,16 +78,6 @@
             android:padding="24dp"
             android:gravity="center">
 
-            <!-- 狀態標題 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="環境識別助手"
-                android:textColor="#FFFFFF"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp" />
-
             <!-- 檢測狀態 -->
             <TextView
                 android:id="@+id/statusText"
