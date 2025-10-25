@@ -1,6 +1,7 @@
 package com.example.tonbo_app;
 
 import android.Manifest;
+import android.graphics.Rect;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -36,9 +37,13 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     private PreviewView previewView;
     private OptimizedDetectionOverlayView detectionOverlay;
     private TextView statusText;
+    private TextView detectionResultsText;
     private Button backButton;
     private Button startButton;
     private Button stopButton;
+    
+    private TTSManager ttsManager;
+    private String currentLanguage = "cantonese";
     
     private ProcessCameraProvider cameraProvider;
     private ImageAnalysis imageAnalysis;
@@ -51,15 +56,28 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_real_ai_detection);
         
+        // 獲取語言設置
+        if (getIntent() != null && getIntent().hasExtra("language")) {
+            currentLanguage = getIntent().getStringExtra("language");
+        }
+        
+        // 初始化TTS
+        ttsManager = TTSManager.getInstance(this);
+        ttsManager.changeLanguage(currentLanguage);
+        
         initViews();
         initDetector();
         checkCameraPermission();
+        
+        // 播報頁面標題
+        announcePageTitle();
     }
     
     private void initViews() {
         previewView = findViewById(R.id.previewView);
         detectionOverlay = findViewById(R.id.detectionOverlay);
         statusText = findViewById(R.id.statusText);
+        detectionResultsText = findViewById(R.id.detectionResultsText);
         backButton = findViewById(R.id.backButton);
         startButton = findViewById(R.id.startButton);
         stopButton = findViewById(R.id.stopButton);
@@ -188,9 +206,12 @@ public class RealAIDetectionActivity extends AppCompatActivity {
                 if (results != null && !results.isEmpty()) {
                     detectionOverlay.setDetectionResultsWithRelativeCoords(results);
                     updateStatus("識別到 " + results.size() + " 個物體，正在分析環境");
+                    updateDetectionResults(results);
+                    announceDetectionResults(results);
                 } else {
                     detectionOverlay.clearDetectionResults();
                     updateStatus("正在掃描環境，請稍候");
+                    detectionResultsText.setText("正在掃描環境，請稍候...");
                 }
             });
             
@@ -231,6 +252,80 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     private void updateStatus(String status) {
         statusText.setText(status);
         Log.d(TAG, "狀態更新: " + status);
+    }
+    
+    private void updateDetectionResults(List<YoloDetector.DetectionResult> results) {
+        StringBuilder resultText = new StringBuilder();
+        resultText.append("檢測到的物體：\n\n");
+        
+        for (int i = 0; i < results.size(); i++) {
+            YoloDetector.DetectionResult result = results.get(i);
+            resultText.append((i + 1)).append(". ").append(result.getLabelZh())
+                     .append(" (信心度: ").append(String.format("%.1f", result.getConfidence() * 100)).append("%)\n");
+            
+            // 添加位置信息
+            String position = getPositionDescription(result.getBoundingBox());
+            resultText.append("   位置: ").append(position).append("\n\n");
+        }
+        
+        detectionResultsText.setText(resultText.toString());
+    }
+    
+    private void announceDetectionResults(List<YoloDetector.DetectionResult> results) {
+        if (results.isEmpty()) return;
+        
+        StringBuilder announcement = new StringBuilder();
+        announcement.append("檢測到 ").append(results.size()).append(" 個物體：");
+        
+        for (int i = 0; i < Math.min(results.size(), 5); i++) { // 最多播報5個物體
+            YoloDetector.DetectionResult result = results.get(i);
+            String position = getPositionDescription(result.getBoundingBox());
+            announcement.append(" ").append(result.getLabelZh())
+                      .append("在").append(position);
+            
+            if (i < Math.min(results.size(), 5) - 1) {
+                announcement.append("，");
+            }
+        }
+        
+        if (results.size() > 5) {
+            announcement.append("等").append(results.size()).append("個物體");
+        }
+        
+        ttsManager.speak(announcement.toString(), announcement.toString(), false);
+    }
+    
+    private String getPositionDescription(Rect boundingBox) {
+        if (boundingBox == null) {
+            return "未知位置";
+        }
+        
+        // 假設畫面大小為標準比例，計算相對位置
+        float centerX = (boundingBox.left + boundingBox.right) / 2.0f;
+        float centerY = (boundingBox.top + boundingBox.bottom) / 2.0f;
+        
+        // 假設畫面寬度為1000，高度為1500（可以根據實際情況調整）
+        float relativeX = centerX / 1000.0f;
+        float relativeY = centerY / 1500.0f;
+        
+        String horizontal = relativeX < 0.33f ? "左側" : (relativeX > 0.66f ? "右側" : "中間");
+        String vertical = relativeY < 0.33f ? "上方" : (relativeY > 0.66f ? "下方" : "中間");
+        
+        if (horizontal.equals("中間") && vertical.equals("中間")) {
+            return "正中央";
+        } else if (horizontal.equals("中間")) {
+            return vertical;
+        } else if (vertical.equals("中間")) {
+            return horizontal;
+        } else {
+            return horizontal + vertical;
+        }
+    }
+    
+    private void announcePageTitle() {
+        String cantoneseText = "環境識別助手。這個功能可以幫助你識別前方的物體。點擊開始識別按鈕開始掃描環境。";
+        String englishText = "Environment Recognition Assistant. This feature can help you identify objects in front of you. Tap the start recognition button to begin scanning the environment.";
+        ttsManager.speak(cantoneseText, englishText, true);
     }
     
     @Override

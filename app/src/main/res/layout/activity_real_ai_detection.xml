@@ -69,32 +69,64 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <!-- 檢測狀態指示器 -->
+        <!-- 全畫面檢測狀態覆蓋層 -->
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|start"
-            android:layout_margin="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:orientation="vertical"
-            android:background="#80000000"
-            android:padding="12dp">
+            android:background="#CC000000"
+            android:padding="24dp"
+            android:gravity="center">
 
+            <!-- 狀態標題 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="環境識別狀態"
+                android:text="環境識別助手"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp" />
 
+            <!-- 檢測狀態 -->
             <TextView
                 android:id="@+id/statusText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="準備就緒"
                 android:textColor="#00FF00"
-                android:textSize="12sp"
-                android:layout_marginTop="4dp" />
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="24dp" />
+
+            <!-- 檢測結果顯示 -->
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="#80000000"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/detectionResultsText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="等待檢測結果..."
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:lineSpacingExtra="4dp"
+                    android:gravity="center" />
+
+            </ScrollView>
+
+            <!-- 操作提示 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="點擊下方按鈕開始環境識別"
+                android:textColor="#CCCCCC"
+                android:textSize="14sp"
+                android:layout_marginTop="16dp" />
 
         </LinearLayout>
 
