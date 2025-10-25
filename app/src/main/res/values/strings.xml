@@ -396,10 +396,13 @@
     <string name="high_precision_enabled">高精度模式已啟用，檢測更頻繁</string>
     <string name="high_precision_disabled">高精度模式已關閉，節省電量</string>
     
-    <!-- 權限相關 -->
-    <string name="microphone_permission_granted">Microphone permission granted, voice commands enabled</string>
-    <string name="microphone_permission_denied">Microphone permission denied, voice commands will be unavailable</string>
-    <string name="microphone_permission_required">Microphone permission required for voice commands</string>
-    <string name="microphone_permission_guidance">To enable voice commands, go to Settings > Apps > Tonbo App > Permissions > Microphone and enable it</string>
+    <!-- 即時協助相關 -->
+    <string name="instant_assistance_title">即時協助</string>
+    <string name="instant_assistance_desc">一鍵呼叫志工獲得即時協助</string>
+    <string name="ready_to_assist">準備協助</string>
+    <string name="checking_connection">檢查連接中...</string>
+    <string name="quick_call_desc">一鍵呼叫志工</string>
+    <string name="quick_message_desc">快速發送訊息</string>
+    <string name="video_call_desc">視訊連線志工</string>
+    <string name="help_button_desc">幫助按鈕</string>
 </resources>
-

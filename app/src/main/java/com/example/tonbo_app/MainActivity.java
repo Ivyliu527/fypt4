@@ -447,7 +447,8 @@ public class MainActivity extends BaseAccessibleActivity {
                 startFindItemsActivity();
                 break;
             case "live_assistance":
-                announceInfo(getString(R.string.function_live_assistance) + "功能開發中");
+                announceNavigation("正在打開即時協助");
+                startActivity(new Intent(this, InstantAssistanceActivity.class).putExtra("language", currentLanguage));
                 break;
             case "travel_assistant":
                 startTravelAssistantActivity();

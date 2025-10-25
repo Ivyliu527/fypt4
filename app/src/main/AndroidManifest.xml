@@ -108,6 +108,12 @@
             android:name=".VoiceCommandActivity"
             android:label="@string/voice_command_title"
             android:exported="false" />
+            
+        <!-- Instant Assistance Activity - 即時協助 -->
+        <activity
+            android:name=".InstantAssistanceActivity"
+            android:label="@string/instant_assistance_title"
+            android:exported="false" />
     </application>
 
 </manifest>
