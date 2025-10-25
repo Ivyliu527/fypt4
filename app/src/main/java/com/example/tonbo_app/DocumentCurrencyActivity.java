@@ -34,6 +34,8 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
     private TextView resultText;
     private Button backButton;
     private Button flashButton;
+    private Button textModeButton;
+    private Button currencyModeButton;
     private Button captureButton;
     private Button readButton;
     private Button clearButton;
@@ -42,6 +44,9 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
     private ProcessCameraProvider cameraProvider;
     private boolean isFlashOn = false;
     private boolean isAnalyzing = false;
+    
+    // 分析模式：true=文字分析，false=錢幣分析
+    private boolean isTextMode = true;
 
     // OCR和貨幣檢測相關變量
     private OCRHelper ocrHelper;
@@ -84,6 +89,8 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
         resultText = findViewById(R.id.resultText);
         backButton = findViewById(R.id.backButton);
         flashButton = findViewById(R.id.flashButton);
+        textModeButton = findViewById(R.id.textModeButton);
+        currencyModeButton = findViewById(R.id.currencyModeButton);
         captureButton = findViewById(R.id.captureButton);
         readButton = findViewById(R.id.readButton);
         clearButton = findViewById(R.id.clearButton);
@@ -99,6 +106,18 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
         flashButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
             toggleFlash();
+        });
+
+        // 文字分析模式按鈕
+        textModeButton.setOnClickListener(v -> {
+            vibrationManager.vibrateClick();
+            switchToTextMode();
+        });
+
+        // 錢幣分析模式按鈕
+        currencyModeButton.setOnClickListener(v -> {
+            vibrationManager.vibrateClick();
+            switchToCurrencyMode();
         });
 
 
@@ -358,6 +377,37 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
             } else {
                 announceInfo("此設備不支持閃光燈");
             }
+        }
+    }
+
+    // 切換到文字分析模式
+    private void switchToTextMode() {
+        isTextMode = true;
+        updateModeUI();
+        announceInfo("已切換到文字分析模式");
+    }
+
+    // 切換到錢幣分析模式
+    private void switchToCurrencyMode() {
+        isTextMode = false;
+        updateModeUI();
+        announceInfo("已切換到錢幣分析模式");
+    }
+
+    // 更新模式UI
+    private void updateModeUI() {
+        if (isTextMode) {
+            // 文字模式
+            textModeButton.setBackgroundResource(R.drawable.button_modern_background);
+            currencyModeButton.setBackgroundResource(R.drawable.button_emergency_background);
+            statusText.setText("準備掃描");
+            resultText.setText("掃描結果將顯示在這裡...");
+        } else {
+            // 錢幣模式
+            textModeButton.setBackgroundResource(R.drawable.button_emergency_background);
+            currencyModeButton.setBackgroundResource(R.drawable.button_modern_background);
+            statusText.setText("準備掃描");
+            resultText.setText("掃描結果將顯示在這裡...");
         }
     }
 
