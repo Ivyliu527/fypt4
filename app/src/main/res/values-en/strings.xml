@@ -31,6 +31,14 @@
     <string name="camera_permission_granted">Camera permission granted</string>
     <string name="camera_permission_denied">Camera permission required for video calls</string>
     
-    <!-- 志工訊息 -->
-    <string name="volunteer_message">Hello, I am a visually impaired person and need instant assistance.</string>
+    <!-- Function Descriptions -->
+    <string name="desc_environment">Describe surroundings and objects</string>
+    <string name="desc_document">Scan documents and recognize currency</string>
+    <string name="desc_voice_command">Control app with voice commands</string>
+    <string name="desc_find_items">Find marked personal items</string>
+    <string name="desc_live_assistance">Video call with volunteers</string>
+    
+    <!-- Travel Assistant -->
+    <string name="travel_assistant_title">Travel Assistant</string>
+    <string name="travel_assistant_description">Provide navigation, route planning, traffic information, weather updates and emergency location sharing services</string>
 </resources>
