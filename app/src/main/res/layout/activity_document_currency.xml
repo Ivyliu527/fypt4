@@ -31,7 +31,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/document_title"
+            android:text="閱讀助手"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:textStyle="bold"
@@ -53,12 +53,55 @@
 
     </LinearLayout>
 
+    <!-- 模式選擇區域 -->
+    <LinearLayout
+        android:id="@+id/modeSelector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/background_dark"
+        android:padding="16dp"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/topControls">
+
+        <Button
+            android:id="@+id/textModeButton"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="📄 文字分析"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:background="@drawable/button_modern_background"
+            android:backgroundTint="@null"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
+            android:contentDescription="文字分析模式" />
+
+        <Button
+            android:id="@+id/currencyModeButton"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="💰 錢幣分析"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:background="@drawable/button_emergency_background"
+            android:backgroundTint="@null"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:contentDescription="錢幣分析模式" />
+
+    </LinearLayout>
+
     <!-- 相機預覽區域 -->
     <androidx.camera.view.PreviewView
         android:id="@+id/cameraPreview"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/topControls"
+        app:layout_constraintTop_toBottomOf="@id/modeSelector"
         app:layout_constraintBottom_toTopOf="@id/infoContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -81,7 +124,7 @@
         android:id="@+id/scanHint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/scan_instruction"
+        android:text="將文件放在框內進行文字分析"
         android:textColor="@color/white"
         android:textSize="16sp"
         android:background="@drawable/button_circle_background"
@@ -110,7 +153,7 @@
             android:id="@+id/statusText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/ready_to_scan"
+            android:text="文字分析模式 - 準備掃描"
             android:textColor="@color/primary_blue"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -132,7 +175,7 @@
                 android:id="@+id/resultText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/scan_results_placeholder"
+                android:text="掃描結果將顯示在這裡..."
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:lineSpacingMultiplier="1.3"
@@ -160,7 +203,7 @@
             android:layout_width="0dp"
             android:layout_height="80dp"
             android:layout_weight="1"
-            android:text="@string/capture_button"
+            android:text="📷 拍照掃描"
             android:textSize="14sp"
             android:textColor="@color/white"
             android:textStyle="bold"
@@ -168,14 +211,14 @@
             android:backgroundTint="@null"
             android:layout_marginEnd="12dp"
             android:gravity="center"
-            android:contentDescription="@string/document_capture_button_desc" />
+            android:contentDescription="拍照掃描按鈕" />
 
         <Button
             android:id="@+id/readButton"
             android:layout_width="0dp"
             android:layout_height="80dp"
             android:layout_weight="1"
-            android:text="@string/read_button"
+            android:text="🔊 語音朗讀"
             android:textSize="14sp"
             android:textColor="@color/white"
             android:textStyle="bold"
@@ -183,21 +226,21 @@
             android:backgroundTint="@null"
             android:layout_marginEnd="12dp"
             android:gravity="center"
-            android:contentDescription="@string/read_button_desc" />
+            android:contentDescription="語音朗讀按鈕" />
 
         <Button
             android:id="@+id/clearButton"
             android:layout_width="0dp"
             android:layout_height="80dp"
             android:layout_weight="1"
-            android:text="@string/clear_button"
+            android:text="🗑️ 清除"
             android:textSize="14sp"
             android:textColor="@color/white"
             android:textStyle="bold"
             android:background="@drawable/button_square_background"
             android:backgroundTint="@null"
             android:gravity="center"
-            android:contentDescription="@string/clear_button_desc" />
+            android:contentDescription="清除按鈕" />
 
     </LinearLayout>
 
