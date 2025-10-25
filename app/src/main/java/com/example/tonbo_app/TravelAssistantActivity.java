@@ -47,10 +47,13 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
         if (backButton != null) {
             backButton.setOnClickListener(v -> {
                 vibrationManager.vibrateClick();
-                announceInfo(getString(R.string.going_back_to_home));
+                announceInfo(getLocalizedString("going_back_to_home"));
                 finish();
             });
         }
+        
+        // 根據當前語言更新界面文字
+        updateLanguageUI();
     }
     
     private void setupButtons() {
@@ -97,26 +100,116 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
         // 3. 播報當前位置信息
     }
     
-    @Override
-    protected void announcePageTitle() {
-        String title = getString(R.string.travel_assistant_title);
-        String description = getString(R.string.travel_assistant_description);
-        String fullAnnouncement = title + "。" + description;
+    /**
+     * 更新語言UI
+     */
+    private void updateLanguageUI() {
+        if (statusText != null) {
+            statusText.setText(getLocalizedString("travel_assistant_status"));
+        }
         
-        Log.d(TAG, "🔊 播報頁面標題: " + fullAnnouncement);
+        if (navigationButton != null) {
+            navigationButton.setText(getLocalizedString("navigation"));
+        }
         
-        // 根據當前語言播報
+        if (routePlanningButton != null) {
+            routePlanningButton.setText(getLocalizedString("route_planning"));
+        }
+        
+        if (trafficInfoButton != null) {
+            trafficInfoButton.setText(getLocalizedString("traffic_info"));
+        }
+        
+        if (weatherButton != null) {
+            weatherButton.setText(getLocalizedString("weather_info"));
+        }
+        
+        if (emergencyLocationButton != null) {
+            emergencyLocationButton.setText(getLocalizedString("emergency_location"));
+        }
+    }
+    
+    /**
+     * 根據當前語言獲取本地化字符串
+     */
+    private String getLocalizedString(String key) {
         String currentLang = LocaleManager.getInstance(this).getCurrentLanguage();
+        
+        switch (key) {
+            case "travel_assistant_status":
+                if ("english".equals(currentLang)) {
+                    return "Travel assistance functions are ready";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "出行协助功能准备就绪";
+                } else {
+                    return "出行協助功能準備就緒";
+                }
+            case "navigation":
+                if ("english".equals(currentLang)) {
+                    return "Navigation";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "导航";
+                } else {
+                    return "導航";
+                }
+            case "route_planning":
+                if ("english".equals(currentLang)) {
+                    return "Route Planning";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "路线规划";
+                } else {
+                    return "路線規劃";
+                }
+            case "traffic_info":
+                if ("english".equals(currentLang)) {
+                    return "Traffic Info";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "交通信息";
+                } else {
+                    return "交通信息";
+                }
+            case "weather_info":
+                if ("english".equals(currentLang)) {
+                    return "Weather Info";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "天气信息";
+                } else {
+                    return "天氣信息";
+                }
+            case "emergency_location":
+                if ("english".equals(currentLang)) {
+                    return "Emergency Location";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "紧急位置分享";
+                } else {
+                    return "緊急位置分享";
+                }
+            case "going_back_to_home":
+                if ("english".equals(currentLang)) {
+                    return "Going back to home";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "返回主页";
+                } else {
+                    return "返回主頁";
+                }
+            default:
+                return getString(R.string.app_name);
+        }
+    }
+
+    protected void announcePageTitle() {
+        String currentLang = LocaleManager.getInstance(this).getCurrentLanguage();
+        
         switch (currentLang) {
             case "english":
-                ttsManager.speak(null, "Travel Assistant. " + getEnglishDescription(), true);
+                ttsManager.speak(null, "Travel Assistant. Provides navigation, route planning, traffic information, weather updates and emergency location sharing services.", true);
                 break;
             case "mandarin":
-                ttsManager.speak(getSimplifiedChineseDescription(), null, true);
+                ttsManager.speak("出行协助。提供导航、路线规划、交通信息、天气更新和紧急位置分享服务。", null, true);
                 break;
             case "cantonese":
             default:
-                ttsManager.speak(fullAnnouncement, null, true);
+                ttsManager.speak("出行協助。提供導航、路線規劃、交通信息、天氣更新和緊急位置分享服務。", "Travel Assistant. Provides navigation, route planning, traffic information, weather updates and emergency location sharing services.", true);
                 break;
         }
     }
