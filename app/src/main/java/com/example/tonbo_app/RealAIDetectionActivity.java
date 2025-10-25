@@ -30,7 +30,7 @@ import java.util.concurrent.Executors;
  * 真實AI檢測演示活動
  * 展示真實的AI物體檢測功能
  */
-public class RealAIDetectionActivity extends AppCompatActivity {
+public class RealAIDetectionActivity extends BaseAccessibleActivity {
     private static final String TAG = "RealAIDetection";
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 1001;
     
@@ -42,6 +42,7 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     
     private TTSManager ttsManager;
     private String currentLanguage = "cantonese";
+    private TextView pageTitle;
     
     private ProcessCameraProvider cameraProvider;
     private ImageAnalysis imageAnalysis;
@@ -77,6 +78,7 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         backButton = findViewById(R.id.backButton);
         startButton = findViewById(R.id.startButton);
         stopButton = findViewById(R.id.stopButton);
+        pageTitle = findViewById(R.id.pageTitle);
         
         // 設置按鈕點擊事件
         backButton.setOnClickListener(v -> {
@@ -91,9 +93,63 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         startButton.setOnClickListener(v -> startDetection());
         stopButton.setOnClickListener(v -> stopDetection());
         
+        // 根據當前語言更新界面文字
+        updateLanguageUI();
+        
         // 初始化狀態指示燈
         updateStatusIndicator("ready");
         stopButton.setEnabled(false);
+    }
+    
+    /**
+     * 更新語言UI
+     */
+    private void updateLanguageUI() {
+        if (pageTitle != null) {
+            pageTitle.setText(getLocalizedString("environment_recognition_title"));
+        }
+        
+        if (startButton != null) {
+            startButton.setText(getLocalizedString("start_recognition"));
+        }
+        
+        if (stopButton != null) {
+            stopButton.setText(getLocalizedString("stop_recognition"));
+        }
+    }
+    
+    /**
+     * 根據當前語言獲取本地化字符串
+     */
+    private String getLocalizedString(String key) {
+        switch (key) {
+            case "environment_recognition_title":
+                if ("english".equals(currentLanguage)) {
+                    return "Environment Recognition";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "环境识别助手";
+                } else {
+                    return "環境識別助手";
+                }
+            case "start_recognition":
+                if ("english".equals(currentLanguage)) {
+                    return "Start Recognition";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "开始识别";
+                } else {
+                    return "開始識別";
+                }
+            case "stop_recognition":
+                if ("english".equals(currentLanguage)) {
+                    return "Stop Recognition";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "停止识别";
+                } else {
+                    return "停止識別";
+                }
+            default:
+                return "";
+        }
     }
     
     private void initDetector() {
@@ -310,7 +366,8 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         }
     }
     
-    private void announcePageTitle() {
+    @Override
+    protected void announcePageTitle() {
         String cantoneseText = "環境識別助手。這個功能可以幫助你識別前方的物體。點擊開始識別按鈕開始掃描環境。";
         String englishText = "Environment Recognition Assistant. This feature can help you identify objects in front of you. Tap the start recognition button to begin scanning the environment.";
         ttsManager.speak(cantoneseText, englishText, true);
