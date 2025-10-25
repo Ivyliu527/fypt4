@@ -30,6 +30,7 @@
 
         <!-- 標題 -->
         <TextView
+            android:id="@+id/pageTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

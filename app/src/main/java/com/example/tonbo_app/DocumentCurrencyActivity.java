@@ -37,6 +37,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
     private Button captureButton;
     private Button readButton;
     private Button clearButton;
+    private TextView pageTitle;
 
     private ExecutorService cameraExecutor;
     private ProcessCameraProvider cameraProvider;
@@ -90,6 +91,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
         captureButton = findViewById(R.id.captureButton);
         readButton = findViewById(R.id.readButton);
         clearButton = findViewById(R.id.clearButton);
+        pageTitle = findViewById(R.id.pageTitle);
 
         // 返回按鈕
         backButton.setOnClickListener(v -> {
@@ -134,8 +136,98 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
             vibrationManager.vibrateClick();
             clearResults();
         });
+        
+        // 根據當前語言更新界面文字
+        updateLanguageUI();
     }
-
+    
+    /**
+     * 更新語言UI
+     */
+    private void updateLanguageUI() {
+        if (pageTitle != null) {
+            pageTitle.setText(getLocalizedString("document_assistant_title"));
+        }
+        
+        if (textModeButton != null) {
+            textModeButton.setText(getLocalizedString("text_analysis"));
+        }
+        
+        if (currencyModeButton != null) {
+            currencyModeButton.setText(getLocalizedString("currency_analysis"));
+        }
+        
+        if (captureButton != null) {
+            captureButton.setText(getLocalizedString("capture_photo"));
+        }
+        
+        if (readButton != null) {
+            readButton.setText(getLocalizedString("voice_read"));
+        }
+        
+        if (clearButton != null) {
+            clearButton.setText(getLocalizedString("clear"));
+        }
+    }
+    
+    /**
+     * 根據當前語言獲取本地化字符串
+     */
+    private String getLocalizedString(String key) {
+        switch (key) {
+            case "document_assistant_title":
+                if ("english".equals(currentLanguage)) {
+                    return "Document Assistant";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "阅读助手";
+                } else {
+                    return "閱讀助手";
+                }
+            case "text_analysis":
+                if ("english".equals(currentLanguage)) {
+                    return "Text Analysis";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "文字分析";
+                } else {
+                    return "文字分析";
+                }
+            case "currency_analysis":
+                if ("english".equals(currentLanguage)) {
+                    return "Currency Analysis";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "货币分析";
+                } else {
+                    return "錢幣分析";
+                }
+            case "capture_photo":
+                if ("english".equals(currentLanguage)) {
+                    return "Capture Photo";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "拍照扫描";
+                } else {
+                    return "拍照掃描";
+                }
+            case "voice_read":
+                if ("english".equals(currentLanguage)) {
+                    return "Voice Read";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "语音朗读";
+                } else {
+                    return "語音朗讀";
+                }
+            case "clear":
+                if ("english".equals(currentLanguage)) {
+                    return "Clear";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "清除";
+                } else {
+                    return "清除";
+                }
+            default:
+                return "";
+        }
+    }
+    
     private boolean allPermissionsGranted() {
         for (String permission : REQUIRED_PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {

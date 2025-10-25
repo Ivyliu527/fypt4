@@ -37,6 +37,7 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
     private Button videoCallButton;
     private TextView statusText;
     private TextView connectionStatus;
+    private TextView pageTitle;
 
     // 志工聯繫信息
     private static final String VOLUNTEER_PHONE = "+852-1234-5678"; // 示例電話號碼
@@ -91,6 +92,7 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
         videoCallButton = findViewById(R.id.videoCallButton);
         statusText = findViewById(R.id.statusText);
         connectionStatus = findViewById(R.id.connectionStatus);
+        pageTitle = findViewById(R.id.pageTitle);
 
         // 返回按鈕
         backButton.setOnClickListener(v -> {
@@ -122,8 +124,98 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
             vibrationManager.vibrateClick();
             initiateVideoCall();
         });
+        
+        // 根據當前語言更新界面文字
+        updateLanguageUI();
     }
-
+    
+    /**
+     * 更新語言UI
+     */
+    private void updateLanguageUI() {
+        if (pageTitle != null) {
+            pageTitle.setText(getLocalizedString("instant_assistance_title"));
+        }
+        
+        if (quickCallButton != null) {
+            quickCallButton.setText(getLocalizedString("quick_call"));
+        }
+        
+        if (quickMessageButton != null) {
+            quickMessageButton.setText(getLocalizedString("quick_message"));
+        }
+        
+        if (videoCallButton != null) {
+            videoCallButton.setText(getLocalizedString("video_call"));
+        }
+        
+        if (statusText != null) {
+            statusText.setText(getLocalizedString("ready_to_assist"));
+        }
+        
+        if (connectionStatus != null) {
+            connectionStatus.setText(getLocalizedString("checking_connection"));
+        }
+    }
+    
+    /**
+     * 根據當前語言獲取本地化字符串
+     */
+    private String getLocalizedString(String key) {
+        switch (key) {
+            case "instant_assistance_title":
+                if ("english".equals(currentLanguage)) {
+                    return "Instant Assistance";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "即时协助";
+                } else {
+                    return "即時協助";
+                }
+            case "quick_call":
+                if ("english".equals(currentLanguage)) {
+                    return "📞 One-touch Call Volunteer";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "📞 一键呼叫志愿者";
+                } else {
+                    return "📞 一鍵呼叫志工";
+                }
+            case "quick_message":
+                if ("english".equals(currentLanguage)) {
+                    return "💬 Quick Message";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "💬 快速消息";
+                } else {
+                    return "💬 快速訊息";
+                }
+            case "video_call":
+                if ("english".equals(currentLanguage)) {
+                    return "📹 Video Call";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "📹 视频通话";
+                } else {
+                    return "📹 視訊連線";
+                }
+            case "ready_to_assist":
+                if ("english".equals(currentLanguage)) {
+                    return "Ready to Assist";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "准备协助";
+                } else {
+                    return "準備協助";
+                }
+            case "checking_connection":
+                if ("english".equals(currentLanguage)) {
+                    return "Checking connection...";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "检查连接中...";
+                } else {
+                    return "檢查連接中...";
+                }
+            default:
+                return "";
+        }
+    }
+    
     /**
      * 檢查連接狀態
      */
