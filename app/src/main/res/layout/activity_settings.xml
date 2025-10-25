@@ -189,6 +189,7 @@
                 android:layout_marginBottom="12dp">
 
                 <TextView
+                    android:id="@+id/vibrationFeedbackLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -219,6 +220,7 @@
                 android:layout_marginBottom="12dp">
 
                 <TextView
+                    android:id="@+id/screenReaderLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -248,6 +250,7 @@
                 android:gravity="center_vertical">
 
                 <TextView
+                    android:id="@+id/gestureOperationsLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"

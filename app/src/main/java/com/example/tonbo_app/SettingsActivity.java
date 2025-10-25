@@ -29,6 +29,11 @@ public class SettingsActivity extends BaseAccessibleActivity {
     private Button screenReaderToggleButton;
     private Button gestureToggleButton;
     
+    // 無障礙設定標籤
+    private TextView vibrationFeedbackLabel;
+    private TextView screenReaderLabel;
+    private TextView gestureOperationsLabel;
+    
     // 其他設定
     private Button resetSettingsButton;
     private Button testVoiceButton;
@@ -69,6 +74,11 @@ public class SettingsActivity extends BaseAccessibleActivity {
         vibrationToggleButton = findViewById(R.id.vibrationToggleButton);
         screenReaderToggleButton = findViewById(R.id.screenReaderToggleButton);
         gestureToggleButton = findViewById(R.id.gestureToggleButton);
+        
+        // 無障礙設定標籤
+        vibrationFeedbackLabel = findViewById(R.id.vibrationFeedbackLabel);
+        screenReaderLabel = findViewById(R.id.screenReaderLabel);
+        gestureOperationsLabel = findViewById(R.id.gestureOperationsLabel);
         
         // 其他設定
         resetSettingsButton = findViewById(R.id.resetSettingsButton);
@@ -583,7 +593,46 @@ public class SettingsActivity extends BaseAccessibleActivity {
      * 更新無障礙設定文字
      */
     private void updateAccessibilitySettingsTexts() {
-        // 震動反饋
+        // 震動反饋標籤
+        if (vibrationFeedbackLabel != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Vibration Feedback";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "震动反馈";
+            } else {
+                text = "震動反饋";
+            }
+            vibrationFeedbackLabel.setText(text);
+        }
+        
+        // 讀屏支援標籤
+        if (screenReaderLabel != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Screen Reader Support";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "屏幕阅读器支持";
+            } else {
+                text = "螢幕閱讀器支援";
+            }
+            screenReaderLabel.setText(text);
+        }
+        
+        // 手勢操作標籤
+        if (gestureOperationsLabel != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Gesture Operations";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "手势操作";
+            } else {
+                text = "手勢操作";
+            }
+            gestureOperationsLabel.setText(text);
+        }
+        
+        // 震動反饋按鈕
         if (vibrationToggleButton != null) {
             String text;
             if ("english".equals(currentLanguage)) {
@@ -596,7 +645,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
             vibrationToggleButton.setText(text);
         }
         
-        // 讀屏支援
+        // 讀屏支援按鈕
         if (screenReaderToggleButton != null) {
             String text;
             if ("english".equals(currentLanguage)) {
@@ -609,7 +658,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
             screenReaderToggleButton.setText(text);
         }
         
-        // 手勢操作
+        // 手勢操作按鈕
         if (gestureToggleButton != null) {
             String text;
             if ("english".equals(currentLanguage)) {
