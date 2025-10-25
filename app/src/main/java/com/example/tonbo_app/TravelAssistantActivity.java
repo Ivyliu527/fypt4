@@ -22,6 +22,7 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
     private Button weatherButton;
     private Button emergencyLocationButton;
     private LinearLayout controlButtons;
+    private TextView instructionText;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +42,7 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
         weatherButton = findViewById(R.id.weather_button);
         emergencyLocationButton = findViewById(R.id.emergency_location_button);
         controlButtons = findViewById(R.id.control_buttons);
+        instructionText = findViewById(R.id.instruction_text);
         
         // 設置返回按鈕
         Button backButton = findViewById(R.id.back_button);
@@ -127,6 +129,10 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
         if (emergencyLocationButton != null) {
             emergencyLocationButton.setText(getLocalizedString("emergency_location"));
         }
+        
+        if (instructionText != null) {
+            instructionText.setText(getLocalizedString("travel_assistant_instruction"));
+        }
     }
     
     /**
@@ -191,6 +197,14 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
                     return "返回主页";
                 } else {
                     return "返回主頁";
+                }
+            case "travel_assistant_instruction":
+                if ("english".equals(currentLang)) {
+                    return "Click the buttons below to use various travel assistance functions";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "点击下方按钮使用各项出行协助功能";
+                } else {
+                    return "點擊下方按鈕使用各項出行協助功能";
                 }
             default:
                 return getString(R.string.app_name);
