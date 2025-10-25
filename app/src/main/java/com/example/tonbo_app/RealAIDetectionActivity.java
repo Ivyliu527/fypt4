@@ -36,11 +36,9 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     private PreviewView previewView;
     private OptimizedDetectionOverlayView detectionOverlay;
     private TextView statusText;
-    private TextView performanceText;
     private Button backButton;
     private Button startButton;
     private Button stopButton;
-    private Button performanceButton;
     
     private ProcessCameraProvider cameraProvider;
     private ImageAnalysis imageAnalysis;
@@ -62,11 +60,9 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         previewView = findViewById(R.id.previewView);
         detectionOverlay = findViewById(R.id.detectionOverlay);
         statusText = findViewById(R.id.statusText);
-        performanceText = findViewById(R.id.performanceText);
         backButton = findViewById(R.id.backButton);
         startButton = findViewById(R.id.startButton);
         stopButton = findViewById(R.id.stopButton);
-        performanceButton = findViewById(R.id.performanceButton);
         
         // 設置按鈕點擊事件
         backButton.setOnClickListener(v -> {
@@ -80,22 +76,21 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         
         startButton.setOnClickListener(v -> startDetection());
         stopButton.setOnClickListener(v -> stopDetection());
-        performanceButton.setOnClickListener(v -> showPerformanceReport());
         
         // 初始化狀態
-        updateStatus("準備就緒");
+        updateStatus("環境識別已準備就緒");
         stopButton.setEnabled(false);
     }
     
     private void initDetector() {
         try {
             yoloDetector = new YoloDetector(this);
-            Log.d(TAG, "AI檢測器初始化完成");
-            updateStatus("AI檢測器已準備就緒");
+            Log.d(TAG, "環境識別器初始化完成");
+            updateStatus("環境識別器已準備就緒");
         } catch (Exception e) {
-            Log.e(TAG, "AI檢測器初始化失敗: " + e.getMessage());
-            updateStatus("AI檢測器初始化失敗");
-            Toast.makeText(this, "AI檢測器初始化失敗", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "環境識別器初始化失敗: " + e.getMessage());
+            updateStatus("環境識別器初始化失敗");
+            Toast.makeText(this, "環境識別器初始化失敗", Toast.LENGTH_LONG).show();
         }
     }
     
@@ -119,8 +114,8 @@ public class RealAIDetectionActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initializeCamera();
             } else {
-                updateStatus("需要相機權限才能使用AI檢測");
-                Toast.makeText(this, "需要相機權限才能使用AI檢測", Toast.LENGTH_LONG).show();
+                updateStatus("需要相機權限才能使用環境識別");
+                Toast.makeText(this, "需要相機權限才能使用環境識別", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -174,7 +169,7 @@ public class RealAIDetectionActivity extends AppCompatActivity {
             CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
             cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
             
-            updateStatus("相機已準備就緒");
+            updateStatus("相機已準備就緒，可以開始環境識別");
             startButton.setEnabled(true);
             
         } catch (Exception e) {
@@ -192,10 +187,10 @@ public class RealAIDetectionActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (results != null && !results.isEmpty()) {
                     detectionOverlay.setDetectionResultsWithRelativeCoords(results);
-                    updateStatus("檢測到 " + results.size() + " 個物體");
+                    updateStatus("識別到 " + results.size() + " 個物體，正在分析環境");
                 } else {
                     detectionOverlay.clearDetectionResults();
-                    updateStatus("未檢測到物體");
+                    updateStatus("正在掃描環境，請稍候");
                 }
             });
             
@@ -207,49 +202,31 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     
     private void startDetection() {
         if (yoloDetector == null) {
-            Toast.makeText(this, "AI檢測器未初始化", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "環境識別器未初始化", Toast.LENGTH_SHORT).show();
             return;
         }
         
         isDetecting = true;
         startButton.setEnabled(false);
         stopButton.setEnabled(true);
-        updateStatus("AI檢測已開始");
+        updateStatus("環境識別已開始，正在掃描前方環境");
         
-        // 重置性能統計
-        yoloDetector.resetPerformanceStats();
         
-        Toast.makeText(this, "AI檢測已開始", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "環境識別已開始", Toast.LENGTH_SHORT).show();
     }
     
     private void stopDetection() {
         isDetecting = false;
         startButton.setEnabled(true);
         stopButton.setEnabled(false);
-        updateStatus("AI檢測已停止");
+        updateStatus("環境識別已停止");
         
         // 清除檢測結果
         detectionOverlay.clearDetectionResults();
         
-        Toast.makeText(this, "AI檢測已停止", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "環境識別已停止", Toast.LENGTH_SHORT).show();
     }
     
-    private void showPerformanceReport() {
-        if (yoloDetector == null) {
-            Toast.makeText(this, "AI檢測器未初始化", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        String report = yoloDetector.getPerformanceReport();
-        performanceText.setText(report);
-        
-        // 檢查性能是否良好
-        boolean isGood = yoloDetector.isPerformanceGood();
-        String performanceStatus = isGood ? "性能良好" : "性能需要優化";
-        updateStatus("性能報告: " + performanceStatus);
-        
-        Toast.makeText(this, "性能報告已更新", Toast.LENGTH_SHORT).show();
-    }
     
     private void updateStatus(String status) {
         statusText.setText(status);
