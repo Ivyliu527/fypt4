@@ -41,6 +41,9 @@ public class MainActivity extends BaseAccessibleActivity {
         
         // 初始化語言按鈕狀態
         initializeLanguageButton();
+        
+        // 更新語言UI
+        updateLanguageUI();
     }
     
     @Override

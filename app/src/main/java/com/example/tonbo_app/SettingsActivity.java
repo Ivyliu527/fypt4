@@ -231,9 +231,42 @@ public class SettingsActivity extends BaseAccessibleActivity {
         int pitch = speechPitchSeekBar.getProgress();
         int volume = speechVolumeSeekBar.getProgress();
         
-        speechRateText.setText(String.format(getString(R.string.speech_rate_display), rate));
-        speechPitchText.setText(String.format(getString(R.string.speech_pitch_display), pitch));
-        speechVolumeText.setText(String.format(getString(R.string.speech_volume_display), volume));
+        // 使用本地化字符串
+        if (speechRateText != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Speech Rate: " + rate + "%";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "语音速度：" + rate + "%";
+            } else {
+                text = "語音速度：" + rate + "%";
+            }
+            speechRateText.setText(text);
+        }
+        
+        if (speechPitchText != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Pitch: " + pitch + "%";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "音调：" + pitch + "%";
+            } else {
+                text = "音調：" + pitch + "%";
+            }
+            speechPitchText.setText(text);
+        }
+        
+        if (speechVolumeText != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Volume: " + volume + "%";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "音量：" + volume + "%";
+            } else {
+                text = "音量：" + volume + "%";
+            }
+            speechVolumeText.setText(text);
+        }
     }
     
     private void updateToggleButton(Button button, boolean enabled, String settingName) {
@@ -463,6 +496,9 @@ public class SettingsActivity extends BaseAccessibleActivity {
         
         // 更新按鈕文字
         updateButtonTexts();
+        
+        // 更新詳細設置項文字
+        updateDetailedSettingsTexts();
     }
     
     /**
@@ -495,6 +531,95 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 text = "重置設定";
             }
             resetSettingsButton.setText(text);
+        }
+    }
+    
+    /**
+     * 更新詳細設置項文字
+     */
+    private void updateDetailedSettingsTexts() {
+        // 更新語音設定詳細文字
+        if (speechRateText != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Speech Rate: " + speechRateSeekBar.getProgress() + "%";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "语音速度：" + speechRateSeekBar.getProgress() + "%";
+            } else {
+                text = "語音速度：" + speechRateSeekBar.getProgress() + "%";
+            }
+            speechRateText.setText(text);
+        }
+        
+        if (speechPitchText != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Pitch: " + speechPitchSeekBar.getProgress() + "%";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "音调：" + speechPitchSeekBar.getProgress() + "%";
+            } else {
+                text = "音調：" + speechPitchSeekBar.getProgress() + "%";
+            }
+            speechPitchText.setText(text);
+        }
+        
+        if (speechVolumeText != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Volume: " + speechVolumeSeekBar.getProgress() + "%";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "音量：" + speechVolumeSeekBar.getProgress() + "%";
+            } else {
+                text = "音量：" + speechVolumeSeekBar.getProgress() + "%";
+            }
+            speechVolumeText.setText(text);
+        }
+        
+        // 更新無障礙設定詳細文字
+        updateAccessibilitySettingsTexts();
+    }
+    
+    /**
+     * 更新無障礙設定文字
+     */
+    private void updateAccessibilitySettingsTexts() {
+        // 震動反饋
+        if (vibrationToggleButton != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Vibration Feedback";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "震动反馈";
+            } else {
+                text = "震動反饋";
+            }
+            vibrationToggleButton.setText(text);
+        }
+        
+        // 讀屏支援
+        if (screenReaderToggleButton != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Screen Reader Support";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "屏幕阅读器支持";
+            } else {
+                text = "螢幕閱讀器支援";
+            }
+            screenReaderToggleButton.setText(text);
+        }
+        
+        // 手勢操作
+        if (gestureToggleButton != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Gesture Operations";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "手势操作";
+            } else {
+                text = "手勢操作";
+            }
+            gestureToggleButton.setText(text);
         }
     }
     
