@@ -34,6 +34,13 @@
     <string name="voice_recognition_error">Voice recognition error</string>
     <string name="voice_command_not_recognized">Command not recognized, please say a valid command</string>
     
+    <!-- Voice Command Page -->
+    <string name="voice_command_title">語音命令</string>
+    <string name="listening_status">點擊開始</string>
+    <string name="listening_active">正在監聽...</string>
+    <string name="available_commands">可用指令</string>
+    <string name="commands_list">• 環境識別：睇下周圍、環境識別\n• 閱讀助手：讀文件、掃描文件\n• 尋找物品：搵嘢、尋找物品\n• 緊急求助：救命、緊急求助\n• 系統設定：設定、打開設定\n• 語言切換：轉語言、切換語言\n• 返回主頁：主頁、返回主頁\n• 時間查詢：幾點、現在幾點\n• 停止監聽：收聲、停止</string>
+    
     <!-- Find Items Page -->
     <string name="find_items_title">Find Items</string>
     <string name="find_items_title_desc">Find Items page title</string>
@@ -201,6 +208,7 @@
     <!-- Function Names -->
     <string name="function_environment">Environment Recognition</string>
     <string name="function_document">Document Assistant</string>
+    <string name="function_voice_command">Voice Command</string>
     <string name="function_find_items">Find Items</string>
     <string name="function_travel">Travel Assistant</string>
     <string name="function_live_assistance">Live Assistance</string>
@@ -209,6 +217,7 @@
     <!-- Function Descriptions -->
     <string name="desc_environment">Describe surroundings and objects</string>
     <string name="desc_document">Scan documents and recognize currency</string>
+    <string name="desc_voice_command">Control app with voice commands</string>
     <string name="desc_find_items">Find marked personal items</string>
     <string name="desc_live_assistance">Video call with volunteers</string>
     
