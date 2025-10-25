@@ -16,7 +16,9 @@ public class MainActivity extends BaseAccessibleActivity {
     private RecyclerView recyclerView;
     private FunctionAdapter adapter;
     private LinearLayout emergencyButton;
+    private Button voiceCommandButton;
     private EmergencyManager emergencyManager;
+    private VoiceCommandManager voiceCommandManager;
     private final ArrayList<HomeFunction> functionList = new ArrayList<>();
 
     @Override
@@ -26,6 +28,9 @@ public class MainActivity extends BaseAccessibleActivity {
 
         // 初始化緊急管理器
         emergencyManager = EmergencyManager.getInstance(this);
+        
+        // 初始化語音命令管理器
+        voiceCommandManager = new VoiceCommandManager(this);
         
         // 確保currentLanguage正確初始化
         if (currentLanguage == null) {
@@ -82,6 +87,7 @@ public class MainActivity extends BaseAccessibleActivity {
     private void initViews() {
         recyclerView = findViewById(R.id.recyclerView);
         emergencyButton = findViewById(R.id.emergencyButton);
+        voiceCommandButton = findViewById(R.id.voiceCommandButton);
 
         // 設置緊急按鈕
         emergencyButton.setOnLongClickListener(v -> {
@@ -92,6 +98,24 @@ public class MainActivity extends BaseAccessibleActivity {
         emergencyButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
             announceInfo("這是緊急求助按鈕，請長按三秒發送求助信息。點擊右上角紅色緊急按鈕可配置緊急聯絡人");
+        });
+        
+        // 設置語音命令按鈕
+        voiceCommandButton.setOnClickListener(v -> {
+            vibrationManager.vibrateClick();
+            if (voiceCommandManager.isListening()) {
+                announceInfo("語音識別正在進行中");
+            } else {
+                announceInfo("開始語音命令識別");
+                voiceCommandManager.startVoiceRecognition();
+            }
+        });
+        
+        // 設置語音命令按鈕長按事件
+        voiceCommandButton.setOnLongClickListener(v -> {
+            vibrationManager.vibrateLongPress();
+            announceInfo("語音命令幫助：您可以說出環境識別、閱讀助手、尋找物品、緊急求助、系統設定、語言切換等命令");
+            return true;
         });
 
         // 緊急求助設置按鈕
@@ -136,7 +160,7 @@ public class MainActivity extends BaseAccessibleActivity {
     }
 
 
-    private void toggleLanguage() {
+    public void toggleLanguage() {
         switch (currentLanguage) {
             case "cantonese":
                 currentLanguage = "english";
@@ -508,7 +532,7 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
     
-    private void openSettings() {
+    public void openSettings() {
         try {
             Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
             intent.putExtra("language", currentLanguage);
@@ -520,7 +544,7 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
     
-    private void openEmergencySettings() {
+    public void openEmergencySettings() {
         try {
             Intent intent = new Intent(MainActivity.this, EmergencySettingsActivity.class);
             intent.putExtra("language", currentLanguage);
@@ -537,6 +561,9 @@ public class MainActivity extends BaseAccessibleActivity {
         // 清理資源
         if (ttsManager != null) {
             ttsManager.shutdown();
+        }
+        if (voiceCommandManager != null) {
+            voiceCommandManager.destroy();
         }
     }
 }
