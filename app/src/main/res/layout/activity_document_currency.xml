@@ -153,7 +153,7 @@
             android:id="@+id/statusText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="文字分析模式 - 準備掃描"
+            android:text="準備掃描"
             android:textColor="@color/primary_blue"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -161,7 +161,7 @@
             android:layout_marginBottom="12dp"
             android:background="@drawable/button_simple_background"
             android:padding="8dp"
-            android:contentDescription="@string/status_desc" />
+            android:contentDescription="狀態顯示" />
 
         <!-- 識別結果顯示 - 優化文字顯示 -->
         <ScrollView
