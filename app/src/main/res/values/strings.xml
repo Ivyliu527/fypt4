@@ -405,4 +405,28 @@
     <string name="quick_message_desc">快速發送訊息</string>
     <string name="video_call_desc">視訊連線志工</string>
     <string name="help_button_desc">幫助按鈕</string>
+    
+    <!-- 即時協助功能說明 -->
+    <string name="instant_assistance_help">即時協助功能說明：\n1. 一鍵呼叫：直接撥打電話給志工\n2. 快速訊息：發送預設訊息給志工\n3. 視訊連線：進行視訊通話獲得協助\n所有功能都需要網絡連接和相應權限。</string>
+    
+    <!-- 狀態訊息 -->
+    <string name="calling_volunteer">正在呼叫志工...</string>
+    <string name="sending_message">正在發送訊息...</string>
+    <string name="connecting_video">正在連線視訊...</string>
+    <string name="message_sent">訊息已發送給志工</string>
+    <string name="call_failed">呼叫失敗，請檢查網絡連接</string>
+    <string name="message_failed">發送訊息失敗，請檢查網絡連接</string>
+    <string name="video_failed">視訊連線失敗，請檢查網絡連接</string>
+    <string name="connection_normal">連接正常</string>
+    
+    <!-- 權限相關 -->
+    <string name="call_permission_granted">通話權限已授予</string>
+    <string name="call_permission_denied">需要通話權限才能呼叫志工</string>
+    <string name="sms_permission_granted">簡訊權限已授予</string>
+    <string name="sms_permission_denied">需要簡訊權限才能發送訊息</string>
+    <string name="camera_permission_granted">相機權限已授予</string>
+    <string name="camera_permission_denied">需要相機權限才能進行視訊通話</string>
+    
+    <!-- 志工訊息 -->
+    <string name="volunteer_message">您好，我是視障人士，需要即時協助。</string>
 </resources>
