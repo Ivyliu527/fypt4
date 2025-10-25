@@ -33,6 +33,7 @@
                 android:layout_marginEnd="8dp" />
 
             <TextView
+                android:id="@+id/systemSettingsTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -61,6 +62,7 @@
             android:layout_marginBottom="16dp">
 
             <TextView
+                android:id="@+id/voiceSettingsTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/voice_settings"
@@ -167,15 +169,16 @@
             android:padding="16dp"
             android:layout_marginBottom="16dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/accessibility_settings"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp"
-                android:contentDescription="無障礙設定區域" />
+        <TextView
+            android:id="@+id/accessibilitySettingsTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/accessibility_settings"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="無障礙設定區域" />
 
             <!-- 震動反饋 -->
             <LinearLayout
@@ -277,6 +280,7 @@
             android:padding="16dp">
 
             <TextView
+                android:id="@+id/testResetTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/test_and_reset"
