@@ -148,8 +148,40 @@ public class MainActivity extends BaseAccessibleActivity {
         // 立即更新TTS語言
         ttsManager.changeLanguage(currentLanguage);
         
+        // 立即更新界面文字
+        updateLanguageUI();
+        
         // 重新創建Activity以應用新語言
         recreate();
+    }
+    
+    /**
+     * 更新語言UI
+     */
+    private void updateLanguageUI() {
+        // 更新語言按鈕文字
+        updateLanguageButton();
+        
+        // 更新功能列表
+        setupFunctionList();
+        
+        // 更新標題
+        updatePageTitle();
+    }
+    
+    /**
+     * 更新頁面標題
+     */
+    private void updatePageTitle() {
+        String title;
+        if ("english".equals(currentLanguage)) {
+            title = "Tonbo";
+        } else if ("mandarin".equals(currentLanguage)) {
+            title = "Tonbo";
+        } else {
+            title = "Tonbo";
+        }
+        // 標題通常不需要更新，因為是品牌名稱
     }
     
     /**
@@ -157,13 +189,13 @@ public class MainActivity extends BaseAccessibleActivity {
      */
     private String getNextLanguage(String currentLang) {
         switch (currentLang) {
-            case AppConstants.LANGUAGE_CANTONESE:
-                return AppConstants.LANGUAGE_ENGLISH;
-            case AppConstants.LANGUAGE_ENGLISH:
-                return AppConstants.LANGUAGE_MANDARIN;
-            case AppConstants.LANGUAGE_MANDARIN:
+            case "cantonese":
+                return "english";
+            case "english":
+                return "mandarin";
+            case "mandarin":
             default:
-                return AppConstants.LANGUAGE_CANTONESE;
+                return "cantonese";
         }
     }
     
@@ -372,36 +404,66 @@ public class MainActivity extends BaseAccessibleActivity {
     
     private void setupFunctionList() {
         functionList.clear(); // 清空列表，避免重複添加
-        functionList.add(new HomeFunction(
-            "environment",
-            getString(R.string.function_environment), 
-            getString(R.string.desc_environment), 
-            R.drawable.ic_environment));
-        functionList.add(new HomeFunction(
-            "document",
-            getString(R.string.function_document), 
-            getString(R.string.desc_document), 
-            R.drawable.ic_scan));
-        functionList.add(new HomeFunction(
-            "voice_command",
-            getString(R.string.function_voice_command), 
-            getString(R.string.desc_voice_command), 
-            R.drawable.ic_voice_command));
-        functionList.add(new HomeFunction(
-            "find_items",
-            getString(R.string.function_find_items), 
-            getString(R.string.desc_find_items), 
-            R.drawable.ic_search));
-        functionList.add(new HomeFunction(
-            "live_assistance",
-            getString(R.string.function_live_assistance), 
-            getString(R.string.desc_live_assistance), 
-            R.drawable.ic_assistance));
-        functionList.add(new HomeFunction(
-            "travel_assistant",
-            getString(R.string.travel_assistant_title), 
-            getString(R.string.travel_assistant_description), 
-            R.drawable.ic_travel));
+        
+        // 根據當前語言獲取對應的字符串
+        String envTitle, envDesc, docTitle, docDesc, voiceTitle, voiceDesc, 
+               findTitle, findDesc, liveTitle, liveDesc, travelTitle, travelDesc;
+        
+        if ("english".equals(currentLanguage)) {
+            // 英文版本
+            envTitle = "Environment Recognition";
+            envDesc = "Describe surroundings and objects";
+            docTitle = "Document Assistant";
+            docDesc = "Scan documents and recognize currency";
+            voiceTitle = "Voice Command";
+            voiceDesc = "Control app with voice commands";
+            findTitle = "Find Items";
+            findDesc = "Find marked personal items";
+            liveTitle = "Live Assistance";
+            liveDesc = "Video call with volunteers";
+            travelTitle = "Travel Assistant";
+            travelDesc = "Provide navigation, route planning, traffic information, weather updates and emergency location sharing services";
+        } else if ("mandarin".equals(currentLanguage)) {
+            // 普通話版本
+            envTitle = "环境识别";
+            envDesc = "描述周围环境和物体";
+            docTitle = "文档助手";
+            docDesc = "扫描文档和识别货币";
+            voiceTitle = "语音命令";
+            voiceDesc = "使用语音命令控制应用";
+            findTitle = "查找物品";
+            findDesc = "查找标记的个人物品";
+            liveTitle = "即时协助";
+            liveDesc = "与志愿者视频通话";
+            travelTitle = "出行协助";
+            travelDesc = "提供导航、路线规划、交通信息、天气更新和紧急位置分享服务";
+        } else {
+            // 廣東話版本（預設）
+            envTitle = getString(R.string.function_environment);
+            envDesc = getString(R.string.desc_environment);
+            docTitle = getString(R.string.function_document);
+            docDesc = getString(R.string.desc_document);
+            voiceTitle = getString(R.string.function_voice_command);
+            voiceDesc = getString(R.string.desc_voice_command);
+            findTitle = getString(R.string.function_find_items);
+            findDesc = getString(R.string.desc_find_items);
+            liveTitle = getString(R.string.function_live_assistance);
+            liveDesc = getString(R.string.desc_live_assistance);
+            travelTitle = getString(R.string.travel_assistant_title);
+            travelDesc = getString(R.string.travel_assistant_description);
+        }
+        
+        functionList.add(new HomeFunction("environment", envTitle, envDesc, R.drawable.ic_environment));
+        functionList.add(new HomeFunction("document", docTitle, docDesc, R.drawable.ic_scan));
+        functionList.add(new HomeFunction("voice_command", voiceTitle, voiceDesc, R.drawable.ic_voice_command));
+        functionList.add(new HomeFunction("find_items", findTitle, findDesc, R.drawable.ic_search));
+        functionList.add(new HomeFunction("live_assistance", liveTitle, liveDesc, R.drawable.ic_assistance));
+        functionList.add(new HomeFunction("travel_assistant", travelTitle, travelDesc, R.drawable.ic_travel));
+        
+        // 通知適配器數據已更新
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
     }
 
     private void setupRecyclerView() {

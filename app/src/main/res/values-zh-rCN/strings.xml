@@ -31,6 +31,14 @@
     <string name="camera_permission_granted">相机权限已授予</string>
     <string name="camera_permission_denied">需要相机权限才能进行视频通话</string>
     
-    <!-- 志工訊息 -->
-    <string name="volunteer_message">您好，我是视障人士，需要即时协助。</string>
+    <!-- Function Descriptions -->
+    <string name="desc_environment">描述周围环境和物体</string>
+    <string name="desc_document">扫描文档和识别货币</string>
+    <string name="desc_voice_command">使用语音命令控制应用</string>
+    <string name="desc_find_items">查找标记的个人物品</string>
+    <string name="desc_live_assistance">与志愿者视频通话</string>
+    
+    <!-- Travel Assistant -->
+    <string name="travel_assistant_title">出行协助</string>
+    <string name="travel_assistant_description">提供导航、路线规划、交通信息、天气更新和紧急位置分享服务</string>
 </resources>
