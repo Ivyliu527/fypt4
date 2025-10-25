@@ -16,9 +16,7 @@ public class MainActivity extends BaseAccessibleActivity {
     private RecyclerView recyclerView;
     private FunctionAdapter adapter;
     private LinearLayout emergencyButton;
-    private Button voiceCommandButton;
     private EmergencyManager emergencyManager;
-    private VoiceCommandManager voiceCommandManager;
     private final ArrayList<HomeFunction> functionList = new ArrayList<>();
 
     @Override
@@ -28,10 +26,6 @@ public class MainActivity extends BaseAccessibleActivity {
 
         // 初始化緊急管理器
         emergencyManager = EmergencyManager.getInstance(this);
-        
-        // 初始化語音命令管理器
-        voiceCommandManager = VoiceCommandManager.getInstance(this);
-        voiceCommandManager.setLanguage(currentLanguage);
         
         // 確保currentLanguage正確初始化
         if (currentLanguage == null) {
@@ -53,12 +47,12 @@ public class MainActivity extends BaseAccessibleActivity {
     protected void announcePageTitle() {
         // 播報頁面標題和功能列表
         String cantoneseText = "瞳伴主頁。歡迎使用智能視覺助手。" +
-                "當前有五個主要功能：環境識別、閱讀助手、語音命令、尋找物品、即時協助。" +
+                "當前有六個主要功能：環境識別、閱讀助手、語音命令、尋找物品、即時協助、出行協助。" +
                 "右上角有三個按鈕：緊急設置、系統設定、語言切換。" +
                 "底部有緊急求助按鈕，長按三秒發送求助信息。" +
                 "請點擊選擇功能或使用語音命令控制。";
         String englishText = "Tonbo Home. Welcome to the smart visual assistant. " +
-                "Five main functions available: Environment Recognition, Document Assistant, Voice Command, Find Items, Live Assistance. " +
+                "Six main functions available: Environment Recognition, Document Assistant, Voice Command, Find Items, Live Assistance, Travel Assistant. " +
                 "Three buttons on top right: Emergency Settings, System Settings, Language Switch. " +
                 "Emergency button at bottom, long press for 3 seconds to send help request. " +
                 "Please tap to select function or use voice command control.";
@@ -88,7 +82,6 @@ public class MainActivity extends BaseAccessibleActivity {
     private void initViews() {
         recyclerView = findViewById(R.id.recyclerView);
         emergencyButton = findViewById(R.id.emergencyButton);
-        voiceCommandButton = findViewById(R.id.voiceCommandButton);
 
         // 設置緊急按鈕
         emergencyButton.setOnLongClickListener(v -> {
@@ -99,24 +92,6 @@ public class MainActivity extends BaseAccessibleActivity {
         emergencyButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
             announceInfo("這是緊急求助按鈕，請長按三秒發送求助信息。點擊右上角紅色緊急按鈕可配置緊急聯絡人");
-        });
-        
-        // 設置語音命令按鈕
-        voiceCommandButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            if (voiceCommandManager.isListening()) {
-                announceInfo("語音識別正在進行中");
-            } else {
-                announceInfo("開始語音命令識別");
-                voiceCommandManager.startVoiceRecognition();
-            }
-        });
-        
-        // 設置語音命令按鈕長按事件
-        voiceCommandButton.setOnLongClickListener(v -> {
-            vibrationManager.vibrateLongPress();
-            announceInfo("語音命令幫助：您可以說出環境識別、閱讀助手、尋找物品、緊急求助、系統設定、語言切換等命令");
-            return true;
         });
 
         // 緊急求助設置按鈕
@@ -398,6 +373,11 @@ public class MainActivity extends BaseAccessibleActivity {
             getString(R.string.desc_document), 
             R.drawable.ic_scan));
         functionList.add(new HomeFunction(
+            "voice_command",
+            getString(R.string.function_voice_command), 
+            getString(R.string.desc_voice_command), 
+            R.drawable.ic_voice_command));
+        functionList.add(new HomeFunction(
             "find_items",
             getString(R.string.function_find_items), 
             getString(R.string.desc_find_items), 
@@ -450,6 +430,9 @@ public class MainActivity extends BaseAccessibleActivity {
             case "document":
                 startDocumentCurrencyActivity();
                 break;
+            case "voice_command":
+                startVoiceCommandActivity();
+                break;
             case "find_items":
                 startFindItemsActivity();
                 break;
@@ -471,6 +454,17 @@ public class MainActivity extends BaseAccessibleActivity {
             startActivity(intent);
         } catch (Exception e) {
             announceError("AI檢測功能暫不可用");
+        }
+    }
+    
+    protected void startVoiceCommandActivity() {
+        try {
+            Intent intent = new Intent(MainActivity.this, VoiceCommandActivity.class);
+            intent.putExtra("language", currentLanguage);
+            announceNavigation("正在進入語音命令頁面");
+            startActivity(intent);
+        } catch (Exception e) {
+            announceError("語音命令功能暫不可用");
         }
     }
 
@@ -562,9 +556,6 @@ public class MainActivity extends BaseAccessibleActivity {
         // 清理資源
         if (ttsManager != null) {
             ttsManager.shutdown();
-        }
-        if (voiceCommandManager != null) {
-            voiceCommandManager.destroy();
         }
     }
 }

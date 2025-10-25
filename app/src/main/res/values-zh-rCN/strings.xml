@@ -22,6 +22,31 @@
     <string name="language_button_desc_suffix">，点击切换语言</string>
     <string name="language_cantonese_desc">粤语</string>
     <string name="language_english_desc">英文</string>
+    <string name="language_mandarin_desc">普通话</string>
+    
+    <!-- 功能名称 -->
+    <string name="function_environment">环境识别</string>
+    <string name="function_document">阅读助手</string>
+    <string name="function_find_items">寻找物品</string>
+    <string name="function_live_assistance">即时协助</string>
+    <string name="function_voice_command">语音命令</string>
+    <string name="desc_voice_command">语音控制应用功能</string>
+    
+    <!-- 语音命令 -->
+    <string name="voice_command">语音命令</string>
+    <string name="voice_command_desc">语音命令按钮，点击开始语音识别</string>
+    <string name="voice_command_help">语音命令帮助：你可以说环境识别、阅读助手、寻找物品、紧急求助、系统设定、语言切换等指令</string>
+    <string name="voice_recognition_starting">开始语音识别</string>
+    <string name="voice_recognition_listening">正在监听...</string>
+    <string name="voice_recognition_error">语音识别错误</string>
+    <string name="voice_command_not_recognized">指令未识别，请说出有效指令</string>
+    
+    <!-- 语音命令页面 -->
+    <string name="voice_command_title">语音命令</string>
+    <string name="listening_status">点击开始</string>
+    <string name="listening_active">正在监听...</string>
+    <string name="available_commands">可用指令</string>
+    <string name="commands_list">• 环境识别：看看周围、环境识别\n• 阅读助手：读文件、扫描文件\n• 寻找物品：找东西、寻找物品\n• 紧急求助：救命、紧急求助\n• 系统设定：设置、打开设置\n• 语言切换：转换语言、切换语言\n• 返回主页：主页、返回主页\n• 时间查询：几点了、现在几点\n• 停止监听：停、停止</string>
     <!-- 环境识别 -->
     <string name="flash_on">闪光灯：开</string>
     <string name="flash_off">闪光灯：关</string>
@@ -80,12 +105,6 @@
     <string name="emergency_button_long_press_info">紧急求助按钮，长按三秒发送求助信息</string>
     <string name="app_title_accessibility">应用程序名称，瞳伴</string>
     <string name="function_selection_accessibility">功能选择区域，共有五个主要功能</string>
-    
-    <!-- 功能名称 -->
-    <string name="function_environment">环境识别</string>
-    <string name="function_document">阅读助手</string>
-    <string name="function_find_items">寻找物品</string>
-    <string name="function_live_assistance">即时协助</string>
     
     <!-- Find Items Page -->
     <string name="find_items_title">寻找物品</string>

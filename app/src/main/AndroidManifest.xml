@@ -102,6 +102,12 @@
             android:name=".RealAIDetectionActivity"
             android:label="真實AI檢測"
             android:exported="false" />
+            
+        <!-- Voice Command Activity - 語音命令 -->
+        <activity
+            android:name=".VoiceCommandActivity"
+            android:label="@string/voice_command_title"
+            android:exported="false" />
     </application>
 
 </manifest>

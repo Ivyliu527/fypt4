@@ -16,6 +16,24 @@
     <string name="function_document">閱讀助手</string>
     <string name="function_find_items">尋找物品</string>
     <string name="function_live_assistance">即時協助</string>
+    <string name="function_voice_command">語音命令</string>
+    <string name="desc_voice_command">語音控制應用功能</string>
+    
+    <!-- 語音命令 -->
+    <string name="voice_command">語音命令</string>
+    <string name="voice_command_desc">語音命令按鈕，點擊開始語音識別</string>
+    <string name="voice_command_help">語音命令幫助：你可以說環境識別、閱讀助手、尋找物品、緊急求助、系統設定、語言切換等指令</string>
+    <string name="voice_recognition_starting">開始語音識別</string>
+    <string name="voice_recognition_listening">正在監聽...</string>
+    <string name="voice_recognition_error">語音識別錯誤</string>
+    <string name="voice_command_not_recognized">指令未識別，請說出有效指令</string>
+    
+    <!-- 語音命令頁面 -->
+    <string name="voice_command_title">語音命令</string>
+    <string name="listening_status">點擊開始</string>
+    <string name="listening_active">正在監聽...</string>
+    <string name="available_commands">可用指令</string>
+    <string name="commands_list">• 環境識別：睇下周圍、環境識別\n• 閱讀助手：讀文件、掃描文件\n• 尋找物品：搵嘢、尋找物品\n• 緊急求助：救命、緊急求助\n• 系統設定：設定、打開設定\n• 語言切換：轉語言、切換語言\n• 返回主頁：主頁、返回主頁\n• 時間查詢：幾點、現在幾點\n• 停止監聽：收聲、停止</string>
     
     <!-- Find Items Page -->
     <string name="find_items_title">尋找物品</string>

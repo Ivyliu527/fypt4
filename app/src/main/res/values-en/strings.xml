@@ -25,6 +25,26 @@
     <string name="language_english_desc">English</string>
     <string name="language_mandarin_desc">Mandarin</string>
     
+    <!-- Voice Command -->
+    <string name="voice_command">Voice Command</string>
+    <string name="voice_command_desc">Voice command button, tap to start voice recognition</string>
+    <string name="voice_command_help">Voice command help: You can say environment recognition, document assistant, find items, emergency help, system settings, language switch and other commands</string>
+    <string name="voice_recognition_starting">Starting voice recognition</string>
+    <string name="voice_recognition_listening">Listening...</string>
+    <string name="voice_recognition_error">Voice recognition error</string>
+    <string name="voice_command_not_recognized">Command not recognized, please say a valid command</string>
+    
+    <!-- Voice Command Page -->
+    <string name="voice_command_title">Voice Command</string>
+    <string name="listening_status">Tap to start</string>
+    <string name="listening_active">Listening...</string>
+    <string name="available_commands">Available Commands</string>
+    <string name="commands_list">• Environment: look around, environment recognition\n• Document: read document, scan document\n• Find Items: find items, find object\n• Emergency: emergency, help me\n• Settings: settings, open settings\n• Language: switch language, change language\n• Home: go home, home\n• Time: what time is it, tell me the time\n• Stop: stop, stop listening</string>
+    
+    <!-- Function Names -->
+    <string name="function_voice_command">Voice Command</string>
+    <string name="desc_voice_command">Control app with voice commands</string>
+    
     <!-- Find Items Page -->
     <string name="find_items_title">Find Items</string>
     <string name="find_items_title_desc">Find Items page title</string>

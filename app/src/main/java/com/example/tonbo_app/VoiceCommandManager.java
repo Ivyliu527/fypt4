@@ -28,7 +28,7 @@ public class VoiceCommandManager {
     private static final int REQUEST_CODE_SPEECH_INPUT = 1000;
     private static VoiceCommandManager instance;
     
-    private BaseAccessibleActivity activity;
+    private Context context;
     private SpeechRecognizer speechRecognizer;
     private Intent recognizerIntent;
     private boolean isListening = false;
@@ -56,15 +56,15 @@ public class VoiceCommandManager {
     
     private VoiceCommandListener commandListener;
     
-    public VoiceCommandManager(BaseAccessibleActivity activity) {
-        this.activity = activity;
+    private VoiceCommandManager(Context context) {
+        this.context = context.getApplicationContext();
         initializeCommands();
         initializeSpeechRecognizer();
     }
     
-    public static synchronized VoiceCommandManager getInstance(BaseAccessibleActivity activity) {
+    public static synchronized VoiceCommandManager getInstance(Context context) {
         if (instance == null) {
-            instance = new VoiceCommandManager(activity);
+            instance = new VoiceCommandManager(context);
         }
         return instance;
     }
@@ -187,23 +187,13 @@ public class VoiceCommandManager {
      * 初始化語音識別器
      */
     private void initializeSpeechRecognizer() {
-        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO) 
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity, 
-                new String[]{Manifest.permission.RECORD_AUDIO}, 
-                REQUEST_CODE_SPEECH_INPUT);
-            return;
-        }
-        
-        if (SpeechRecognizer.isRecognitionAvailable(activity)) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(activity);
+        if (SpeechRecognizer.isRecognitionAvailable(context)) {
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
             speechRecognizer.setRecognitionListener(new RecognitionListener() {
                 @Override
                 public void onReadyForSpeech(Bundle params) {
                     Log.d(TAG, "準備接收語音");
                     isListening = true;
-                    activity.announceInfo("請說出您的命令");
-                    activity.vibrationManager.vibrateNotification();
                     if (commandListener != null) {
                         commandListener.onListeningStarted();
                     }
@@ -212,7 +202,6 @@ public class VoiceCommandManager {
                 @Override
                 public void onBeginningOfSpeech() {
                     Log.d(TAG, "開始說話");
-                    activity.announceInfo("正在聆聽...");
                 }
                 
                 @Override
@@ -235,11 +224,8 @@ public class VoiceCommandManager {
                 public void onError(int error) {
                     Log.e(TAG, "語音識別錯誤: " + getErrorText(error));
                     isListening = false;
-                    String errorMessage = getErrorText(error);
-                    activity.announceError(errorMessage);
-                    activity.vibrationManager.vibrateError();
                     if (commandListener != null) {
-                        commandListener.onError(errorMessage);
+                        commandListener.onError(getErrorText(error));
                         commandListener.onListeningStopped();
                     }
                 }
@@ -293,14 +279,30 @@ public class VoiceCommandManager {
     /**
      * 開始監聽語音命令
      */
-    public void startVoiceRecognition() {
+    public void startListening() {
         if (speechRecognizer == null) {
             initializeSpeechRecognizer();
         }
         
+        if (speechRecognizer == null) {
+            Log.e(TAG, "語音識別器初始化失敗");
+            if (commandListener != null) {
+                commandListener.onError("語音識別器初始化失敗");
+            }
+            return;
+        }
+        
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) 
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.w(TAG, "錄音權限未授予");
+            if (commandListener != null) {
+                commandListener.onError("需要錄音權限");
+            }
+            return;
+        }
+        
         if (isListening) {
             Log.w(TAG, "已經在監聽中");
-            activity.announceInfo("語音識別正在進行中");
             return;
         }
         
@@ -335,7 +337,7 @@ public class VoiceCommandManager {
     /**
      * 停止監聽
      */
-    public void stopVoiceRecognition() {
+    public void stopListening() {
         if (speechRecognizer != null && isListening) {
             speechRecognizer.stopListening();
             isListening = false;
@@ -351,77 +353,14 @@ public class VoiceCommandManager {
         
         if (command != null) {
             Log.d(TAG, "匹配到命令: " + command);
-            executeCommand(command, recognizedText);
             if (commandListener != null) {
                 commandListener.onCommandRecognized(command, recognizedText);
             }
         } else {
             Log.d(TAG, "未匹配到命令: " + recognizedText);
-            activity.announceError("未識別的命令，請說出有效的命令");
-            activity.vibrationManager.vibrateError();
             if (commandListener != null) {
                 commandListener.onError("未識別的命令");
             }
-        }
-    }
-    
-    /**
-     * 執行語音命令
-     */
-    private void executeCommand(String command, String originalText) {
-        Log.d(TAG, "執行命令: " + command);
-        
-        // 震動反饋
-        activity.vibrationManager.vibrateSuccess();
-        
-        // 根據命令執行相應操作
-        switch (command) {
-            case "open_environment":
-                activity.announceInfo("正在啟動環境識別");
-                ((MainActivity) activity).startEnvironmentActivity();
-                break;
-            case "open_document":
-                activity.announceInfo("正在啟動閱讀助手");
-                ((MainActivity) activity).startDocumentCurrencyActivity();
-                break;
-            case "open_find":
-                activity.announceInfo("正在啟動尋找物品");
-                ((MainActivity) activity).startFindItemsActivity();
-                break;
-            case "open_assistance":
-                activity.announceInfo("即時協助功能開發中");
-                break;
-            case "emergency":
-                activity.announceInfo("正在啟動緊急求助設置");
-                ((MainActivity) activity).openEmergencySettings();
-                break;
-            case "open_settings":
-                activity.announceInfo("正在啟動系統設定");
-                ((MainActivity) activity).openSettings();
-                break;
-            case "switch_language":
-                activity.announceInfo("正在切換語言");
-                ((MainActivity) activity).toggleLanguage();
-                break;
-            case "go_home":
-                activity.announceInfo("返回主頁");
-                activity.finish();
-                break;
-            case "go_back":
-                activity.announceInfo("返回上一頁");
-                activity.finish();
-                break;
-            case "tell_time":
-                activity.announceInfo("時間功能開發中");
-                break;
-            case "stop_listening":
-                activity.announceInfo("停止語音識別");
-                stopVoiceRecognition();
-                break;
-            default:
-                activity.announceError("未識別的命令，請說出有效的命令");
-                activity.vibrationManager.vibrateError();
-                break;
         }
     }
     
