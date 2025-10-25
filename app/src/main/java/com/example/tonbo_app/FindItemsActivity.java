@@ -211,6 +211,22 @@ public class FindItemsActivity extends BaseAccessibleActivity {
                 } else {
                     return "物品名稱：";
                 }
+            case "camera_setup_failed":
+                if ("english".equals(currentLanguage)) {
+                    return "Camera setup failed";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "相机设置失败";
+                } else {
+                    return "相機設置失敗";
+                }
+            case "camera_not_ready_status":
+                if ("english".equals(currentLanguage)) {
+                    return "Camera not ready";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "相机未就绪";
+                } else {
+                    return "相機未就緒";
+                }
             default:
                 return "";
         }
@@ -251,18 +267,18 @@ public class FindItemsActivity extends BaseAccessibleActivity {
                     this, cameraSelector, preview, imageCapture);
                 
                 Log.d(TAG, "相機初始化成功");
-                updateStatus(getString(R.string.camera_ready));
+                updateStatus(getLocalizedString("camera_ready"));
                 
             } catch (ExecutionException | InterruptedException e) {
                 Log.e(TAG, "相機初始化失敗: " + e.getMessage());
-                updateStatus(getString(R.string.camera_setup_failed));
+                updateStatus(getLocalizedString("camera_setup_failed"));
             }
         }, ContextCompat.getMainExecutor(this));
     }
 
     private void capturePhoto() {
         if (imageCapture == null) {
-            updateStatus(getString(R.string.camera_not_ready_status));
+            updateStatus(getLocalizedString("camera_not_ready_status"));
             return;
         }
 
