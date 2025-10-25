@@ -36,8 +36,7 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     
     private PreviewView previewView;
     private OptimizedDetectionOverlayView detectionOverlay;
-    private TextView statusText;
-    private TextView detectionResultsText;
+    private View statusIndicator;
     private Button backButton;
     private Button startButton;
     private Button stopButton;
@@ -76,8 +75,7 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     private void initViews() {
         previewView = findViewById(R.id.previewView);
         detectionOverlay = findViewById(R.id.detectionOverlay);
-        statusText = findViewById(R.id.statusText);
-        detectionResultsText = findViewById(R.id.detectionResultsText);
+        statusIndicator = findViewById(R.id.statusIndicator);
         backButton = findViewById(R.id.backButton);
         startButton = findViewById(R.id.startButton);
         stopButton = findViewById(R.id.stopButton);
@@ -95,8 +93,8 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         startButton.setOnClickListener(v -> startDetection());
         stopButton.setOnClickListener(v -> stopDetection());
         
-        // 初始化狀態
-        updateStatus("環境識別已準備就緒");
+        // 初始化狀態指示燈
+        updateStatusIndicator("ready");
         stopButton.setEnabled(false);
     }
     
@@ -104,10 +102,10 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         try {
             yoloDetector = new YoloDetector(this);
             Log.d(TAG, "環境識別器初始化完成");
-            updateStatus("環境識別器已準備就緒");
+            updateStatusIndicator("ready");
         } catch (Exception e) {
             Log.e(TAG, "環境識別器初始化失敗: " + e.getMessage());
-            updateStatus("環境識別器初始化失敗");
+            updateStatusIndicator("error");
             Toast.makeText(this, "環境識別器初始化失敗", Toast.LENGTH_LONG).show();
         }
     }
@@ -132,7 +130,7 @@ public class RealAIDetectionActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initializeCamera();
             } else {
-                updateStatus("需要相機權限才能使用環境識別");
+                updateStatusIndicator("error");
                 Toast.makeText(this, "需要相機權限才能使用環境識別", Toast.LENGTH_LONG).show();
             }
         }
@@ -149,13 +147,13 @@ public class RealAIDetectionActivity extends AppCompatActivity {
                     setupCamera();
                 } catch (Exception e) {
                     Log.e(TAG, "相機初始化失敗: " + e.getMessage());
-                    updateStatus("相機初始化失敗");
+                    updateStatusIndicator("error");
                 }
             }, ContextCompat.getMainExecutor(this));
             
         } catch (Exception e) {
             Log.e(TAG, "相機提供者獲取失敗: " + e.getMessage());
-            updateStatus("相機提供者獲取失敗");
+            updateStatusIndicator("error");
         }
     }
     
@@ -187,12 +185,12 @@ public class RealAIDetectionActivity extends AppCompatActivity {
             CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
             cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
             
-            updateStatus("相機已準備就緒，可以開始環境識別");
+            updateStatusIndicator("ready");
             startButton.setEnabled(true);
             
         } catch (Exception e) {
             Log.e(TAG, "相機設置失敗: " + e.getMessage());
-            updateStatus("相機設置失敗");
+            updateStatusIndicator("error");
         }
     }
     
@@ -205,19 +203,17 @@ public class RealAIDetectionActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (results != null && !results.isEmpty()) {
                     detectionOverlay.setDetectionResultsWithRelativeCoords(results);
-                    updateStatus("識別到 " + results.size() + " 個物體，正在分析環境");
-                    updateDetectionResults(results);
+                    updateStatusIndicator("scanning");
                     announceDetectionResults(results);
                 } else {
                     detectionOverlay.clearDetectionResults();
-                    updateStatus("正在掃描環境，請稍候");
-                    detectionResultsText.setText("正在掃描環境，請稍候...");
+                    updateStatusIndicator("scanning");
                 }
             });
             
         } catch (Exception e) {
             Log.e(TAG, "圖像分析失敗: " + e.getMessage());
-            runOnUiThread(() -> updateStatus("檢測失敗: " + e.getMessage()));
+            runOnUiThread(() -> updateStatusIndicator("error"));
         }
     }
     
@@ -230,7 +226,7 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         isDetecting = true;
         startButton.setEnabled(false);
         stopButton.setEnabled(true);
-        updateStatus("環境識別已開始，正在掃描前方環境");
+        updateStatusIndicator("scanning");
         
         
         Toast.makeText(this, "環境識別已開始", Toast.LENGTH_SHORT).show();
@@ -240,7 +236,7 @@ public class RealAIDetectionActivity extends AppCompatActivity {
         isDetecting = false;
         startButton.setEnabled(true);
         stopButton.setEnabled(false);
-        updateStatus("環境識別已停止");
+        updateStatusIndicator("ready");
         
         // 清除檢測結果
         detectionOverlay.clearDetectionResults();
@@ -249,27 +245,26 @@ public class RealAIDetectionActivity extends AppCompatActivity {
     }
     
     
-    private void updateStatus(String status) {
-        statusText.setText(status);
-        Log.d(TAG, "狀態更新: " + status);
+    private void updateStatusIndicator(String status) {
+        int drawableRes;
+        switch (status) {
+            case "ready":
+                drawableRes = R.drawable.status_indicator_ready;
+                break;
+            case "scanning":
+                drawableRes = R.drawable.status_indicator_scanning;
+                break;
+            case "error":
+                drawableRes = R.drawable.status_indicator_error;
+                break;
+            default:
+                drawableRes = R.drawable.status_indicator_ready;
+                break;
+        }
+        statusIndicator.setBackgroundResource(drawableRes);
+        Log.d(TAG, "狀態指示燈更新: " + status);
     }
     
-    private void updateDetectionResults(List<YoloDetector.DetectionResult> results) {
-        StringBuilder resultText = new StringBuilder();
-        resultText.append("檢測到的物體：\n\n");
-        
-        for (int i = 0; i < results.size(); i++) {
-            YoloDetector.DetectionResult result = results.get(i);
-            resultText.append((i + 1)).append(". ").append(result.getLabelZh())
-                     .append(" (信心度: ").append(String.format("%.1f", result.getConfidence() * 100)).append("%)\n");
-            
-            // 添加位置信息
-            String position = getPositionDescription(result.getBoundingBox());
-            resultText.append("   位置: ").append(position).append("\n\n");
-        }
-        
-        detectionResultsText.setText(resultText.toString());
-    }
     
     private void announceDetectionResults(List<YoloDetector.DetectionResult> results) {
         if (results.isEmpty()) return;

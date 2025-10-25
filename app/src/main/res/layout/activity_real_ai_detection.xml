@@ -69,56 +69,15 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <!-- 全畫面檢測狀態覆蓋層 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:background="#CC000000"
-            android:padding="24dp"
-            android:gravity="center">
-
-            <!-- 檢測狀態 -->
-            <TextView
-                android:id="@+id/statusText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="準備就緒"
-                android:textColor="#00FF00"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="24dp" />
-
-            <!-- 檢測結果顯示 -->
-            <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:background="#80000000"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/detectionResultsText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="等待檢測結果..."
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:lineSpacingExtra="4dp"
-                    android:gravity="center" />
-
-            </ScrollView>
-
-            <!-- 操作提示 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="點擊下方按鈕開始環境識別"
-                android:textColor="#CCCCCC"
-                android:textSize="14sp"
-                android:layout_marginTop="16dp" />
-
-        </LinearLayout>
+        <!-- 右上角狀態指示燈 -->
+        <View
+            android:id="@+id/statusIndicator"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="24dp"
+            android:background="@drawable/status_indicator_ready"
+            android:elevation="8dp" />
 
     </FrameLayout>
 
