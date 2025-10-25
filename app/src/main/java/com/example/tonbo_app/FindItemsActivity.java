@@ -142,6 +142,12 @@ public class FindItemsActivity extends BaseAccessibleActivity {
         if (itemNameInput != null) {
             itemNameInput.setHint(getLocalizedString("enter_item_name"));
         }
+        
+        // 更新物品名稱標籤
+        TextView itemNameLabel = findViewById(R.id.item_name_label);
+        if (itemNameLabel != null) {
+            itemNameLabel.setText(getLocalizedString("item_name_label"));
+        }
     }
     
     /**
@@ -196,6 +202,14 @@ public class FindItemsActivity extends BaseAccessibleActivity {
                     return "输入物品名称";
                 } else {
                     return "輸入物品名稱";
+                }
+            case "item_name_label":
+                if ("english".equals(currentLanguage)) {
+                    return "Item Name:";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "物品名称：";
+                } else {
+                    return "物品名稱：";
                 }
             default:
                 return "";
@@ -476,8 +490,19 @@ public class FindItemsActivity extends BaseAccessibleActivity {
 
     @Override
     protected void announcePageTitle() {
-        String title = getString(R.string.find_items_title);
-        ttsManager.speak(null, title, true);
+        String title = getLocalizedString("find_items_title");
+        String description;
+        
+        if ("english".equals(currentLanguage)) {
+            description = "Find Items page. You can take photos, mark items, and find previously marked items.";
+            ttsManager.speak(null, description, true);
+        } else if ("mandarin".equals(currentLanguage)) {
+            description = "查找物品页面。您可以拍照、标记物品，并查找之前标记的物品。";
+            ttsManager.speak(description, null, true);
+        } else {
+            description = "尋找物品頁面。您可以拍照、標記物品，並查找之前標記的物品。";
+            ttsManager.speak(description, "Find Items page. You can take photos, mark items, and find previously marked items.", true);
+        }
     }
 
     @Override

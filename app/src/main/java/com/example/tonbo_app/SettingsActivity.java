@@ -50,6 +50,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
         initViews();
         loadSettings();
         setupListeners();
+        updateLanguageUI();
         
         // 頁面標題播報
         announcePageTitle();
@@ -398,6 +399,103 @@ public class SettingsActivity extends BaseAccessibleActivity {
             String englishText = "System Settings. You can adjust voice settings, vibration feedback, screen reader support and more.";
             ttsManager.speak(cantoneseText, englishText, true);
         }, 500);
+    }
+    
+    /**
+     * 更新語言UI
+     */
+    private void updateLanguageUI() {
+        // 更新頁面標題
+        TextView titleText = findViewById(R.id.systemSettingsTitle);
+        if (titleText != null) {
+            String title;
+            if ("english".equals(currentLanguage)) {
+                title = "System Settings";
+            } else if ("mandarin".equals(currentLanguage)) {
+                title = "系统设置";
+            } else {
+                title = "系統設定";
+            }
+            titleText.setText(title);
+        }
+        
+        // 更新語音設定標題
+        TextView voiceSettingsTitle = findViewById(R.id.voiceSettingsTitle);
+        if (voiceSettingsTitle != null) {
+            String title;
+            if ("english".equals(currentLanguage)) {
+                title = "Voice Settings";
+            } else if ("mandarin".equals(currentLanguage)) {
+                title = "语音设置";
+            } else {
+                title = "語音設定";
+            }
+            voiceSettingsTitle.setText(title);
+        }
+        
+        // 更新無障礙設定標題
+        TextView accessibilitySettingsTitle = findViewById(R.id.accessibilitySettingsTitle);
+        if (accessibilitySettingsTitle != null) {
+            String title;
+            if ("english".equals(currentLanguage)) {
+                title = "Accessibility Settings";
+            } else if ("mandarin".equals(currentLanguage)) {
+                title = "无障碍设置";
+            } else {
+                title = "無障礙設定";
+            }
+            accessibilitySettingsTitle.setText(title);
+        }
+        
+        // 更新測試和重置標題
+        TextView testResetTitle = findViewById(R.id.testResetTitle);
+        if (testResetTitle != null) {
+            String title;
+            if ("english".equals(currentLanguage)) {
+                title = "Test and Reset";
+            } else if ("mandarin".equals(currentLanguage)) {
+                title = "测试和重置";
+            } else {
+                title = "測試和重置";
+            }
+            testResetTitle.setText(title);
+        }
+        
+        // 更新按鈕文字
+        updateButtonTexts();
+    }
+    
+    /**
+     * 更新按鈕文字
+     */
+    private void updateButtonTexts() {
+        // 更新測試語音按鈕
+        Button testVoiceButton = findViewById(R.id.testVoiceButton);
+        if (testVoiceButton != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Test Voice";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "测试语音";
+            } else {
+                text = "測試語音";
+            }
+            testVoiceButton.setText(text);
+        }
+        
+        // 更新重置設定按鈕
+        Button resetSettingsButton = findViewById(R.id.resetSettingsButton);
+        if (resetSettingsButton != null) {
+            String text;
+            if ("english".equals(currentLanguage)) {
+                text = "Reset Settings";
+            } else if ("mandarin".equals(currentLanguage)) {
+                text = "重置设置";
+            } else {
+                text = "重置設定";
+            }
+            resetSettingsButton.setText(text);
+        }
     }
     
     @Override

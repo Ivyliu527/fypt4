@@ -173,15 +173,19 @@ public class MainActivity extends BaseAccessibleActivity {
      * 更新頁面標題
      */
     private void updatePageTitle() {
-        String title;
-        if ("english".equals(currentLanguage)) {
-            title = "Tonbo";
-        } else if ("mandarin".equals(currentLanguage)) {
-            title = "Tonbo";
-        } else {
-            title = "Tonbo";
+        // 更新Function Selection標題
+        TextView functionTitle = findViewById(R.id.functionSelectionTitle);
+        if (functionTitle != null) {
+            String functionSelectionTitle;
+            if ("english".equals(currentLanguage)) {
+                functionSelectionTitle = "Function Selection";
+            } else if ("mandarin".equals(currentLanguage)) {
+                functionSelectionTitle = "功能选择";
+            } else {
+                functionSelectionTitle = "功能選擇";
+            }
+            functionTitle.setText(functionSelectionTitle);
         }
-        // 標題通常不需要更新，因為是品牌名稱
     }
     
     /**
