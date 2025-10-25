@@ -40,7 +40,6 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
 
     // 志工聯繫信息
     private static final String VOLUNTEER_PHONE = "+852-1234-5678"; // 示例電話號碼
-    private static final String VOLUNTEER_MESSAGE = "您好，我是視障人士，需要即時協助。";
     
     // 狀態
     private boolean isConnecting = false;
@@ -67,7 +66,20 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             String cantoneseText = "即時協助頁面。你可以一鍵呼叫志工、發送快速訊息或進行視訊連線。";
             String englishText = "Instant Assistance page. You can make quick calls to volunteers, send messages, or video chat.";
-            ttsManager.speak(cantoneseText, englishText, true);
+            String mandarinText = "即时协助页面。你可以一键呼叫志愿者、发送快速消息或进行视频连线。";
+            
+            switch (currentLanguage) {
+                case "english":
+                    ttsManager.speak(englishText, englishText, true);
+                    break;
+                case "mandarin":
+                    ttsManager.speak(mandarinText, mandarinText, true);
+                    break;
+                case "cantonese":
+                default:
+                    ttsManager.speak(cantoneseText, englishText, true);
+                    break;
+            }
         }, 500);
     }
 
@@ -116,12 +128,12 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
      * 檢查連接狀態
      */
     private void checkConnectionStatus() {
-        connectionStatus.setText("檢查連接中...");
+        connectionStatus.setText(getString(R.string.checking_connection));
         
         // 模擬檢查連接狀態
         handler.postDelayed(() -> {
-            connectionStatus.setText("連接正常");
-            announceInfo("系統連接正常，可以開始使用即時協助功能");
+            connectionStatus.setText(getString(R.string.connection_normal));
+            announceInfo(getString(R.string.connection_normal));
         }, 2000);
     }
 
@@ -143,8 +155,8 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
         }
 
         isConnecting = true;
-        updateStatus("正在呼叫志工...");
-        announceInfo("正在呼叫志工，請稍候");
+        updateStatus(getString(R.string.calling_volunteer));
+        announceInfo(getString(R.string.calling_volunteer));
 
         // 模擬呼叫過程
         handler.postDelayed(() -> {
@@ -152,11 +164,11 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
                 Intent callIntent = new Intent(Intent.ACTION_CALL);
                 callIntent.setData(Uri.parse("tel:" + VOLUNTEER_PHONE));
                 startActivity(callIntent);
-                announceSuccess("正在呼叫志工");
+                announceSuccess(getString(R.string.calling_volunteer));
             } catch (Exception e) {
                 Log.e(TAG, "呼叫失敗", e);
-                announceError("呼叫失敗，請檢查網絡連接");
-                updateStatus("呼叫失敗");
+                announceError(getString(R.string.call_failed));
+                updateStatus(getString(R.string.call_failed));
             }
             isConnecting = false;
         }, 1500);
@@ -180,20 +192,21 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
         }
 
         isConnecting = true;
-        updateStatus("正在發送訊息...");
-        announceInfo("正在發送快速訊息給志工");
+        updateStatus(getString(R.string.sending_message));
+        announceInfo(getString(R.string.sending_message));
 
         // 模擬發送訊息
         handler.postDelayed(() -> {
             try {
                 SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(VOLUNTEER_PHONE, null, VOLUNTEER_MESSAGE, null, null);
-                announceSuccess("訊息已發送給志工");
-                updateStatus("訊息已發送");
+                String message = getString(R.string.volunteer_message);
+                smsManager.sendTextMessage(VOLUNTEER_PHONE, null, message, null, null);
+                announceSuccess(getString(R.string.message_sent));
+                updateStatus(getString(R.string.message_sent));
             } catch (Exception e) {
                 Log.e(TAG, "發送訊息失敗", e);
-                announceError("發送訊息失敗，請檢查網絡連接");
-                updateStatus("發送失敗");
+                announceError(getString(R.string.message_failed));
+                updateStatus(getString(R.string.message_failed));
             }
             isConnecting = false;
         }, 2000);
@@ -217,8 +230,8 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
         }
 
         isConnecting = true;
-        updateStatus("正在連線視訊...");
-        announceInfo("正在連線志工進行視訊通話");
+        updateStatus(getString(R.string.connecting_video));
+        announceInfo(getString(R.string.connecting_video));
 
         // 模擬視訊連線
         handler.postDelayed(() -> {
@@ -227,11 +240,11 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
                 Intent videoIntent = new Intent(Intent.ACTION_VIEW);
                 videoIntent.setData(Uri.parse("https://meet.google.com/volunteer-assistance"));
                 startActivity(videoIntent);
-                announceSuccess("正在連線視訊通話");
+                announceSuccess(getString(R.string.connecting_video));
             } catch (Exception e) {
                 Log.e(TAG, "視訊連線失敗", e);
-                announceError("視訊連線失敗，請檢查網絡連接");
-                updateStatus("連線失敗");
+                announceError(getString(R.string.video_failed));
+                updateStatus(getString(R.string.video_failed));
             }
             isConnecting = false;
         }, 2500);
@@ -241,12 +254,7 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
      * 顯示幫助對話框
      */
     private void showHelpDialog() {
-        String helpText = "即時協助功能說明：\n" +
-                "1. 一鍵呼叫：直接撥打電話給志工\n" +
-                "2. 快速訊息：發送預設訊息給志工\n" +
-                "3. 視訊連線：進行視訊通話獲得協助\n" +
-                "所有功能都需要網絡連接和相應權限。";
-        
+        String helpText = getString(R.string.instant_assistance_help);
         announceInfo(helpText);
         Toast.makeText(this, helpText, Toast.LENGTH_LONG).show();
     }
@@ -265,28 +273,28 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
         switch (requestCode) {
             case PERMISSION_REQUEST_CALL:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    announceInfo("通話權限已授予");
+                    announceInfo(getString(R.string.call_permission_granted));
                     initiateQuickCall();
                 } else {
-                    announceError("需要通話權限才能呼叫志工");
+                    announceError(getString(R.string.call_permission_denied));
                 }
                 break;
                 
             case PERMISSION_REQUEST_SMS:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    announceInfo("簡訊權限已授予");
+                    announceInfo(getString(R.string.sms_permission_granted));
                     sendQuickMessage();
                 } else {
-                    announceError("需要簡訊權限才能發送訊息");
+                    announceError(getString(R.string.sms_permission_denied));
                 }
                 break;
                 
             case PERMISSION_REQUEST_CAMERA:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    announceInfo("相機權限已授予");
+                    announceInfo(getString(R.string.camera_permission_granted));
                     initiateVideoCall();
                 } else {
-                    announceError("需要相機權限才能進行視訊通話");
+                    announceError(getString(R.string.camera_permission_denied));
                 }
                 break;
         }
