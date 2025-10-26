@@ -81,22 +81,7 @@
 
     </LinearLayout>
 
-    <!-- 滑動區域 - 功能列表、緊急按鈕、操作指引 -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true"
-        android:scrollbars="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="20dp"
-            android:paddingBottom="20dp">
-
-    <!-- 功能列表標題 - 增大字體和間距 -->
+    <!-- 功能列表標題 -->
     <TextView
         android:id="@+id/functionSelectionTitle"
         android:layout_width="match_parent"
@@ -105,19 +90,19 @@
         android:textColor="#4FC3F7"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:layout_marginBottom="20dp"
-        android:contentDescription="@string/function_selection_area_desc"
-        android:minHeight="32dp" />
+        android:layout_marginTop="8dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="10dp"
+        android:contentDescription="@string/function_selection_area_desc" />
 
-    <!-- 功能列表 - 優化間距 -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+    <!-- ViewPager2 用於左右滑動的功能頁面 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:nestedScrollingEnabled="false" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
-    <!-- 緊急按鈕 - 增大尺寸和字體 -->
+    <!-- 緊急按鈕 -->
     <LinearLayout
         android:id="@+id/emergencyButton"
         android:layout_width="match_parent"
@@ -129,7 +114,9 @@
         android:focusable="true"
         android:contentDescription="@string/emergency_button_desc"
         android:minHeight="90dp"
-        android:padding="12dp">
+        android:padding="12dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="20dp">
         
         <TextView
             android:layout_width="wrap_content"
@@ -148,16 +135,6 @@
             android:layout_marginTop="4dp" />
             
     </LinearLayout>
-
-
-            <!-- 底部間距 -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="24dp" />
-
-        </LinearLayout>
-
-    </ScrollView>
 
 
 </LinearLayout>
