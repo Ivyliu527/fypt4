@@ -1,6 +1,9 @@
 package com.example.tonbo_app;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
@@ -11,7 +14,16 @@ import androidx.appcompat.app.AppCompatActivity;
 public abstract class BaseAccessibleActivity extends AppCompatActivity {
     protected TTSManager ttsManager;
     protected VibrationManager vibrationManager;
+    protected LocaleManager localeManager;
     protected String currentLanguage;
+    
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        // 在Activity創建前應用語言設置
+        LocaleManager localeManager = LocaleManager.getInstance(newBase);
+        Context context = localeManager.updateResources(newBase, localeManager.getCurrentLanguage());
+        super.attachBaseContext(context);
+    }
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,20 +32,89 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
         // 初始化管理器
         ttsManager = TTSManager.getInstance(this);
         vibrationManager = VibrationManager.getInstance(this);
+        localeManager = LocaleManager.getInstance(this);
         
         // 獲取語言設置
         currentLanguage = getIntent().getStringExtra("language");
         if (currentLanguage == null) {
-            currentLanguage = "cantonese"; // 默認語言
+            currentLanguage = localeManager.getCurrentLanguage(); // 使用保存的語言
         }
+        
+        // 設定TTSManager的語言
+        ttsManager.setLanguageSilently(currentLanguage);
+        
+        // 強制初始化TTS，確保語音播報可用
+        ttsManager.forceInitialize();
         
         // 設置無障礙支持
         setupAccessibility();
         
         // 頁面載入完成後播放頁面標題
         getWindow().getDecorView().post(() -> {
-            announcePageTitle();
+            // 延遲播報，確保TTS初始化完成
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                Log.d("BaseAccessibleActivity", "🔊 開始播報頁面標題");
+                announcePageTitle();
+            }, 1000); // 延遲1秒確保TTS初始化完成
         });
+    }
+    
+    // 默認的Activity啟動方法，子類可以重寫
+    protected void startEnvironmentActivity() {
+        Intent intent = new Intent(this, EnvironmentActivity.class);
+        intent.putExtra("language", currentLanguage);
+        startActivity(intent);
+    }
+    
+    protected void startDocumentCurrencyActivity() {
+        Intent intent = new Intent(this, DocumentCurrencyActivity.class);
+        intent.putExtra("language", currentLanguage);
+        startActivity(intent);
+    }
+    
+    protected void startFindItemsActivity() {
+        Intent intent = new Intent(this, FindItemsActivity.class);
+        intent.putExtra("language", currentLanguage);
+        startActivity(intent);
+    }
+    
+    protected void startSettingsActivity() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        intent.putExtra("language", currentLanguage);
+        startActivity(intent);
+    }
+    
+    protected void handleEmergencyCommand() {
+        announceInfo("緊急求助功能");
+        // 子類可以重寫此方法實現具體的緊急求助邏輯
+    }
+    
+    protected void goToHome() {
+        if (!(this instanceof MainActivity)) {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra("language", currentLanguage);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        } else {
+            announceInfo("已在主頁");
+        }
+    }
+    
+    protected void handleLanguageSwitch() {
+        announceInfo("語言切換功能");
+        // 子類可以重寫此方法實現語言切換
+    }
+    
+    protected void announceCurrentTime() {
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
+        String currentTime = sdf.format(new java.util.Date());
+        announceInfo("現在時間: " + currentTime);
+    }
+    
+    protected void stopCurrentOperation() {
+        announceInfo("停止當前操作");
+        // 子類可以重寫此方法實現停止邏輯
     }
     
     private void setupAccessibility() {

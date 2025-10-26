@@ -6,9 +6,12 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -22,14 +25,16 @@ public class DetectionOverlayView extends View {
     private Paint boxPaint;
     private Paint textPaint;
     private Paint backgroundPaint;
+    private String currentLanguage = "cantonese"; // 當前語言
     
-    // 繪製參數
-    private static final int BOX_COLOR = Color.RED;
+    // 繪製參數 - 優化為更高精度和清晰度
+    private static final int BOX_COLOR = Color.BLUE;
+    private static final int BOX_COLOR_ALT = Color.MAGENTA;
     private static final int TEXT_COLOR = Color.WHITE;
     private static final int BACKGROUND_COLOR = Color.BLACK;
-    private static final int BOX_THICKNESS = 4;
-    private static final int TEXT_SIZE = 24;
-    private static final int TEXT_PADDING = 8;
+    private static final int BOX_THICKNESS = 6;  // 適中的邊界框粗細
+    private static final int TEXT_SIZE = 28;    // 適中的文字大小
+    private static final int TEXT_PADDING = 16; // 適中的文字內邊距
     
     public DetectionOverlayView(Context context) {
         super(context);
@@ -75,23 +80,66 @@ public class DetectionOverlayView extends View {
      * 更新檢測結果
      */
     public void updateDetections(List<ObjectDetectorHelper.DetectionResult> newDetections) {
-        this.detections = newDetections != null ? new ArrayList<>(newDetections) : new ArrayList<>();
+        Log.d(TAG, "updateDetections called with " + (newDetections != null ? newDetections.size() : 0) + " detections");
+        
+        // 只顯示最多2個檢測結果
+        if (newDetections != null && newDetections.size() > 2) {
+            // 按置信度排序並只取前2個
+            List<ObjectDetectorHelper.DetectionResult> sortedDetections = new ArrayList<>(newDetections);
+            Collections.sort(sortedDetections, new Comparator<ObjectDetectorHelper.DetectionResult>() {
+                @Override
+                public int compare(ObjectDetectorHelper.DetectionResult a, ObjectDetectorHelper.DetectionResult b) {
+                    return Float.compare(b.getConfidence(), a.getConfidence());
+                }
+            });
+            this.detections = new ArrayList<>(sortedDetections.subList(0, 2));
+            Log.d(TAG, "限制檢測結果為2個，按置信度排序");
+        } else {
+            this.detections = newDetections != null ? new ArrayList<>(newDetections) : new ArrayList<>();
+        }
+        
+        Log.d(TAG, "Updated detections list size: " + this.detections.size());
+        
+        // 確保視圖可見
+        setVisibility(VISIBLE);
+        
+        // 強制重繪
+        postInvalidate();
+        invalidate();
+        
+        Log.d(TAG, "postInvalidate() and invalidate() called");
+        
+        // 打印檢測結果詳情
+        for (int i = 0; i < this.detections.size(); i++) {
+            ObjectDetectorHelper.DetectionResult detection = this.detections.get(i);
+            Log.d(TAG, "Detection " + i + ": " + detection.getLabel() + " (" + detection.getConfidence() + ") at " + detection.getBoundingBox());
+        }
+    }
+    
+    /**
+     * 清除檢測結果
+     */
+    public void clearDetections() {
+        this.detections.clear();
         postInvalidate(); // 觸發重繪
     }
     
     /**
-     * 清除所有檢測結果
+     * 設置當前語言
      */
-    public void clearDetections() {
-        this.detections.clear();
-        postInvalidate();
+    public void setCurrentLanguage(String language) {
+        this.currentLanguage = language;
+        postInvalidate(); // 重新繪製以更新標籤語言
     }
     
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         
+        Log.d(TAG, "onDraw called, detections size: " + detections.size());
+        
         if (detections.isEmpty()) {
+            Log.d(TAG, "No detections to draw");
             return;
         }
         
@@ -99,9 +147,14 @@ public class DetectionOverlayView extends View {
         int viewWidth = getWidth();
         int viewHeight = getHeight();
         
-        // 繪製每個檢測結果
-        for (ObjectDetectorHelper.DetectionResult detection : detections) {
-            drawDetection(canvas, detection, viewWidth, viewHeight);
+        Log.d(TAG, "View size: " + viewWidth + "x" + viewHeight);
+        
+        // 繪製每個檢測結果，使用不同顏色
+        for (int i = 0; i < detections.size(); i++) {
+            ObjectDetectorHelper.DetectionResult detection = detections.get(i);
+            int color = (i % 2 == 0) ? BOX_COLOR : BOX_COLOR_ALT;
+            Log.d(TAG, "Drawing detection " + i + ": " + detection.getLabel() + " at " + detection.getBoundingBox());
+            drawDetection(canvas, detection, viewWidth, viewHeight, color);
         }
     }
     
@@ -109,27 +162,79 @@ public class DetectionOverlayView extends View {
      * 繪製單個檢測結果
      */
     private void drawDetection(Canvas canvas, ObjectDetectorHelper.DetectionResult detection, 
-                             int viewWidth, int viewHeight) {
+                             int viewWidth, int viewHeight, int boxColor) {
         
-        // 獲取邊界框（模型輸出的是0-1的相對座標）
+        // 獲取邊界框
         RectF boundingBox = detection.getBoundingBox();
         
-        // 轉換為實際像素座標
-        float left = boundingBox.left * viewWidth;
-        float top = boundingBox.top * viewHeight;
-        float right = boundingBox.right * viewWidth;
-        float bottom = boundingBox.bottom * viewHeight;
+        Log.d(TAG, "原始邊界框座標: " + boundingBox);
+        Log.d(TAG, "視圖尺寸: " + viewWidth + "x" + viewHeight);
+        
+        // 檢查邊界框座標是否已經是像素座標還是相對座標
+        float left, top, right, bottom;
+        
+        // 更精確的座標轉換邏輯
+        boolean isScaledCoords = (boundingBox.left > 1.0f || boundingBox.top > 1.0f ||
+                                boundingBox.right > 1.0f || boundingBox.bottom > 1.0f);
+        
+        if (isScaledCoords) {
+            // 縮放座標 (0-1000)，需要轉換為相對座標再轉為像素座標
+            Log.d(TAG, "檢測到縮放座標，轉換為像素座標");
+            left = (boundingBox.left / 1000.0f) * viewWidth;
+            top = (boundingBox.top / 1000.0f) * viewHeight;
+            right = (boundingBox.right / 1000.0f) * viewWidth;
+            bottom = (boundingBox.bottom / 1000.0f) * viewHeight;
+        } else if (boundingBox.left <= 1.0f && boundingBox.top <= 1.0f &&
+                  boundingBox.right <= 1.0f && boundingBox.bottom <= 1.0f) {
+            // 相對座標 (0-1)，需要轉換為像素座標
+            Log.d(TAG, "檢測到相對座標，轉換為像素座標");
+            left = boundingBox.left * viewWidth;
+            top = boundingBox.top * viewHeight;
+            right = boundingBox.right * viewWidth;
+            bottom = boundingBox.bottom * viewHeight;
+        } else {
+            // 已經是像素座標，直接使用
+            Log.d(TAG, "檢測到像素座標，直接使用");
+            left = boundingBox.left;
+            top = boundingBox.top;
+            right = boundingBox.right;
+            bottom = boundingBox.bottom;
+        }
+        
+        // 精確的邊界檢查和調整
+        left = Math.max(0, Math.min(left, viewWidth - 1));
+        top = Math.max(0, Math.min(top, viewHeight - 1));
+        right = Math.max(left + 1, Math.min(right, viewWidth));
+        bottom = Math.max(top + 1, Math.min(bottom, viewHeight));
         
         // 創建邊界框矩形
         RectF rect = new RectF(left, top, right, bottom);
         
-        // 繪製邊界框
+        // 設置邊界框顏色
+        boxPaint.setColor(boxColor);
+        
+        Log.d(TAG, "繪製邊界框: " + rect + ", 顏色: " + Integer.toHexString(boxColor));
+        
+        // 繪製邊界框 - 先繪製填充，再繪製邊框
+        Paint fillPaint = new Paint();
+        fillPaint.setColor(boxColor);
+        fillPaint.setStyle(Paint.Style.FILL);
+        fillPaint.setAlpha(50); // 半透明填充
+        
+        // 繪製填充
+        canvas.drawRect(rect, fillPaint);
+        
+        // 繪製邊框
         canvas.drawRect(rect, boxPaint);
         
-        // 準備標籤文字
-        String label = String.format("%s %.0f%%", 
-            detection.getLabelZh(), 
-            detection.getConfidence() * 100);
+        // 繪製角落標記
+        drawCornerMarkers(canvas, rect, boxColor);
+        
+        // 準備標籤文字（根據當前語言選擇對應的標籤）
+        String displayLabel = getDisplayLabel(detection);
+        String label = String.format("%s %.2f", 
+            displayLabel, 
+            detection.getConfidence());
         
         // 計算文字尺寸
         Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
@@ -156,17 +261,14 @@ public class DetectionOverlayView extends View {
         float textX = textLeft + TEXT_PADDING;
         float textY = textBottom - TEXT_PADDING;
         canvas.drawText(label, textX, textY, textPaint);
-        
-        // 在邊界框角落繪製小圓點（視覺增強）
-        drawCornerMarkers(canvas, rect);
     }
     
     /**
      * 繪製邊界框角落標記
      */
-    private void drawCornerMarkers(Canvas canvas, RectF rect) {
+    private void drawCornerMarkers(Canvas canvas, RectF rect, int color) {
         Paint markerPaint = new Paint();
-        markerPaint.setColor(BOX_COLOR);
+        markerPaint.setColor(color);
         markerPaint.setStyle(Paint.Style.FILL);
         markerPaint.setAntiAlias(true);
         
@@ -212,5 +314,20 @@ public class DetectionOverlayView extends View {
      */
     public int getDetectionCount() {
         return detections.size();
+    }
+    
+    /**
+     * 根據當前語言獲取顯示標籤
+     */
+    private String getDisplayLabel(ObjectDetectorHelper.DetectionResult detection) {
+        switch (currentLanguage) {
+            case "english":
+                return detection.getLabel() != null ? detection.getLabel() : detection.getLabelZh();
+            case "mandarin":
+                return detection.getLabelZh() != null ? detection.getLabelZh() : detection.getLabel();
+            case "cantonese":
+            default:
+                return detection.getLabelZh() != null ? detection.getLabelZh() : detection.getLabel();
+        }
     }
 }

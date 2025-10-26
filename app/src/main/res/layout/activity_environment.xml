@@ -10,64 +10,78 @@
         android:id="@+id/cameraPreview"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="@string/camera_preview_desc"
         app:layout_constraintBottom_toTopOf="@id/infoContainer"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:contentDescription="相機預覽畫面" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topBar" />
 
     <!-- Overlay for detection results -->
     <com.example.tonbo_app.DetectionOverlayView
         android:id="@+id/detectionOverlay"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="@id/cameraPreview"
+        android:contentDescription="@string/object_detection_overlay_desc"
+        android:elevation="20dp"
+        android:background="@android:color/transparent"
         app:layout_constraintBottom_toBottomOf="@id/cameraPreview"
-        app:layout_constraintStart_toStartOf="@id/cameraPreview"
         app:layout_constraintEnd_toEndOf="@id/cameraPreview"
-        android:contentDescription="物體檢測結果覆蓋層，顯示檢測框和標籤" />
+        app:layout_constraintStart_toStartOf="@id/cameraPreview"
+        app:layout_constraintTop_toTopOf="@id/cameraPreview" />
 
     <!-- Top Control Bar -->
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:background="#80000000"
-        android:padding="16dp"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <Button
             android:id="@+id/backButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/button_simple_background"
+            android:backgroundTint="@null"
+            android:contentDescription="@string/back_to_home"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="8dp"
             android:text="←"
-            android:textSize="24sp"
             android:textColor="@color/white"
-            android:background="@drawable/button_circle_background"
-            android:contentDescription="返回主頁按鈕" />
+            android:textSize="28sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
             android:layout_weight="1"
-            android:text="環境識別"
+            android:contentDescription="@string/environment_title"
+            android:gravity="center"
+            android:text="@string/environment_title"
             android:textColor="@color/white"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginHorizontal="16dp"
-            android:contentDescription="環境識別頁面標題" />
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/flashButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/button_simple_background"
+            android:backgroundTint="@null"
+            android:contentDescription="@string/flash_button_desc"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="8dp"
             android:text="💡"
-            android:textSize="20sp"
-            android:background="@drawable/button_circle_background"
-            android:contentDescription="閃光燈開關按鈕" />
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="8dp" />
+
 
     </LinearLayout>
 
@@ -76,69 +90,50 @@
         android:id="@+id/infoContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:background="@color/background_dark"
+        android:orientation="vertical"
         android:padding="20dp"
-        app:layout_constraintBottom_toTopOf="@id/controlButtons">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <TextView
             android:id="@+id/detectionStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="正在偵測環境..."
+            android:layout_marginBottom="12dp"
+            android:contentDescription="@string/detection_status_desc"
+            android:gravity="center"
+            android:text="@string/analyzing_environment"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginBottom="12dp"
-            android:contentDescription="偵測狀態提示" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/detectionResults"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="指向周圍物體以開始識別"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
+            android:contentDescription="@string/detection_results_desc"
             android:gravity="center"
             android:minHeight="60dp"
-            android:contentDescription="偵測結果顯示" />
+            android:text="@string/point_to_objects_instruction"
+            android:textColor="@color/text_secondary"
+            android:textSize="16sp" />
+
+        <!-- Start Detection Button -->
+        <Button
+            android:id="@+id/startDetectionButton"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/button_square_background"
+            android:backgroundTint="@color/menu_blue"
+            android:contentDescription="@string/start_detection_desc"
+            android:text="@string/start_detection"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 
-    <!-- Control Buttons -->
-    <LinearLayout
-        android:id="@+id/controlButtons"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@color/background_dark"
-        android:padding="16dp"
-        android:gravity="center"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <Button
-            android:id="@+id/speakButton"
-            android:layout_width="120dp"
-            android:layout_height="60dp"
-            android:text="語音播報"
-            android:textSize="16sp"
-            android:textColor="@color/white"
-            android:background="@drawable/menu_button_background"
-            android:layout_marginEnd="16dp"
-            android:contentDescription="語音播報當前偵測結果" />
-
-        <Button
-            android:id="@+id/clearButton"
-            android:layout_width="120dp"
-            android:layout_height="60dp"
-            android:text="清除顯示"
-            android:textSize="16sp"
-            android:textColor="@color/white"
-            android:background="@drawable/menu_button_background"
-            android:contentDescription="清除檢測框顯示" />
-
-    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

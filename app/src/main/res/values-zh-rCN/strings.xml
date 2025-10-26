@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 即時協助相關 - 普通話 -->
+    <string name="instant_assistance_title">即时协助</string>
+    <string name="instant_assistance_desc">一键呼叫志愿者获得即时协助</string>
+    <string name="ready_to_assist">准备协助</string>
+    <string name="checking_connection">检查连接中...</string>
+    <string name="quick_call_desc">一键呼叫志愿者</string>
+    <string name="quick_message_desc">快速发送消息</string>
+    <string name="video_call_desc">视频连线志愿者</string>
+    <string name="help_button_desc">帮助按钮</string>
+    
+    <!-- 即時協助功能說明 -->
+    <string name="instant_assistance_help">即时协助功能说明：\n1. 一键呼叫：直接拨打电话给志愿者\n2. 快速消息：发送预设消息给志愿者\n3. 视频连线：进行视频通话获得协助\n所有功能都需要网络连接和相应权限。</string>
+    
+    <!-- 狀態訊息 -->
+    <string name="calling_volunteer">正在呼叫志愿者...</string>
+    <string name="sending_message">正在发送消息...</string>
+    <string name="connecting_video">正在连线视频...</string>
+    <string name="message_sent">消息已发送给志愿者</string>
+    <string name="call_failed">呼叫失败，请检查网络连接</string>
+    <string name="message_failed">发送消息失败，请检查网络连接</string>
+    <string name="video_failed">视频连线失败，请检查网络连接</string>
+    <string name="connection_normal">连接正常</string>
+    
+    <!-- 權限相關 -->
+    <string name="call_permission_granted">通话权限已授予</string>
+    <string name="call_permission_denied">需要通话权限才能呼叫志愿者</string>
+    <string name="sms_permission_granted">短信权限已授予</string>
+    <string name="sms_permission_denied">需要短信权限才能发送消息</string>
+    <string name="camera_permission_granted">相机权限已授予</string>
+    <string name="camera_permission_denied">需要相机权限才能进行视频通话</string>
+    
+    <!-- Function Descriptions -->
+    <string name="desc_environment">描述周围环境和物体</string>
+    <string name="desc_document">扫描文档和识别货币</string>
+    <string name="desc_voice_command">使用语音命令控制应用</string>
+    <string name="desc_find_items">查找标记的个人物品</string>
+    <string name="desc_live_assistance">与志愿者视频通话</string>
+    
+    <!-- Travel Assistant -->
+    <string name="travel_assistant_title">出行协助</string>
+    <string name="travel_assistant_description">提供导航、路线规划、交通信息、天气更新和紧急位置分享服务</string>
+</resources>

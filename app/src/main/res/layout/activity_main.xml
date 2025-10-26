@@ -3,81 +3,161 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#000000"
-    android:padding="16dp">
+    android:background="#000000">
 
-    <!-- 頂部標題和語言切換 -->
+    <!-- 頂部標題和按鈕區域 - 固定不動 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="24dp">
+        android:padding="20dp"
+        android:paddingBottom="16dp"
+        android:background="#000000">
 
         <TextView
             android:id="@+id/appTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="瞳伴"
+            android:text="@string/app_name"
             android:textColor="#FFFFFF"
-            android:textSize="30sp"
+            android:textSize="45sp"
             android:textStyle="bold"
-            android:contentDescription="應用程式名稱，瞳伴，智能視覺助手"
+            android:contentDescription="@string/app_name"
             android:importantForAccessibility="yes"
-            android:focusable="true" />
+            android:focusable="true"
+            android:minHeight="48dp" />
 
+        <!-- 緊急求助設置按鈕 - 現代化設計 -->
+        <Button
+            android:id="@+id/emergencySettingsButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:text="🚨"
+            android:textSize="24sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_emergency_background"
+            android:backgroundTint="@null"
+            android:contentDescription="@string/emergency_settings_desc"
+            android:layout_marginEnd="12dp"
+            android:minHeight="64dp"
+            android:minWidth="64dp"
+            android:elevation="4dp"
+            android:stateListAnimator="@null" />
+
+        <!-- 系統設定按鈕 - 現代化設計 -->
+        <Button
+            android:id="@+id/systemSettingsButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:text="⚙"
+            android:textSize="24sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_modern_background"
+            android:backgroundTint="@null"
+            android:contentDescription="@string/system_settings_desc"
+            android:layout_marginEnd="12dp"
+            android:minHeight="64dp"
+            android:minWidth="64dp"
+            android:elevation="4dp"
+            android:stateListAnimator="@null" />
+
+        <!-- 語言切換按鈕 - 現代化設計 -->
         <Button
             android:id="@+id/languageButton"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:text="廣"
-            android:textSize="18sp"
+            android:textSize="22sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/button_circle_background"
-            android:contentDescription="當前語言廣東話，點擊切換語言" />
+            android:background="@drawable/button_language_background"
+            android:backgroundTint="@null"
+            android:contentDescription="@string/language_button_desc_prefix"
+            android:minHeight="72dp"
+            android:minWidth="72dp"
+            android:elevation="4dp"
+            android:stateListAnimator="@null" />
 
     </LinearLayout>
 
-    <!-- 功能列表 -->
+    <!-- 滑動區域 - 功能列表、緊急按鈕、操作指引 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="20dp">
+
+    <!-- 功能列表標題 - 增大字體和間距 -->
     <TextView
         android:id="@+id/functionSelectionTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="功能選擇"
+        android:text="@string/function_selection"
         android:textColor="#4FC3F7"
-        android:textSize="20sp"
-        android:layout_marginBottom="16dp"
-        android:contentDescription="功能選擇區域" />
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp"
+        android:contentDescription="@string/function_selection_area_desc"
+        android:minHeight="32dp" />
 
+    <!-- 功能列表 - 優化間距 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginBottom="24dp" />
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:nestedScrollingEnabled="false" />
 
-    <!-- 緊急按鈕 -->
-    <Button
+    <!-- 緊急按鈕 - 增大尺寸和字體 -->
+    <LinearLayout
         android:id="@+id/emergencyButton"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:text="緊急求助\n長按3秒發送"
-        android:textSize="18sp"
-        android:textColor="#FFFFFF"
-        android:background="@drawable/emergency_button_background"
-        android:textAlignment="center"
-        android:contentDescription="緊急求助按鈕，長按三秒發送求助信息" />
-
-    <!-- 底部指引 -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="提示：點擊選擇功能"
-        android:textColor="#BDBDBD"
-        android:textSize="14sp"
+        android:layout_height="90dp"
+        android:background="@drawable/emergency_button_selector"
         android:gravity="center"
-        android:layout_marginTop="16dp"
-        android:contentDescription="操作提示，點擊選擇功能" />
+        android:orientation="vertical"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="@string/emergency_button_desc"
+        android:minHeight="90dp"
+        android:padding="12dp">
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/emergency_help_text"
+            android:textSize="22sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
+            
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/long_press_send_text"
+            android:textSize="16sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="4dp" />
+            
+    </LinearLayout>
+
+
+            <!-- 底部間距 -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="24dp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
 
 </LinearLayout>
