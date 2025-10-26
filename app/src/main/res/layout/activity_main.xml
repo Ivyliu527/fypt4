@@ -95,6 +95,17 @@
         android:layout_marginBottom="10dp"
         android:contentDescription="@string/function_selection_area_desc" />
 
+    <!-- 頁面指示器 -->
+    <TextView
+        android:id="@+id/pageIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:textColor="#4FC3F7"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp"
+        android:contentDescription="左滑查看更多功能" />
+
     <!-- ViewPager2 用於左右滑動的功能頁面 -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
