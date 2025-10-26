@@ -341,14 +341,13 @@ public class SettingsActivity extends BaseAccessibleActivity {
     private void testVoice() {
         announceInfo(getString(R.string.testing_voice));
         
-        // 根據當前語言生成測試文字
-        String currentLang = ttsManager.getCurrentLanguage();
+        // 根據當前語言生成測試文字 - 使用SettingsActivity的currentLanguage而不是TTSManager的
         String testText;
         
-        if ("english".equals(currentLang)) {
+        if ("english".equals(currentLanguage)) {
             testText = "This is voice test. Speech rate: " + speechRateSeekBar.getProgress() + "%, pitch: " + 
                       speechPitchSeekBar.getProgress() + "%, volume: " + speechVolumeSeekBar.getProgress() + "%.";
-        } else if ("mandarin".equals(currentLang)) {
+        } else if ("mandarin".equals(currentLanguage)) {
             testText = "这是语音测试。语速：" + speechRateSeekBar.getProgress() + "%，音调：" + 
                       speechPitchSeekBar.getProgress() + "%，音量：" + speechVolumeSeekBar.getProgress() + "%。";
         } else { // cantonese (default)
@@ -438,9 +437,15 @@ public class SettingsActivity extends BaseAccessibleActivity {
     @Override
     protected void announcePageTitle() {
         new android.os.Handler().postDelayed(() -> {
-            String cantoneseText = "系統設定頁面。可以調整語音設定、震動反饋、讀屏支援等選項。";
-            String englishText = "System Settings. You can adjust voice settings, vibration feedback, screen reader support and more.";
-            ttsManager.speak(cantoneseText, englishText, true);
+            String pageDescription;
+            if ("english".equals(currentLanguage)) {
+                pageDescription = "System Settings. You can adjust voice settings, vibration feedback, screen reader support and more.";
+            } else if ("mandarin".equals(currentLanguage)) {
+                pageDescription = "系统设置页面。可以调整语音设置、震动反馈、读屏支持等选项。";
+            } else {
+                pageDescription = "系統設定頁面。可以調整語音設定、震動反饋、讀屏支援等選項。";
+            }
+            ttsManager.speak(pageDescription, null, true);
         }, 500);
     }
     
@@ -509,6 +514,28 @@ public class SettingsActivity extends BaseAccessibleActivity {
         
         // 更新詳細設置項文字
         updateDetailedSettingsTexts();
+        
+        // 更新TTS語言設置
+        updateTTSSettings();
+    }
+    
+    /**
+     * 更新TTS語言設置
+     */
+    private void updateTTSSettings() {
+        // 確保TTS語言與當前界面語言一致
+        Log.d(TAG, "更新TTS語言設置，當前語言: " + currentLanguage);
+        
+        // 使用setLanguageSilently避免中斷當前播報
+        if ("english".equals(currentLanguage)) {
+            ttsManager.setLanguageSilently("english");
+        } else if ("mandarin".equals(currentLanguage)) {
+            ttsManager.setLanguageSilently("mandarin");
+        } else {
+            ttsManager.setLanguageSilently("cantonese");
+        }
+        
+        Log.d(TAG, "TTS語言已更新為: " + currentLanguage);
     }
     
     /**

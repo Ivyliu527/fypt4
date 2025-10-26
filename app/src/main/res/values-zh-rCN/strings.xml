@@ -41,4 +41,29 @@
     <!-- Travel Assistant -->
     <string name="travel_assistant_title">出行协助</string>
     <string name="travel_assistant_description">提供导航、路线规划、交通信息、天气更新和紧急位置分享服务</string>
+    
+    <!-- Settings Activity Strings -->
+    <string name="testing_voice">正在测试语音设置</string>
+    <string name="screen_reader_enabled">屏幕阅读器支持已启用</string>
+    <string name="screen_reader_disabled">屏幕阅读器支持已禁用</string>
+    <string name="gesture_enabled">手势操作已启用</string>
+    <string name="gesture_disabled">手势操作已禁用</string>
+    <string name="vibration_enabled">震动反馈已启用</string>
+    <string name="vibration_disabled">震动反馈已禁用</string>
+    <string name="reset_settings_title">重置设置</string>
+    <string name="reset_settings_message">确定要重置所有设置吗？</string>
+    <string name="settings_reset">所有设置已重置为默认值</string>
+    <string name="reset_cancelled">重置已取消</string>
+    <string name="confirm">确认</string>
+    <string name="back">返回</string>
+    <string name="status_enabled">已启用</string>
+    <string name="status_disabled">已禁用</string>
+    
+    <!-- Speech Settings -->
+    <string name="current_speech_rate">当前语音速度：%d%%</string>
+    <string name="current_speech_pitch">当前音调：%d%%</string>
+    <string name="current_speech_volume">当前音量：%d%%</string>
+    <string name="current_vibration_status">震动反馈：%s</string>
+    <string name="current_screen_reader_status">屏幕阅读器支持：%s</string>
+    <string name="current_gesture_status">手势操作：%s</string>
 </resources>
