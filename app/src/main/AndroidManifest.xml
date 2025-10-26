@@ -112,6 +112,12 @@
             android:name=".InstantAssistanceActivity"
             android:label="@string/instant_assistance_title"
             android:exported="false" />
+            
+        <!-- Gesture Management Activity - 手勢管理 -->
+        <activity
+            android:name=".GestureManagementActivity"
+            android:label="@string/gesture_management"
+            android:exported="false" />
     </application>
 
 </manifest>

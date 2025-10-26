@@ -414,7 +414,8 @@ public class MainActivity extends BaseAccessibleActivity {
         
         // 根據當前語言獲取對應的字符串
         String envTitle, envDesc, docTitle, docDesc, voiceTitle, voiceDesc, 
-               findTitle, findDesc, liveTitle, liveDesc, travelTitle, travelDesc;
+               findTitle, findDesc, liveTitle, liveDesc, travelTitle, travelDesc, 
+               gestureTitle, gestureDesc;
         
         if ("english".equals(currentLanguage)) {
             // 英文版本
@@ -430,6 +431,8 @@ public class MainActivity extends BaseAccessibleActivity {
             liveDesc = "Video call with volunteers";
             travelTitle = "Travel Assistant";
             travelDesc = "Provide navigation, route planning, traffic information, weather updates and emergency location sharing services";
+            gestureTitle = "Gesture Management";
+            gestureDesc = "Draw gestures to bind functions";
         } else if ("mandarin".equals(currentLanguage)) {
             // 普通話版本
             envTitle = "环境识别";
@@ -444,6 +447,8 @@ public class MainActivity extends BaseAccessibleActivity {
             liveDesc = "与志愿者视频通话";
             travelTitle = "出行协助";
             travelDesc = "提供导航、路线规划、交通信息、天气更新和紧急位置分享服务";
+            gestureTitle = "手势管理";
+            gestureDesc = "绘制手势绑定应用功能";
         } else {
             // 廣東話版本（預設）
             envTitle = getString(R.string.function_environment);
@@ -458,6 +463,8 @@ public class MainActivity extends BaseAccessibleActivity {
             liveDesc = getString(R.string.desc_live_assistance);
             travelTitle = getString(R.string.travel_assistant_title);
             travelDesc = getString(R.string.travel_assistant_description);
+            gestureTitle = getString(R.string.gesture_management);
+            gestureDesc = getString(R.string.gesture_management_desc);
         }
         
         functionList.add(new HomeFunction("environment", envTitle, envDesc, R.drawable.ic_environment));
@@ -466,6 +473,7 @@ public class MainActivity extends BaseAccessibleActivity {
         functionList.add(new HomeFunction("find_items", findTitle, findDesc, R.drawable.ic_search));
         functionList.add(new HomeFunction("live_assistance", liveTitle, liveDesc, R.drawable.ic_assistance));
         functionList.add(new HomeFunction("travel_assistant", travelTitle, travelDesc, R.drawable.ic_travel));
+        functionList.add(new HomeFunction("gesture_management", gestureTitle, gestureDesc, R.drawable.ic_gesture));
         
         // 通知適配器數據已更新
         if (adapter != null) {
@@ -522,6 +530,20 @@ public class MainActivity extends BaseAccessibleActivity {
             case "travel_assistant":
                 startTravelAssistantActivity();
                 break;
+            case "gesture_management":
+                startGestureManagementActivity();
+                break;
+        }
+    }
+    
+    protected void startGestureManagementActivity() {
+        try {
+            Intent intent = new Intent(MainActivity.this, GestureManagementActivity.class);
+            intent.putExtra("language", currentLanguage);
+            announceNavigation("正在進入手勢管理頁面");
+            startActivity(intent);
+        } catch (Exception e) {
+            announceError("手勢管理功能暫不可用");
         }
     }
 
