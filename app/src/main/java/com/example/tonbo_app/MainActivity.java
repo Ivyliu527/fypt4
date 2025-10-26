@@ -522,13 +522,16 @@ public class MainActivity extends BaseAccessibleActivity {
             handleFunctionClick(function.getId());
         };
         
-        // 為所有 Fragment 設置點擊監聽器
-        for (int i = 0; i < functionPages.size(); i++) {
-            Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + i);
-            if (fragment instanceof FunctionListFragment) {
-                ((FunctionListFragment) fragment).setOnFunctionClickListener(functionClickListener);
+        // 延後設置點擊監聽器，確保 Fragment 已完全創建
+        viewPager.post(() -> {
+            for (int i = 0; i < functionPages.size(); i++) {
+                long itemId = pagerAdapter.getItemId(i);
+                Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + itemId);
+                if (fragment instanceof FunctionListFragment) {
+                    ((FunctionListFragment) fragment).setOnFunctionClickListener(functionClickListener);
+                }
             }
-        }
+        });
     }
 
     private void handleFunctionClick(String functionId) {

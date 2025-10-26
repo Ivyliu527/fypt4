@@ -50,8 +50,13 @@ public class FunctionListFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_function_list, container, false);
         recyclerView = view.findViewById(R.id.recyclerView);
-        setupRecyclerView();
         return view;
+    }
+    
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        setupRecyclerView();
     }
     
     private void setupRecyclerView() {
@@ -83,6 +88,31 @@ public class FunctionListFragment extends Fragment {
     
     public void setOnFunctionClickListener(OnFunctionClickListener listener) {
         this.clickListener = listener;
+        
+        // 如果 adapter 已經創建，更新它的監聽器
+        if (adapter != null) {
+            adapter = new FunctionAdapter(functionList, new FunctionAdapter.OnItemClickListener() {
+                @Override
+                public void onItemClick(HomeFunction function) {
+                    vibrationManager.vibrateClick();
+                    String announcement = (currentLanguage.equals("english") ? "Starting " : "正在啟動") + function.getName();
+                    ttsManager.speak(announcement, announcement, true);
+                    
+                    if (clickListener != null) {
+                        clickListener.onFunctionClick(function);
+                    }
+                }
+                
+                @Override
+                public void onItemFocus(HomeFunction function) {
+                    vibrationManager.vibrateFocus();
+                    String cantoneseText = "當前焦點：" + function.getName() + "，" + function.getDescription();
+                    String englishText = "Current focus: " + function.getName() + ", " + function.getDescription();
+                    ttsManager.speak(cantoneseText, englishText);
+                }
+            });
+            recyclerView.setAdapter(adapter);
+        }
     }
 }
 
