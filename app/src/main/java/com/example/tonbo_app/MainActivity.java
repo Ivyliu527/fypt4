@@ -54,7 +54,7 @@ public class MainActivity extends BaseAccessibleActivity {
     protected void announcePageTitle() {
         // 播報頁面標題和功能列表
         String cantoneseText = "瞳伴主頁。歡迎使用智能視覺助手。" +
-                "當前有七個主要功能：環境識別、文檔助手、語音命令、尋找物品、即時協助、出行協助、手勢管理。" +
+                "當前有七個主要功能：環境識別、閱讀助手、語音命令、尋找物品、即時協助、出行協助、手勢管理。" +
                 "右上角有三個按鈕：緊急設置、系統設定、語言切換。" +
                 "底部有緊急求助按鈕，長按三秒發送求助信息。" +
                 "請點擊選擇功能或使用語音命令控制。";
@@ -64,7 +64,7 @@ public class MainActivity extends BaseAccessibleActivity {
                 "Emergency button at bottom, long press for 3 seconds to send help request. " +
                 "Please tap to select function or use voice command control.";
         String mandarinText = "瞳伴主页。欢迎使用智能视觉助手。" +
-                "当前有七个主要功能：环境识别、文档助手、语音命令、寻找物品、即时协助、出行协助、手势管理。" +
+                "当前有七个主要功能：环境识别、阅读助手、语音命令、寻找物品、即时协助、出行协助、手势管理。" +
                 "右上角有三个按钮：紧急设置、系统设定、语言切换。" +
                 "底部有紧急求助按钮，长按三秒发送求助信息。" +
                 "请点击选择功能或使用语音命令控制。";
@@ -485,7 +485,7 @@ public class MainActivity extends BaseAccessibleActivity {
             // 普通話版本
             envTitle = "环境识别";
             envDesc = "描述周围环境和物体";
-            docTitle = "文档助手";
+            docTitle = "阅读助手";
             docDesc = "扫描文档和识别货币";
             voiceTitle = "语音命令";
             voiceDesc = "使用语音命令控制应用";
@@ -501,7 +501,7 @@ public class MainActivity extends BaseAccessibleActivity {
             // 廣東話版本（預設）
             envTitle = "環境識別";
             envDesc = "描述周圍環境和物體";
-            docTitle = "文檔助手";
+            docTitle = "閱讀助手";
             docDesc = "掃描文檔和識別貨幣";
             voiceTitle = "語音命令";
             voiceDesc = "使用語音命令控制應用";

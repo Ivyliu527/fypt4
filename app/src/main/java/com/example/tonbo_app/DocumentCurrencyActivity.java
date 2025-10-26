@@ -179,7 +179,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
                 if ("english".equals(currentLanguage)) {
                     return "Document Assistant";
                 } else if ("mandarin".equals(currentLanguage)) {
-                    return "文字助手";
+                    return "阅读助手";
                 } else {
                     return "閱讀助手";
                 }
