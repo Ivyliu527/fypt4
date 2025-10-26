@@ -47,6 +47,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     private ProcessCameraProvider cameraProvider;
     private ImageAnalysis imageAnalysis;
     private YoloDetector yoloDetector;
+    private OptimizedDetectionOverlayView detectionOverlay;
     private ExecutorService cameraExecutor;
     private boolean isDetecting = false;
     
@@ -74,6 +75,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     
     private void initViews() {
         previewView = findViewById(R.id.previewView);
+        detectionOverlay = findViewById(R.id.detectionOverlay);
         statusIndicator = findViewById(R.id.statusIndicator);
         backButton = findViewById(R.id.backButton);
         startButton = findViewById(R.id.startButton);
@@ -257,9 +259,20 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             runOnUiThread(() -> {
                 if (results != null && !results.isEmpty()) {
                     updateStatusIndicator("scanning");
+                    
+                    // 更新檢測結果覆蓋層
+                    if (detectionOverlay != null) {
+                        detectionOverlay.updateDetectionResults(results);
+                    }
+                    
                     announceDetectionResults(results);
                 } else {
                     updateStatusIndicator("scanning");
+                    
+                    // 清除檢測結果覆蓋層
+                    if (detectionOverlay != null) {
+                        detectionOverlay.clearDetectionResults();
+                    }
                 }
             });
             
