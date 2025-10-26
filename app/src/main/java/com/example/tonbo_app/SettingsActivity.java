@@ -145,7 +145,16 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 int progress = seekBar.getProgress();
                 float rate = progress / 100.0f;
                 preferences.edit().putFloat("speech_rate", rate).apply();
-                announceSettingChange(String.format(getString(R.string.speech_rate_changed_to), progress));
+                
+                String message;
+                if ("english".equals(currentLanguage)) {
+                    message = "Speech rate adjusted to " + progress + "%";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    message = "语音速度已调整为 " + progress + "%";
+                } else {
+                    message = "語速已調整為 " + progress + "%";
+                }
+                announceSettingChange(message);
             }
         });
         
@@ -173,7 +182,16 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 int progress = seekBar.getProgress();
                 float pitch = progress / 100.0f;
                 preferences.edit().putFloat("speech_pitch", pitch).apply();
-                announceSettingChange(String.format(getString(R.string.speech_pitch_changed_to), progress));
+                
+                String message;
+                if ("english".equals(currentLanguage)) {
+                    message = "Pitch adjusted to " + progress + "%";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    message = "音调已调整为 " + progress + "%";
+                } else {
+                    message = "音調已調整為 " + progress + "%";
+                }
+                announceSettingChange(message);
             }
         });
         
@@ -201,7 +219,16 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 int progress = seekBar.getProgress();
                 float volume = progress / 100.0f;
                 preferences.edit().putFloat("speech_volume", volume).apply();
-                announceSettingChange(String.format(getString(R.string.speech_volume_changed_to), progress));
+                
+                String message;
+                if ("english".equals(currentLanguage)) {
+                    message = "Volume adjusted to " + progress + "%";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    message = "音量已调整为 " + progress + "%";
+                } else {
+                    message = "音量已調整為 " + progress + "%";
+                }
+                announceSettingChange(message);
             }
         });
         
