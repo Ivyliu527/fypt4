@@ -15,6 +15,16 @@
     <!-- Common Buttons -->
     <string name="back_button_desc">Back Button</string>
     
+    <!-- Gesture Management -->
+    <string name="gesture_management">手勢管理</string>
+    <string name="gesture_management_desc">手勢管理功能，繪製手勢綁定應用功能</string>
+    <string name="draw_gesture_hint">在區域內繪製手勢</string>
+    <string name="gesture_recognized">已識別手勢</string>
+    <string name="gesture_not_recognized">未識別到已保存的手勢</string>
+    <string name="create_gesture">創建手勢</string>
+    <string name="bind_function">綁定功能</string>
+    <string name="delete_gesture">刪除手勢</string>
+    
     <!-- Language Buttons -->
     <string name="language_button_cantonese">廣</string>
     <string name="language_button_english">EN</string>

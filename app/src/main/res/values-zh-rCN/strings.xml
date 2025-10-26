@@ -104,4 +104,14 @@
     <string name="speech_rate_changed_to">语音速度已调整为 %d%%</string>
     <string name="speech_pitch_changed_to">音调已调整为 %d%%</string>
     <string name="speech_volume_changed_to">音量已调整为 %d%%</string>
+    
+    <!-- Gesture Management -->
+    <string name="gesture_management">手势管理</string>
+    <string name="gesture_management_desc">手势管理功能，绘制手势绑定应用功能</string>
+    <string name="draw_gesture_hint">在区域内绘制手势</string>
+    <string name="gesture_recognized">已识别手势</string>
+    <string name="gesture_not_recognized">未识别到已保存的手势</string>
+    <string name="create_gesture">创建手势</string>
+    <string name="bind_function">绑定功能</string>
+    <string name="delete_gesture">删除手势</string>
 </resources>

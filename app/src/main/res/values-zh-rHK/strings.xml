@@ -297,6 +297,16 @@
     <string name="current_gesture_status">手勢操作目前為 %s</string>
     <string name="status_enabled">開啟</string>
     <string name="status_disabled">關閉</string>
+    
+    <!-- Gesture Management -->
+    <string name="gesture_management">手勢管理</string>
+    <string name="gesture_management_desc">手勢管理功能，繪製手勢綁定應用功能</string>
+    <string name="draw_gesture_hint">在區域內繪製手勢</string>
+    <string name="gesture_recognized">已識別手勢</string>
+    <string name="gesture_not_recognized">未識別到已保存的手勢</string>
+    <string name="create_gesture">創建手勢</string>
+    <string name="bind_function">綁定功能</string>
+    <string name="delete_gesture">刪除手勢</string>
     <string name="emergency_settings_desc">緊急求助設置，點擊進入緊急聯絡人設置</string>
     <string name="system_settings_desc">系統設定，點擊進入語音和無障礙設置</string>
     <string name="function_selection_area_desc">功能選擇區域，共有四個主要功能</string>
