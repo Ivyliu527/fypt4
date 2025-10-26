@@ -25,6 +25,9 @@
     <!-- 位置權限（用於緊急求助時發送位置） -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    
+    <!-- 硬件功能聲明 -->
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -55,11 +58,61 @@
         <!-- Environment Activity - 環境識別 -->
         <activity
             android:name=".EnvironmentActivity"
+            android:label="@string/environment_title"
             android:exported="false" />
             
         <!-- Document Currency Activity - 閱讀助手 -->
         <activity
             android:name=".DocumentCurrencyActivity"
+            android:label="@string/document_title"
+            android:exported="false" />
+            
+        <!-- Emergency Settings Activity - 緊急求助設置 -->
+        <activity
+            android:name=".EmergencySettingsActivity"
+            android:label="@string/emergency_settings_page_title"
+            android:exported="false" />
+            
+        <!-- Settings Activity - 系統設定 -->
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/settings_page_title"
+            android:exported="false" />
+            
+        <!-- Find Items Activity - 尋找物品 -->
+        <activity
+            android:name=".FindItemsActivity"
+            android:label="@string/find_items_title"
+            android:exported="false" />
+            
+        <!-- Travel Assistant Activity - 出行協助 -->
+        <activity
+            android:name=".TravelAssistantActivity"
+            android:label="@string/travel_assistant_title"
+            android:exported="false" />
+            
+        <!-- Login Activity - 登入 -->
+        <activity
+            android:name=".LoginActivity"
+            android:label="@string/login_title"
+            android:exported="false" />
+            
+        <!-- Real AI Detection Activity - 真實AI檢測 -->
+        <activity
+            android:name=".RealAIDetectionActivity"
+            android:label="真實AI檢測"
+            android:exported="false" />
+            
+        <!-- Voice Command Activity - 語音命令 -->
+        <activity
+            android:name=".VoiceCommandActivity"
+            android:label="@string/voice_command_title"
+            android:exported="false" />
+            
+        <!-- Instant Assistance Activity - 即時協助 -->
+        <activity
+            android:name=".InstantAssistanceActivity"
+            android:label="@string/instant_assistance_title"
             android:exported="false" />
     </application>
 

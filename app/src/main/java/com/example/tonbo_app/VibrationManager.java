@@ -12,6 +12,7 @@ public class VibrationManager {
     
     private Vibrator vibrator;
     private Context context;
+    private boolean isEnabled = true;
     
     // 震動模式定義
     public static final int VIBRATION_CLICK = 50;          // 點擊反饋
@@ -35,6 +36,11 @@ public class VibrationManager {
     }
     
     public void vibrate(int duration) {
+        if (!isEnabled) {
+            Log.d(TAG, "震動已禁用");
+            return;
+        }
+        
         if (vibrator == null || !vibrator.hasVibrator()) {
             Log.w(TAG, "設備不支持震動功能");
             return;
@@ -56,6 +62,11 @@ public class VibrationManager {
     }
     
     public void vibratePattern(long[] pattern, int repeat) {
+        if (!isEnabled) {
+            Log.d(TAG, "震動已禁用");
+            return;
+        }
+        
         if (vibrator == null || !vibrator.hasVibrator()) {
             Log.w(TAG, "設備不支持震動功能");
             return;
@@ -125,5 +136,20 @@ public class VibrationManager {
         if (vibrator != null) {
             vibrator.cancel();
         }
+    }
+    
+    /**
+     * 設置震動是否啟用
+     */
+    public void setEnabled(boolean enabled) {
+        this.isEnabled = enabled;
+        Log.d(TAG, "震動功能已" + (enabled ? "啟用" : "禁用"));
+    }
+    
+    /**
+     * 檢查震動是否啟用
+     */
+    public boolean isEnabled() {
+        return isEnabled;
     }
 }
