@@ -189,10 +189,22 @@ public class MainActivity extends BaseAccessibleActivity {
         // 更新標題
         updatePageTitle();
         
-        // 通知adapter數據已更新
-        if (pagerAdapter != null) {
-            pagerAdapter.notifyDataSetChanged();
+        // 重新創建pagerAdapter以確保使用新的語言
+        if (functionPages.size() > 0) {
+            pagerAdapter = new FunctionPagerAdapter(this, functionPages, currentLanguage);
+            viewPager.setAdapter(pagerAdapter);
+            
+            // 重新設置點擊監聽器
+            setupFragmentClickListeners();
         }
+    }
+    
+    private void setupFragmentClickListeners() {
+        viewPager.post(() -> {
+            for (int i = 0; i < functionPages.size(); i++) {
+                setupFragmentClickListener(i);
+            }
+        });
     }
     
     /**
@@ -444,6 +456,9 @@ public class MainActivity extends BaseAccessibleActivity {
     
     private void setupFunctionList() {
         functionPages.clear(); // 清空列表，避免重複添加
+        
+        // 記錄當前語言以便log
+        Log.d("MainActivity", "setupFunctionList called with language: " + currentLanguage);
         
         // 根據當前語言獲取對應的字符串
         String envTitle, envDesc, docTitle, docDesc, voiceTitle, voiceDesc, 
