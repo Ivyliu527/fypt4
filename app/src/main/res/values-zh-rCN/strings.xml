@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 應用名稱 -->
+    <!-- 应用名称 -->
     <string name="app_name">瞳伴</string>
     
-    <!-- 緊急求助按鈕 -->
-    <string name="emergency_help_text">緊急求助</string>
-    <string name="long_press_send_text">長按3秒發送</string>
+    <!-- 紧急求助按钮 -->
+    <string name="emergency_help_text">紧急求助</string>
+    <string name="long_press_send_text">长按3秒发送</string>
     
     <!-- 即時協助相關 - 普通話 -->
     <string name="instant_assistance_title">即时协助</string>
