@@ -486,7 +486,12 @@ public class MainActivity extends BaseAccessibleActivity {
         functionList.add(new HomeFunction("find_items", findTitle, findDesc, R.drawable.ic_search));
         functionList.add(new HomeFunction("live_assistance", liveTitle, liveDesc, R.drawable.ic_assistance));
         functionList.add(new HomeFunction("travel_assistant", travelTitle, travelDesc, R.drawable.ic_travel));
-        functionList.add(new HomeFunction("gesture_management", gestureTitle, gestureDesc, R.drawable.ic_gesture));
+        functionList.add(new HomeFunction("gesture_management", gestureTitle, gestureDesc, R.drawable.ic_search));
+        
+        Log.d("MainActivity", "Total functions: " + functionList.size());
+        for (HomeFunction f : functionList) {
+            Log.d("MainActivity", "Function: " + f.getId() + " - " + f.getName());
+        }
         
         // 通知適配器數據已更新
         if (adapter != null) {
