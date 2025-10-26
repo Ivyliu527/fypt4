@@ -60,7 +60,8 @@ public class FunctionListFragment extends Fragment {
     }
     
     private void setupRecyclerView() {
-        adapter = new FunctionAdapter(functionList, new FunctionAdapter.OnItemClickListener() {
+        // 創建監聽器
+        FunctionAdapter.OnItemClickListener adapterListener = new FunctionAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(HomeFunction function) {
                 vibrationManager.vibrateClick();
@@ -79,7 +80,9 @@ public class FunctionListFragment extends Fragment {
                 String englishText = "Current focus: " + function.getName() + ", " + function.getDescription();
                 ttsManager.speak(cantoneseText, englishText);
             }
-        });
+        };
+        
+        adapter = new FunctionAdapter(functionList, adapterListener);
         
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(layoutManager);
@@ -88,31 +91,6 @@ public class FunctionListFragment extends Fragment {
     
     public void setOnFunctionClickListener(OnFunctionClickListener listener) {
         this.clickListener = listener;
-        
-        // 如果 adapter 已經創建，更新它的監聽器
-        if (adapter != null) {
-            adapter = new FunctionAdapter(functionList, new FunctionAdapter.OnItemClickListener() {
-                @Override
-                public void onItemClick(HomeFunction function) {
-                    vibrationManager.vibrateClick();
-                    String announcement = (currentLanguage.equals("english") ? "Starting " : "正在啟動") + function.getName();
-                    ttsManager.speak(announcement, announcement, true);
-                    
-                    if (clickListener != null) {
-                        clickListener.onFunctionClick(function);
-                    }
-                }
-                
-                @Override
-                public void onItemFocus(HomeFunction function) {
-                    vibrationManager.vibrateFocus();
-                    String cantoneseText = "當前焦點：" + function.getName() + "，" + function.getDescription();
-                    String englishText = "Current focus: " + function.getName() + ", " + function.getDescription();
-                    ttsManager.speak(cantoneseText, englishText);
-                }
-            });
-            recyclerView.setAdapter(adapter);
-        }
     }
 }
 
