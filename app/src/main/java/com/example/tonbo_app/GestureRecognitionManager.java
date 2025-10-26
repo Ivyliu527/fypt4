@@ -76,12 +76,20 @@ public class GestureRecognitionManager {
             double score = calculateDistance(inputPoints, entry.getValue());
             Log.d(TAG, "手勢匹配: " + entry.getKey() + " 分數: " + score);
             
-            if (score < bestScore && score < 1000.0) { // 閾值可調整
+            if (score < bestScore) {
                 bestScore = score;
                 bestMatch = entry.getKey();
             }
         }
         
+        // 如果最佳分數超過閾值，返回null
+        // 使用較低的閾值，因為正規化後的座標範圍在0-1之間
+        if (bestScore > 0.3) { // 閾值：0.3表示最大差異30%
+            Log.d(TAG, "未找到匹配的手勢，最佳分數: " + bestScore);
+            return null;
+        }
+        
+        Log.d(TAG, "匹配到手勢: " + bestMatch + " 分數: " + bestScore);
         return bestMatch;
     }
     
@@ -114,35 +122,88 @@ public class GestureRecognitionManager {
     private List<GesturePoint> extractPoints(Path path) {
         List<GesturePoint> points = new ArrayList<>();
         
-        // 簡化實現：創建固定數量的樣本點
-        // 實際實現需要從Path中提取真實點
-        for (int i = 0; i < 20; i++) {
-            points.add(new GesturePoint(
-                (float) Math.random() * 100,
-                (float) Math.random() * 100
-            ));
+        // 使用PathMeasure提取真實的點
+        android.graphics.PathMeasure pm = new android.graphics.PathMeasure(path, false);
+        float length = pm.getLength();
+        
+        if (length > 0) {
+            int sampleCount = 50;
+            float[] coords = new float[2];
+            
+            for (int i = 0; i < sampleCount; i++) {
+                float distance = (i / (float) (sampleCount - 1)) * length;
+                if (pm.getPosTan(distance, coords, null)) {
+                    points.add(new GesturePoint(coords[0], coords[1]));
+                }
+            }
         }
         
         return points;
     }
     
     /**
-     * 計算兩個手勢之間的距離
+     * 計算兩個手勢之間的距離（使用Hausdorff距離）
      */
     private double calculateDistance(List<GesturePoint> points1, List<GesturePoint> points2) {
-        // 簡化的歐氏距離計算
-        // 實際應該使用DTW或類似的時間序列匹配算法
-        
-        int minSize = Math.min(points1.size(), points2.size());
-        double totalDistance = 0;
-        
-        for (int i = 0; i < minSize; i++) {
-            double dx = points1.get(i).x - points2.get(i).x;
-            double dy = points1.get(i).y - points2.get(i).y;
-            totalDistance += Math.sqrt(dx * dx + dy * dy);
+        if (points1.isEmpty() || points2.isEmpty()) {
+            return Double.MAX_VALUE;
         }
         
-        return totalDistance / minSize;
+        // 首先正規化座標，使手勢與位置無關
+        points1 = normalizePoints(points1);
+        points2 = normalizePoints(points2);
+        
+        // 計算Hausdorff距離
+        double maxDist = 0;
+        
+        // 從points1到points2的最大最小距離
+        for (GesturePoint p1 : points1) {
+            double minDist = Double.MAX_VALUE;
+            for (GesturePoint p2 : points2) {
+                double dx = p1.x - p2.x;
+                double dy = p1.y - p2.y;
+                double dist = Math.sqrt(dx * dx + dy * dy);
+                minDist = Math.min(minDist, dist);
+            }
+            maxDist = Math.max(maxDist, minDist);
+        }
+        
+        return maxDist;
+    }
+    
+    /**
+     * 正規化點列表，使手勢與位置和大小無關
+     */
+    private List<GesturePoint> normalizePoints(List<GesturePoint> points) {
+        if (points.isEmpty()) {
+            return points;
+        }
+        
+        // 找到邊界
+        float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
+        float maxX = Float.MIN_VALUE, maxY = Float.MIN_VALUE;
+        
+        for (GesturePoint p : points) {
+            minX = Math.min(minX, p.x);
+            minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x);
+            maxY = Math.max(maxY, p.y);
+        }
+        
+        // 計算中心和平移
+        float centerX = (minX + maxX) / 2;
+        float centerY = (minY + maxY) / 2;
+        float scale = Math.max(maxX - minX, maxY - minY);
+        
+        List<GesturePoint> normalized = new ArrayList<>();
+        for (GesturePoint p : points) {
+            normalized.add(new GesturePoint(
+                (p.x - centerX) / scale,
+                (p.y - centerY) / scale
+            ));
+        }
+        
+        return normalized;
     }
     
     /**
