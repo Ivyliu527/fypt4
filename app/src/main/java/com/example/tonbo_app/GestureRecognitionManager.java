@@ -83,8 +83,8 @@ public class GestureRecognitionManager {
         }
         
         // 如果最佳分數超過閾值，返回null
-        // 使用較低的閾值，因為正規化後的座標範圍在0-1之間
-        if (bestScore > 0.3) { // 閾值：0.3表示最大差異30%
+        // DTW距離比Hausdorff距離大，所以閾值也需要調整
+        if (bestScore > 5.0) { // 閾值：DTW距離超過5.0表示不匹配
             Log.d(TAG, "未找到匹配的手勢，最佳分數: " + bestScore);
             return null;
         }
@@ -142,7 +142,7 @@ public class GestureRecognitionManager {
     }
     
     /**
-     * 計算兩個手勢之間的距離（使用Hausdorff距離）
+     * 計算兩個手勢之間的距離（使用改進的距離計算）
      */
     private double calculateDistance(List<GesturePoint> points1, List<GesturePoint> points2) {
         if (points1.isEmpty() || points2.isEmpty()) {
@@ -153,22 +153,47 @@ public class GestureRecognitionManager {
         points1 = normalizePoints(points1);
         points2 = normalizePoints(points2);
         
-        // 計算Hausdorff距離
-        double maxDist = 0;
+        // 使用DTW (Dynamic Time Warping) 算法計算距離
+        return calculateDTW(points1, points2);
+    }
+    
+    /**
+     * 使用DTW算法計算兩個手勢之間的距離
+     * DTW考慮了時間順序，對手勢匹配更準確
+     */
+    private double calculateDTW(List<GesturePoint> points1, List<GesturePoint> points2) {
+        int n = points1.size();
+        int m = points2.size();
         
-        // 從points1到points2的最大最小距離
-        for (GesturePoint p1 : points1) {
-            double minDist = Double.MAX_VALUE;
-            for (GesturePoint p2 : points2) {
-                double dx = p1.x - p2.x;
-                double dy = p1.y - p2.y;
-                double dist = Math.sqrt(dx * dx + dy * dy);
-                minDist = Math.min(minDist, dist);
+        // DP矩陣
+        double[][] dtw = new double[n + 1][m + 1];
+        
+        // 初始化
+        for (int i = 0; i <= n; i++) {
+            for (int j = 0; j <= m; j++) {
+                dtw[i][j] = Double.MAX_VALUE;
             }
-            maxDist = Math.max(maxDist, minDist);
+        }
+        dtw[0][0] = 0;
+        
+        // 計算DTW距離
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= m; j++) {
+                double cost = euclideanDistance(points1.get(i - 1), points2.get(j - 1));
+                dtw[i][j] = cost + Math.min(Math.min(dtw[i - 1][j], dtw[i][j - 1]), dtw[i - 1][j - 1]);
+            }
         }
         
-        return maxDist;
+        return dtw[n][m];
+    }
+    
+    /**
+     * 計算兩個點之間的歐氏距離
+     */
+    private double euclideanDistance(GesturePoint p1, GesturePoint p2) {
+        double dx = p1.x - p2.x;
+        double dy = p1.y - p2.y;
+        return Math.sqrt(dx * dx + dy * dy);
     }
     
     /**
