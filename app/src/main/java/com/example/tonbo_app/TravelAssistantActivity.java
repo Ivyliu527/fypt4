@@ -15,6 +15,7 @@ import android.widget.TextView;
 public class TravelAssistantActivity extends BaseAccessibleActivity {
     private static final String TAG = "TravelAssistant";
     
+    private TextView pageTitle;
     private TextView statusText;
     private Button navigationButton;
     private Button routePlanningButton;
@@ -35,6 +36,7 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
     }
     
     private void initViews() {
+        pageTitle = findViewById(R.id.page_title);
         statusText = findViewById(R.id.status_text);
         navigationButton = findViewById(R.id.navigation_button);
         routePlanningButton = findViewById(R.id.route_planning_button);
@@ -106,6 +108,10 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
      * 更新語言UI
      */
     private void updateLanguageUI() {
+        if (pageTitle != null) {
+            pageTitle.setText(getLocalizedString("travel_assistant_title"));
+        }
+        
         if (statusText != null) {
             statusText.setText(getLocalizedString("travel_assistant_status"));
         }
@@ -142,6 +148,14 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
         String currentLang = LocaleManager.getInstance(this).getCurrentLanguage();
         
         switch (key) {
+            case "travel_assistant_title":
+                if ("english".equals(currentLang)) {
+                    return "Travel Assistant";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "出行协助";
+                } else {
+                    return "出行協助";
+                }
             case "travel_assistant_status":
                 if ("english".equals(currentLang)) {
                     return "Travel assistance functions are ready";
