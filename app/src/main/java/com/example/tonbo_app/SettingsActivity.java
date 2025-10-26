@@ -321,7 +321,14 @@ public class SettingsActivity extends BaseAccessibleActivity {
         // 更新VibrationManager狀態
         vibrationManager.setEnabled(newState);
         
-        String message = newState ? getString(R.string.vibration_feedback_status_on) : getString(R.string.vibration_feedback_status_off);
+        String message;
+        if ("english".equals(currentLanguage)) {
+            message = newState ? "Vibration feedback enabled" : "Vibration feedback disabled";
+        } else if ("mandarin".equals(currentLanguage)) {
+            message = newState ? "震动反馈已开启" : "震动反馈已关闭";
+        } else {
+            message = newState ? "震動反饋已開啟" : "震動反饋已關閉";
+        }
         announceSettingChange(message);
         
         if (newState) {
@@ -336,12 +343,19 @@ public class SettingsActivity extends BaseAccessibleActivity {
         preferences.edit().putBoolean("screen_reader_enabled", newState).apply();
         updateToggleButton(screenReaderToggleButton, newState, getLocalizedString("screen_reader_support"));
         
-        String message = newState ? getString(R.string.screen_reader_status_on) : getString(R.string.screen_reader_status_off);
+        String message;
+        if ("english".equals(currentLanguage)) {
+            message = newState ? "Screen reader support enabled" : "Screen reader support disabled";
+        } else if ("mandarin".equals(currentLanguage)) {
+            message = newState ? "屏幕阅读器支持已开启" : "屏幕阅读器支持已关闭";
+        } else {
+            message = newState ? "螢幕閱讀器支援已開啟" : "螢幕閱讀器支援已關閉";
+        }
         announceSettingChange(message);
         
         // 這裡可以添加讀屏相關的設定邏輯
         if (newState) {
-            announceInfo(getString(R.string.screen_reader_status_on));
+            announceInfo(message);
         }
     }
     
@@ -352,11 +366,18 @@ public class SettingsActivity extends BaseAccessibleActivity {
         preferences.edit().putBoolean("gesture_enabled", newState).apply();
         updateToggleButton(gestureToggleButton, newState, getLocalizedString("gesture_operations"));
         
-        String message = newState ? getString(R.string.gesture_operations_status_on) : getString(R.string.gesture_operations_status_off);
+        String message;
+        if ("english".equals(currentLanguage)) {
+            message = newState ? "Gesture operations enabled" : "Gesture operations disabled";
+        } else if ("mandarin".equals(currentLanguage)) {
+            message = newState ? "手势操作已开启" : "手势操作已关闭";
+        } else {
+            message = newState ? "手勢操作已開啟" : "手勢操作已關閉";
+        }
         announceSettingChange(message);
         
         if (newState) {
-            announceInfo(getString(R.string.gesture_operations_status_on));
+            announceInfo(message);
         }
     }
     
@@ -715,44 +736,8 @@ public class SettingsActivity extends BaseAccessibleActivity {
             gestureOperationsLabel.setText(text);
         }
         
-        // 震動反饋按鈕
-        if (vibrationToggleButton != null) {
-            String text;
-            if ("english".equals(currentLanguage)) {
-                text = "Vibration Feedback";
-            } else if ("mandarin".equals(currentLanguage)) {
-                text = "震动反馈";
-            } else {
-                text = "震動反饋";
-            }
-            vibrationToggleButton.setText(text);
-        }
-        
-        // 讀屏支援按鈕
-        if (screenReaderToggleButton != null) {
-            String text;
-            if ("english".equals(currentLanguage)) {
-                text = "Screen Reader Support";
-            } else if ("mandarin".equals(currentLanguage)) {
-                text = "屏幕阅读器支持";
-            } else {
-                text = "螢幕閱讀器支援";
-            }
-            screenReaderToggleButton.setText(text);
-        }
-        
-        // 手勢操作按鈕
-        if (gestureToggleButton != null) {
-            String text;
-            if ("english".equals(currentLanguage)) {
-                text = "Gesture Operations";
-            } else if ("mandarin".equals(currentLanguage)) {
-                text = "手势操作";
-            } else {
-                text = "手勢操作";
-            }
-            gestureToggleButton.setText(text);
-        }
+        // 無障礙設定按鈕應該顯示狀態，而不是標籤
+        // 這些按鈕的狀態由 updateToggleButton() 方法控制
     }
     
     @Override

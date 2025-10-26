@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
-    kotlin("android")
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -41,10 +41,10 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.10")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    implementation(libs.appcompat)
-    implementation(libs.material)
-    implementation(libs.activity)
-    implementation(libs.constraintlayout)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
     implementation("androidx.recyclerview:recyclerview:1.3.2")
 
     // CameraX dependencies for camera functionality (使用更穩定的版本)
