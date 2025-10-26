@@ -188,6 +188,11 @@ public class MainActivity extends BaseAccessibleActivity {
         
         // 更新標題
         updatePageTitle();
+        
+        // 通知adapter數據已更新
+        if (pagerAdapter != null) {
+            pagerAdapter.notifyDataSetChanged();
+        }
     }
     
     /**
