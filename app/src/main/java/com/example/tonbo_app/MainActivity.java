@@ -16,6 +16,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends BaseAccessibleActivity {
     private ViewPager2 viewPager;
+    private TextView pageIndicator;
     private FunctionPagerAdapter pagerAdapter;
     private LinearLayout emergencyButton;
     private EmergencyManager emergencyManager;
@@ -100,6 +101,7 @@ public class MainActivity extends BaseAccessibleActivity {
 
     private void initViews() {
         viewPager = findViewById(R.id.viewPager);
+        pageIndicator = findViewById(R.id.pageIndicator);
         emergencyButton = findViewById(R.id.emergencyButton);
 
         // 設置緊急按鈕
@@ -493,17 +495,17 @@ public class MainActivity extends BaseAccessibleActivity {
             gestureDesc = getString(R.string.gesture_management_desc);
         }
         
-        // 第一頁：前6個功能
+        // 第一頁：前4個功能
         ArrayList<HomeFunction> page1 = new ArrayList<>();
         page1.add(new HomeFunction("environment", envTitle, envDesc, R.drawable.ic_environment));
         page1.add(new HomeFunction("document", docTitle, docDesc, R.drawable.ic_scan));
         page1.add(new HomeFunction("voice_command", voiceTitle, voiceDesc, R.drawable.ic_voice_command));
         page1.add(new HomeFunction("find_items", findTitle, findDesc, R.drawable.ic_search));
-        page1.add(new HomeFunction("live_assistance", liveTitle, liveDesc, R.drawable.ic_assistance));
-        page1.add(new HomeFunction("travel_assistant", travelTitle, travelDesc, R.drawable.ic_travel));
         
-        // 第二頁：手勢管理（方便擴展）
+        // 第二頁：後3個功能
         ArrayList<HomeFunction> page2 = new ArrayList<>();
+        page2.add(new HomeFunction("live_assistance", liveTitle, liveDesc, R.drawable.ic_assistance));
+        page2.add(new HomeFunction("travel_assistant", travelTitle, travelDesc, R.drawable.ic_travel));
         page2.add(new HomeFunction("gesture_management", gestureTitle, gestureDesc, R.drawable.ic_search));
         
         functionPages.add(page1);
@@ -532,6 +534,19 @@ public class MainActivity extends BaseAccessibleActivity {
             handleFunctionClick(function.getId());
         };
         
+        // 設置頁面變更監聽器，更新指示器
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                updatePageIndicator(position);
+            }
+        });
+        
+        // 初始化指示器
+        if (functionPages.size() > 0) {
+            updatePageIndicator(0);
+        }
+        
         // 延後設置點擊監聽器，確保 Fragment 已完全創建
         viewPager.post(() -> {
             for (int i = 0; i < functionPages.size(); i++) {
@@ -542,6 +557,39 @@ public class MainActivity extends BaseAccessibleActivity {
                 }
             }
         });
+    }
+    
+    private void updatePageIndicator(int currentPage) {
+        if (pageIndicator != null && functionPages.size() > 1) {
+            int totalPages = functionPages.size();
+            String indicatorText;
+            
+            if ("english".equals(currentLanguage)) {
+                if (currentPage == 0) {
+                    indicatorText = "← Swipe left for more functions";
+                } else {
+                    indicatorText = "Swipe right for more functions →";
+                }
+            } else if ("mandarin".equals(currentLanguage)) {
+                if (currentPage == 0) {
+                    indicatorText = "← 左滑查看更多功能";
+                } else {
+                    indicatorText = "右滑返回上一頁 →";
+                }
+            } else {
+                if (currentPage == 0) {
+                    indicatorText = "← 左滑查看更多功能";
+                } else {
+                    indicatorText = "右滑返回上一頁 →";
+                }
+            }
+            
+            pageIndicator.setText(indicatorText);
+            pageIndicator.setContentDescription(indicatorText);
+        } else if (pageIndicator != null) {
+            pageIndicator.setText("");
+            pageIndicator.setContentDescription("");
+        }
     }
 
     private void handleFunctionClick(String functionId) {
