@@ -41,7 +41,7 @@ public class FunctionListFragment extends Fragment {
             currentLanguage = getArguments().getString("language");
             functionList = (ArrayList<HomeFunction>) getArguments().getSerializable("functions");
         }
-        vibrationManager = new VibrationManager(getContext());
+        vibrationManager = VibrationManager.getInstance(getContext());
         ttsManager = TTSManager.getInstance(getContext());
     }
     
