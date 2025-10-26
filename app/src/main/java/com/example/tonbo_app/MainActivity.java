@@ -327,11 +327,21 @@ public class MainActivity extends BaseAccessibleActivity {
      * 更新功能列表
      */
     private void updateFunctionList() {
-        if (adapter != null) {
+        if (pagerAdapter != null) {
             // 重新創建功能列表
-            functionList.clear();
             setupFunctionList();
-            adapter.notifyDataSetChanged();
+            pagerAdapter.notifyDataSetChanged();
+            
+            // 重新設置點擊監聽器
+            viewPager.post(() -> {
+                for (int i = 0; i < functionPages.size(); i++) {
+                    long itemId = pagerAdapter.getItemId(i);
+                    Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + itemId);
+                    if (fragment instanceof FunctionListFragment) {
+                        ((FunctionListFragment) fragment).setOnFunctionClickListener(functionClickListener);
+                    }
+                }
+            });
         }
     }
     
