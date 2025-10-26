@@ -7,17 +7,20 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.ArrayList;
 
 public class MainActivity extends BaseAccessibleActivity {
-    private RecyclerView recyclerView;
-    private FunctionAdapter adapter;
+    private ViewPager2 viewPager;
+    private FunctionPagerAdapter pagerAdapter;
     private LinearLayout emergencyButton;
     private EmergencyManager emergencyManager;
-    private final ArrayList<HomeFunction> functionList = new ArrayList<>();
+    private ArrayList<ArrayList<HomeFunction>> functionPages = new ArrayList<>();
+    private FunctionListFragment.OnFunctionClickListener functionClickListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +37,7 @@ public class MainActivity extends BaseAccessibleActivity {
         
         initViews();
         setupFunctionList();
-        setupRecyclerView();
+        setupViewPager();
         
         // 設置無障礙內容描述
         setupAccessibilityContent();
@@ -96,7 +99,7 @@ public class MainActivity extends BaseAccessibleActivity {
     }
 
     private void initViews() {
-        recyclerView = findViewById(R.id.recyclerView);
+        viewPager = findViewById(R.id.viewPager);
         emergencyButton = findViewById(R.id.emergencyButton);
 
         // 設置緊急按鈕
@@ -423,7 +426,7 @@ public class MainActivity extends BaseAccessibleActivity {
     }
     
     private void setupFunctionList() {
-        functionList.clear(); // 清空列表，避免重複添加
+        functionPages.clear(); // 清空列表，避免重複添加
         
         // 根據當前語言獲取對應的字符串
         String envTitle, envDesc, docTitle, docDesc, voiceTitle, voiceDesc, 
@@ -480,51 +483,52 @@ public class MainActivity extends BaseAccessibleActivity {
             gestureDesc = getString(R.string.gesture_management_desc);
         }
         
-        functionList.add(new HomeFunction("environment", envTitle, envDesc, R.drawable.ic_environment));
-        functionList.add(new HomeFunction("document", docTitle, docDesc, R.drawable.ic_scan));
-        functionList.add(new HomeFunction("voice_command", voiceTitle, voiceDesc, R.drawable.ic_voice_command));
-        functionList.add(new HomeFunction("find_items", findTitle, findDesc, R.drawable.ic_search));
-        functionList.add(new HomeFunction("live_assistance", liveTitle, liveDesc, R.drawable.ic_assistance));
-        functionList.add(new HomeFunction("travel_assistant", travelTitle, travelDesc, R.drawable.ic_travel));
-        functionList.add(new HomeFunction("gesture_management", gestureTitle, gestureDesc, R.drawable.ic_search));
+        // 第一頁：前6個功能
+        ArrayList<HomeFunction> page1 = new ArrayList<>();
+        page1.add(new HomeFunction("environment", envTitle, envDesc, R.drawable.ic_environment));
+        page1.add(new HomeFunction("document", docTitle, docDesc, R.drawable.ic_scan));
+        page1.add(new HomeFunction("voice_command", voiceTitle, voiceDesc, R.drawable.ic_voice_command));
+        page1.add(new HomeFunction("find_items", findTitle, findDesc, R.drawable.ic_search));
+        page1.add(new HomeFunction("live_assistance", liveTitle, liveDesc, R.drawable.ic_assistance));
+        page1.add(new HomeFunction("travel_assistant", travelTitle, travelDesc, R.drawable.ic_travel));
         
-        Log.d("MainActivity", "Total functions: " + functionList.size());
-        for (HomeFunction f : functionList) {
-            Log.d("MainActivity", "Function: " + f.getId() + " - " + f.getName());
+        // 第二頁：手勢管理（方便擴展）
+        ArrayList<HomeFunction> page2 = new ArrayList<>();
+        page2.add(new HomeFunction("gesture_management", gestureTitle, gestureDesc, R.drawable.ic_search));
+        
+        functionPages.add(page1);
+        functionPages.add(page2);
+        
+        Log.d("MainActivity", "Total pages: " + functionPages.size());
+        for (int i = 0; i < functionPages.size(); i++) {
+            Log.d("MainActivity", "Page " + i + " has " + functionPages.get(i).size() + " functions");
         }
         
         // 通知適配器數據已更新
-        if (adapter != null) {
-            adapter.notifyDataSetChanged();
+        if (pagerAdapter != null) {
+            pagerAdapter.notifyDataSetChanged();
         }
     }
 
-    private void setupRecyclerView() {
-        adapter = new FunctionAdapter(functionList, new FunctionAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(HomeFunction function) {
-                vibrationManager.vibrateClick();
-
-                // 使用當前語言播報（名稱已經是正確語言）
-                String announcement = (currentLanguage.equals("english") ? "Starting " : "正在啟動") + function.getName();
-                ttsManager.speak(announcement, announcement, true);
-
-                // 根據功能ID啟動相應頁面
-                handleFunctionClick(function.getId());
+    private void setupViewPager() {
+        pagerAdapter = new FunctionPagerAdapter(this, functionPages, currentLanguage);
+        viewPager.setAdapter(pagerAdapter);
+        
+        // 設置 Fragment 點擊監聽器
+        functionClickListener = function -> {
+            vibrationManager.vibrateClick();
+            String announcement = (currentLanguage.equals("english") ? "Starting " : "正在啟動") + function.getName();
+            ttsManager.speak(announcement, announcement, true);
+            handleFunctionClick(function.getId());
+        };
+        
+        // 為所有 Fragment 設置點擊監聽器
+        for (int i = 0; i < functionPages.size(); i++) {
+            Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + i);
+            if (fragment instanceof FunctionListFragment) {
+                ((FunctionListFragment) fragment).setOnFunctionClickListener(functionClickListener);
             }
-
-            @Override
-            public void onItemFocus(HomeFunction function) {
-                vibrationManager.vibrateFocus();
-                String cantoneseText = "當前焦點：" + function.getName() + "，" + function.getDescription();
-                String englishText = "Current focus: " + function.getName() + ", " + function.getDescription();
-                ttsManager.speak(cantoneseText, englishText);
-            }
-        });
-
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(adapter);
+        }
     }
 
     private void handleFunctionClick(String functionId) {
