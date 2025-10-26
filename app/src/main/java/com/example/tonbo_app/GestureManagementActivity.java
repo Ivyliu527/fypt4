@@ -19,6 +19,7 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
     private static final String TAG = "GestureManagement";
     
     private GestureDrawView gestureDrawView;
+    private Button saveButton;
     private Button clearButton;
     private Button backButton;
     private TextView pageTitle;
@@ -46,6 +47,7 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
     
     private void initViews() {
         gestureDrawView = findViewById(R.id.gesture_draw_view);
+        saveButton = findViewById(R.id.save_button);
         clearButton = findViewById(R.id.clear_button);
         backButton = findViewById(R.id.back_button);
         pageTitle = findViewById(R.id.page_title);
@@ -57,6 +59,16 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
         backButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
             finish();
+        });
+        
+        // 保存手勢
+        saveButton.setOnClickListener(v -> {
+            vibrationManager.vibrateClick();
+            if (gestureDrawView.hasDrawing()) {
+                showSaveGestureDialog();
+            } else {
+                announceInfo("請先繪製手勢");
+            }
         });
         
         // 清除手勢
@@ -117,6 +129,42 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
         // TODO: 顯示創建手勢對話框，讓用戶選擇綁定功能
         // 簡化實現：直接提示
         Toast.makeText(this, "請繪製手勢並綁定功能", Toast.LENGTH_SHORT).show();
+    }
+    
+    /**
+     * 顯示保存手勢對話框
+     */
+    private void showSaveGestureDialog() {
+        // 簡化實現：直接顯示功能選擇對話框
+        String[] functions = {
+            "環境識別", "文檔助手", "語音命令", "尋找物品", 
+            "即時協助", "出行協助"
+        };
+        
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("綁定功能");
+        builder.setItems(functions, (dialog, which) -> {
+            String gestureName = "手勢_" + System.currentTimeMillis();
+            String selectedFunction = functions[which];
+            
+            // 將Path轉換為GesturePoint列表
+            List<android.graphics.Path> paths = gestureDrawView.getPaths();
+            List<GestureRecognitionManager.GesturePoint> points = convertPathsToPoints(paths);
+            
+            // 保存手勢
+            gestureManager.saveGesture(
+                gestureName,
+                points,
+                selectedFunction
+            );
+            
+            // 清除繪畫區域
+            gestureDrawView.clear();
+            
+            announceInfo("手勢已綁定到：" + selectedFunction);
+            loadSavedGestures();
+        });
+        builder.show();
     }
     
     /**
@@ -249,5 +297,31 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
             String description = getLocalizedString("gesture_management_title") + "頁面。可以繪製手勢並綁定功能。";
             ttsManager.speak(description, null, true);
         }, 500);
+    }
+    
+    /**
+     * 將Path轉換為GesturePoint列表
+     */
+    private List<GestureRecognitionManager.GesturePoint> convertPathsToPoints(List<android.graphics.Path> paths) {
+        List<GestureRecognitionManager.GesturePoint> points = new java.util.ArrayList<>();
+        
+        for (android.graphics.Path path : paths) {
+            // 簡化實現：從Path中提取關鍵點
+            // 實際應該從Path中提取所有點
+            android.graphics.PathMeasure pm = new android.graphics.PathMeasure(path, false);
+            float length = pm.getLength();
+            
+            // 取樣點數
+            int sampleCount = 20;
+            for (int i = 0; i < sampleCount; i++) {
+                float distance = (i / (float) (sampleCount - 1)) * length;
+                float[] coords = new float[2];
+                if (pm.getPosTan(distance, coords, null)) {
+                    points.add(new GestureRecognitionManager.GesturePoint(coords[0], coords[1]));
+                }
+            }
+        }
+        
+        return points;
     }
 }
