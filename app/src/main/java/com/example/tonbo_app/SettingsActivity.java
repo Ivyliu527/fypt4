@@ -113,9 +113,9 @@ public class SettingsActivity extends BaseAccessibleActivity {
         boolean screenReaderEnabled = preferences.getBoolean("screen_reader_enabled", true);
         boolean gestureEnabled = preferences.getBoolean("gesture_enabled", false);
         
-        updateToggleButton(vibrationToggleButton, vibrationEnabled, getString(R.string.vibration_feedback));
-        updateToggleButton(screenReaderToggleButton, screenReaderEnabled, getString(R.string.screen_reader_support));
-        updateToggleButton(gestureToggleButton, gestureEnabled, getString(R.string.gesture_operations));
+        updateToggleButton(vibrationToggleButton, vibrationEnabled, getLocalizedString("vibration_feedback"));
+        updateToggleButton(screenReaderToggleButton, screenReaderEnabled, getLocalizedString("screen_reader_support"));
+        updateToggleButton(gestureToggleButton, gestureEnabled, getLocalizedString("gesture_operations"));
         
         Log.d(TAG, "設定已載入 - 語速:" + speechRate + " 音調:" + speechPitch + " 音量:" + speechVolume);
     }
@@ -280,13 +280,35 @@ public class SettingsActivity extends BaseAccessibleActivity {
     }
     
     private void updateToggleButton(Button button, boolean enabled, String settingName) {
+        String statusText;
+        String contentDescription;
+        
         if (enabled) {
-            button.setText(getString(R.string.status_on));
-            button.setContentDescription(settingName + getString(R.string.status_on) + "，點擊關閉");
+            if ("english".equals(currentLanguage)) {
+                statusText = "On";
+                contentDescription = settingName + " On, tap to turn off";
+            } else if ("mandarin".equals(currentLanguage)) {
+                statusText = "开启";
+                contentDescription = settingName + " 已开启，点击关闭";
+            } else {
+                statusText = "開啟";
+                contentDescription = settingName + " 已開啟，點擊關閉";
+            }
         } else {
-            button.setText(getString(R.string.status_off));
-            button.setContentDescription(settingName + getString(R.string.status_off) + "，點擊開啟");
+            if ("english".equals(currentLanguage)) {
+                statusText = "Off";
+                contentDescription = settingName + " Off, tap to turn on";
+            } else if ("mandarin".equals(currentLanguage)) {
+                statusText = "关闭";
+                contentDescription = settingName + " 已关闭，点击开启";
+            } else {
+                statusText = "關閉";
+                contentDescription = settingName + " 已關閉，點擊開啟";
+            }
         }
+        
+        button.setText(statusText);
+        button.setContentDescription(contentDescription);
     }
     
     private void toggleVibration() {
@@ -294,7 +316,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
         boolean newState = !currentState;
         
         preferences.edit().putBoolean("vibration_enabled", newState).apply();
-        updateToggleButton(vibrationToggleButton, newState, getString(R.string.vibration_feedback));
+        updateToggleButton(vibrationToggleButton, newState, getLocalizedString("vibration_feedback"));
         
         // 更新VibrationManager狀態
         vibrationManager.setEnabled(newState);
@@ -312,7 +334,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
         boolean newState = !currentState;
         
         preferences.edit().putBoolean("screen_reader_enabled", newState).apply();
-        updateToggleButton(screenReaderToggleButton, newState, getString(R.string.screen_reader_support));
+        updateToggleButton(screenReaderToggleButton, newState, getLocalizedString("screen_reader_support"));
         
         String message = newState ? getString(R.string.screen_reader_status_on) : getString(R.string.screen_reader_status_off);
         announceSettingChange(message);
@@ -328,7 +350,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
         boolean newState = !currentState;
         
         preferences.edit().putBoolean("gesture_enabled", newState).apply();
-        updateToggleButton(gestureToggleButton, newState, getString(R.string.gesture_operations));
+        updateToggleButton(gestureToggleButton, newState, getLocalizedString("gesture_operations"));
         
         String message = newState ? getString(R.string.gesture_operations_status_on) : getString(R.string.gesture_operations_status_off);
         announceSettingChange(message);
@@ -416,9 +438,9 @@ public class SettingsActivity extends BaseAccessibleActivity {
         speechVolumeSeekBar.setProgress(100);
         updateSpeechTexts();
         
-        updateToggleButton(vibrationToggleButton, true, getString(R.string.vibration_feedback));
-        updateToggleButton(screenReaderToggleButton, true, getString(R.string.screen_reader_support));
-        updateToggleButton(gestureToggleButton, false, getString(R.string.gesture_operations));
+        updateToggleButton(vibrationToggleButton, true, getLocalizedString("vibration_feedback"));
+        updateToggleButton(screenReaderToggleButton, true, getLocalizedString("screen_reader_support"));
+        updateToggleButton(gestureToggleButton, false, getLocalizedString("gesture_operations"));
         
         // 重置TTS設定
         ttsManager.setSpeechRate(1.0f);
@@ -432,6 +454,40 @@ public class SettingsActivity extends BaseAccessibleActivity {
     private void announceSettingChange(String message) {
         // 直接使用傳入的詳細訊息，不需要額外的英文訊息
         ttsManager.speak(message, null, false);
+    }
+    
+    /**
+     * 獲取本地化字符串
+     */
+    private String getLocalizedString(String key) {
+        switch (key) {
+            case "vibration_feedback":
+                if ("english".equals(currentLanguage)) {
+                    return "Vibration Feedback";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "震动反馈";
+                } else {
+                    return "震動反饋";
+                }
+            case "screen_reader_support":
+                if ("english".equals(currentLanguage)) {
+                    return "Screen Reader Support";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "屏幕阅读器支持";
+                } else {
+                    return "螢幕閱讀器支援";
+                }
+            case "gesture_operations":
+                if ("english".equals(currentLanguage)) {
+                    return "Gesture Operations";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "手势操作";
+                } else {
+                    return "手勢操作";
+                }
+            default:
+                return getString(R.string.app_name); // fallback
+        }
     }
     
     @Override
