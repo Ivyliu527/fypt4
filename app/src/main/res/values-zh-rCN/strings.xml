@@ -99,4 +99,9 @@
     <string name="error_contact_exists">该联系人已存在</string>
     <string name="error_add_contact">请至少添加一个紧急联系人</string>
     <string name="test_emergency_confirmation">即将测试紧急功能，此操作不会发送实际的求助请求，仅会测试语音和震动功能。继续吗？</string>
+    
+    <!-- Speech Rate/Pitch/Volume Changes -->
+    <string name="speech_rate_changed_to">语音速度已调整为 %d%%</string>
+    <string name="speech_pitch_changed_to">音调已调整为 %d%%</string>
+    <string name="speech_volume_changed_to">音量已调整为 %d%%</string>
 </resources>
