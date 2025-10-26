@@ -5,28 +5,28 @@
     android:viewportWidth="120"
     android:viewportHeight="120">
     
-    <!-- 手勢圖標：手指繪製示意圖 -->
-    <!-- 圓形背景 -->
-    <circle
-        android:cx="60"
-        android:cy="60"
-        android:r="55"
-        android:fillColor="@android:color/transparent"
-        android:strokeColor="@color/primary_blue"
-        android:strokeWidth="3"/>
-    
-    <!-- 手指示意圖 -->
-    <path
-        android:fillColor="@color/primary_blue"
-        android:pathData="M 35,45 Q 30,40 25,35 L 25,30 Q 25,25 30,25 Q 35,25 40,30 L 40,40 Q 40,45 35,45 Z
-                           M 40,40 Q 45,40 50,38 L 55,35 Q 60,32 65,32 Q 70,32 75,35
-                           L 75,45 Q 75,48 72,50 L 68,53 Q 65,55 62,55 Q 58,55 55,52
-                           L 50,47 Q 45,42 40,40 Z"/>
-    
-    <!-- 繪製路徑示意 -->
+    <!-- 手勢圖標：繪製路徑示意 -->
+    <!-- 圓形邊框 -->
     <path
         android:fillColor="@android:color/transparent"
         android:strokeColor="@color/primary_blue"
         android:strokeWidth="3"
-        android:pathData="M 40,80 Q 50,60 60,80 T 80,80"/>
+        android:pathData="M 60,10 A 50,50 0 1,1 60,110 A 50,50 0 1,1 60,10"/>
+    
+    <!-- 手勢路徑示意 -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@color/primary_blue"
+        android:strokeWidth="6"
+        android:strokeLinecap="round"
+        android:strokeLinejoin="round"
+        android:pathData="M 40,60 L 60,40 L 80,60"/>
+    
+    <!-- 波形手勢示意 -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@color/primary_blue"
+        android:strokeWidth="4"
+        android:strokeLinecap="round"
+        android:pathData="M 30,80 Q 40,70 50,80 T 70,80"/>
 </vector>
