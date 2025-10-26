@@ -18,8 +18,6 @@
         android:fillColor="@android:color/transparent"
         android:strokeColor="@color/primary_blue"
         android:strokeWidth="6"
-        android:strokeLinecap="round"
-        android:strokeLinejoin="round"
         android:pathData="M 40,60 L 60,40 L 80,60"/>
     
     <!-- 波形手勢示意 -->
@@ -27,6 +25,5 @@
         android:fillColor="@android:color/transparent"
         android:strokeColor="@color/primary_blue"
         android:strokeWidth="4"
-        android:strokeLinecap="round"
         android:pathData="M 30,80 Q 40,70 50,80 T 70,80"/>
 </vector>
