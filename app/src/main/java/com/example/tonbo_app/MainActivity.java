@@ -479,20 +479,20 @@ public class MainActivity extends BaseAccessibleActivity {
             gestureDesc = "绘制手势绑定应用功能";
         } else {
             // 廣東話版本（預設）
-            envTitle = getString(R.string.function_environment);
-            envDesc = getString(R.string.desc_environment);
-            docTitle = getString(R.string.function_document);
-            docDesc = getString(R.string.desc_document);
-            voiceTitle = getString(R.string.function_voice_command);
-            voiceDesc = getString(R.string.desc_voice_command);
-            findTitle = getString(R.string.function_find_items);
-            findDesc = getString(R.string.desc_find_items);
-            liveTitle = getString(R.string.function_live_assistance);
-            liveDesc = getString(R.string.desc_live_assistance);
-            travelTitle = getString(R.string.travel_assistant_title);
-            travelDesc = getString(R.string.travel_assistant_description);
-            gestureTitle = getString(R.string.gesture_management);
-            gestureDesc = getString(R.string.gesture_management_desc);
+            envTitle = "環境識別";
+            envDesc = "描述周圍環境和物體";
+            docTitle = "文檔助手";
+            docDesc = "掃描文檔和識別貨幣";
+            voiceTitle = "語音命令";
+            voiceDesc = "使用語音命令控制應用";
+            findTitle = "尋找物品";
+            findDesc = "尋找標記的個人物品";
+            liveTitle = "即時協助";
+            liveDesc = "與志願者視頻通話";
+            travelTitle = "出行協助";
+            travelDesc = "提供導航、路線規劃、交通信息、天氣更新和緊急位置分享服務";
+            gestureTitle = "手勢管理";
+            gestureDesc = "繪製手勢綁定應用功能";
         }
         
         // 第一頁：前4個功能
