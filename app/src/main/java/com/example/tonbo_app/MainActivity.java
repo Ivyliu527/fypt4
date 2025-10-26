@@ -539,6 +539,9 @@ public class MainActivity extends BaseAccessibleActivity {
             @Override
             public void onPageSelected(int position) {
                 updatePageIndicator(position);
+                
+                // 為當前頁面的Fragment設置點擊監聽器
+                setupFragmentClickListener(position);
             }
         });
         
@@ -550,13 +553,17 @@ public class MainActivity extends BaseAccessibleActivity {
         // 延後設置點擊監聽器，確保 Fragment 已完全創建
         viewPager.post(() -> {
             for (int i = 0; i < functionPages.size(); i++) {
-                long itemId = pagerAdapter.getItemId(i);
-                Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + itemId);
-                if (fragment instanceof FunctionListFragment) {
-                    ((FunctionListFragment) fragment).setOnFunctionClickListener(functionClickListener);
-                }
+                setupFragmentClickListener(i);
             }
         });
+    }
+    
+    private void setupFragmentClickListener(int position) {
+        long itemId = pagerAdapter.getItemId(position);
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + itemId);
+        if (fragment instanceof FunctionListFragment) {
+            ((FunctionListFragment) fragment).setOnFunctionClickListener(functionClickListener);
+        }
     }
     
     private void updatePageIndicator(int currentPage) {
