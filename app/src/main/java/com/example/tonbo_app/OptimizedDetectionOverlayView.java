@@ -18,6 +18,7 @@ public class OptimizedDetectionOverlayView extends View {
     
     private List<YoloDetector.DetectionResult> detectionResults;
     private Paint boxPaint;
+    private Paint fillPaint;
     private Paint textPaint;
     private Paint backgroundPaint;
     private int viewWidth;
@@ -43,8 +44,14 @@ public class OptimizedDetectionOverlayView extends View {
         boxPaint = new Paint();
         boxPaint.setColor(Color.RED);
         boxPaint.setStyle(Paint.Style.STROKE);
-        boxPaint.setStrokeWidth(4f);
+        boxPaint.setStrokeWidth(6f);
         boxPaint.setAntiAlias(true);
+        
+        // 半透明填充遮罩
+        fillPaint = new Paint();
+        fillPaint.setStyle(Paint.Style.FILL);
+        fillPaint.setAlpha(100); // 半透明
+        fillPaint.setAntiAlias(true);
         
         textPaint = new Paint();
         textPaint.setColor(Color.WHITE);
@@ -54,7 +61,7 @@ public class OptimizedDetectionOverlayView extends View {
         
         backgroundPaint = new Paint();
         backgroundPaint.setColor(Color.BLACK);
-        backgroundPaint.setAlpha(128);
+        backgroundPaint.setAlpha(200);
         backgroundPaint.setAntiAlias(true);
     }
     
@@ -86,11 +93,17 @@ public class OptimizedDetectionOverlayView extends View {
             return;
         }
         
-        // 根據檢測結果調整顏色
-        int color = getColorForConfidence(result.getConfidence());
-        boxPaint.setColor(color);
+        // 獲取物體顏色（根據索引）
+        int[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.CYAN, 
+                       Color.MAGENTA, 0xFF00FF00, 0xFFFF00FF, 0xFFFF8000, 0xFF00FFFF};
+        int objectColor = colors[index % colors.length];
+        
+        // 繪製半透明填充遮罩
+        fillPaint.setColor(objectColor);
+        canvas.drawRect(boundingBox, fillPaint);
         
         // 繪製邊界框
+        boxPaint.setColor(objectColor);
         canvas.drawRect(boundingBox, boxPaint);
         
         // 準備標籤文本
@@ -115,11 +128,15 @@ public class OptimizedDetectionOverlayView extends View {
             textX = viewWidth - textWidth - 10;
         }
         
-        // 繪製文本背景矩形
+        // 繪製文本背景矩形（使用物體顏色，但更深）
+        Paint textBackgroundPaint = new Paint(backgroundPaint);
+        textBackgroundPaint.setColor(Color.argb(200, Color.red(objectColor), 
+                                                 Color.green(objectColor), 
+                                                 Color.blue(objectColor)));
         canvas.drawRect(
             textX - 5, textY - textHeight - 5,
             textX + textWidth + 5, textY + 5,
-            backgroundPaint
+            textBackgroundPaint
         );
         
         // 繪製文本
