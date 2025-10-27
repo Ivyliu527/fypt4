@@ -58,6 +58,9 @@ dependencies {
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
     implementation("org.tensorflow:tensorflow-lite-gpu:2.14.0")
     implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
+    
+    // ONNX Runtime (可選：用於 ONNX 模型)
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.16.0")
 
     // Google ML Kit for OCR text recognition
     implementation("com.google.mlkit:text-recognition:16.0.0")
