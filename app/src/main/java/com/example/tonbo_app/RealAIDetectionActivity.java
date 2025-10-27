@@ -226,13 +226,11 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
             
-            // 設置圖像分析器
+            // 設置空的分析器（不進行檢測）
             imageAnalysis.setAnalyzer(cameraExecutor, new ImageAnalysis.Analyzer() {
                 @Override
                 public void analyze(@NonNull ImageProxy image) {
-                    if (isDetecting && yoloDetector != null) {
-                        analyzeImage(image);
-                    }
+                    // 初始狀態不進行檢測，只關閉圖像
                     image.close();
                 }
             });
@@ -293,6 +291,25 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         stopButton.setEnabled(true);
         updateStatusIndicator("scanning");
         
+        // 設置真正的圖像分析器
+        if (imageAnalysis != null) {
+            imageAnalysis.setAnalyzer(cameraExecutor, new ImageAnalysis.Analyzer() {
+                @Override
+                public void analyze(@NonNull ImageProxy image) {
+                    if (isDetecting && yoloDetector != null) {
+                        analyzeImage(image);
+                    } else {
+                        image.close();
+                    }
+                }
+            });
+        }
+        
+        String announcement = (currentLanguage.equals("english")) 
+            ? "Environment recognition started" 
+            : (currentLanguage.equals("mandarin") ? "環境識別已開始" : "環境識別已開始");
+        
+        ttsManager.speak(announcement, announcement, true);
         
         Toast.makeText(this, "環境識別已開始", Toast.LENGTH_SHORT).show();
     }
