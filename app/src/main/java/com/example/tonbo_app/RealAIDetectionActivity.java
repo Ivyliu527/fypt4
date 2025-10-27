@@ -301,6 +301,17 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         isDetecting = false;
         startButton.setEnabled(true);
         stopButton.setEnabled(false);
+        
+        // 停止圖像分析，避免後台繼續處理
+        if (imageAnalysis != null) {
+            imageAnalysis.setAnalyzer(null, null);
+        }
+        
+        // 清除檢測結果顯示
+        if (detectionOverlay != null) {
+            detectionOverlay.clearDetectionResults();
+        }
+        
         updateStatusIndicator("ready");
         
         Toast.makeText(this, "環境識別已停止", Toast.LENGTH_SHORT).show();
