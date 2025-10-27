@@ -383,7 +383,15 @@ public class YoloDetector {
                 
                 if (chineseName != null) {
                     Rect boundingBox = new Rect(left, top, right, bottom);
-                    results.add(new DetectionResult(className, chineseName, confidence, boundingBox));
+                    
+                    // 驗證邊界框合理性：寬度和高度必須大於20像素
+                    int width = right - left;
+                    int height = bottom - top;
+                    if (width >= 20 && height >= 20 && width > 0 && height > 0) {
+                        results.add(new DetectionResult(className, chineseName, confidence, boundingBox));
+                    } else {
+                        Log.d(TAG, "濾除不合理邊界框: " + chineseName + " (" + width + "x" + height + ")");
+                    }
                 }
             }
         }
@@ -584,40 +592,11 @@ public class YoloDetector {
     
     /**
      * 備用檢測方法（當 YOLO 模型不可用時使用）
-     * 基於圖像特徵的簡單檢測
+     * 不使用簡陋的特徵檢測，直接返回空結果以避免誤報
      */
     private List<DetectionResult> getFallbackDetections(Bitmap bitmap) {
-        List<DetectionResult> results = new ArrayList<>();
-        
-        try {
-            // 基於圖像特徵的簡單檢測邏輯
-            // 這裡可以實現基於顏色、邊緣、紋理等特徵的檢測
-            
-            // 分析圖像的主要顏色
-            int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-            bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-            
-            // 簡單的物體檢測邏輯
-            if (detectPerson(pixels, bitmap.getWidth(), bitmap.getHeight())) {
-                Rect boundingBox = new Rect(200, 200, 400, 600); // 模擬人體邊界框
-                results.add(new DetectionResult("person", "人", 0.8f, boundingBox));
-            }
-            
-            if (detectFurniture(pixels, bitmap.getWidth(), bitmap.getHeight())) {
-                Rect boundingBox = new Rect(100, 300, 500, 500); // 模擬家具邊界框
-                results.add(new DetectionResult("chair", "椅子", 0.7f, boundingBox));
-            }
-            
-            if (detectElectronics(pixels, bitmap.getWidth(), bitmap.getHeight())) {
-                Rect boundingBox = new Rect(300, 100, 500, 300); // 模擬電子產品邊界框
-                results.add(new DetectionResult("laptop", "筆記本電腦", 0.75f, boundingBox));
-            }
-            
-        } catch (Exception e) {
-            Log.e(TAG, "備用檢測失敗: " + e.getMessage());
-        }
-        
-        return results;
+        Log.w(TAG, "模型未載入，無法進行準確檢測，返回空結果");
+        return new ArrayList<>(); // 返回空列表，避免誤報
     }
     
     /**

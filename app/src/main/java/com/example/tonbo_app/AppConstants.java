@@ -38,12 +38,12 @@ public final class AppConstants {
     public static final int SLIDE_TRANSITION_DURATION_MS = 300;
     public static final int SCALE_TRANSITION_DURATION_MS = 250;
     
-    // 置信度閾值
-    public static final float CONFIDENCE_THRESHOLD = 0.3f;
-    public static final float HIGH_CONFIDENCE_THRESHOLD = 0.55f;
-    public static final float SCORE_THRESHOLD = 0.25f;
-    public static final float NMS_THRESHOLD = 0.35f;
-    public static final float IOU_THRESHOLD = 0.5f;
+    // 置信度閾值 - 提高閾值以減少誤報
+    public static final float CONFIDENCE_THRESHOLD = 0.6f;        // 從0.3提高到0.6
+    public static final float HIGH_CONFIDENCE_THRESHOLD = 0.75f;  // 從0.55提高到0.75
+    public static final float SCORE_THRESHOLD = 0.5f;              // 從0.25提高到0.5
+    public static final float NMS_THRESHOLD = 0.4f;                // 從0.35提高到0.4
+    public static final float IOU_THRESHOLD = 0.5f;                // 保持0.5
     
     // 模型參數
     public static final String MODEL_FILE = "ssd_mobilenet_v1.tflite";
