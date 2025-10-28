@@ -357,27 +357,119 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     
     
     private void announceDetectionResults(List<YoloDetector.DetectionResult> results) {
-        if (results.isEmpty()) return;
+        if (results.isEmpty()) {
+            // 空結果不播報，避免信息過載
+            return;
+        }
         
-        StringBuilder announcement = new StringBuilder();
-        announcement.append("檢測到 ").append(results.size()).append(" 個物體：");
+        // 1. 重要性排序
+        List<YoloDetector.DetectionResult> critical = new ArrayList<>();
+        List<YoloDetector.DetectionResult> important = new ArrayList<>();
+        List<YoloDetector.DetectionResult> optional = new ArrayList<>();
         
-        for (int i = 0; i < Math.min(results.size(), 5); i++) { // 最多播報5個物體
-            YoloDetector.DetectionResult result = results.get(i);
-            String position = getPositionDescription(result.getBoundingBox());
-            announcement.append(" ").append(result.getLabelZh())
-                      .append("在").append(position);
-            
-            if (i < Math.min(results.size(), 5) - 1) {
-                announcement.append("，");
+        for (YoloDetector.DetectionResult result : results) {
+            String category = categorizeImportance(result.getLabel());
+            if ("critical".equals(category)) {
+                critical.add(result);
+            } else if ("important".equals(category)) {
+                important.add(result);
+            } else {
+                optional.add(result);
             }
         }
         
-        if (results.size() > 5) {
-            announcement.append("等").append(results.size()).append("個物體");
+        // 2. 只播報重要的結果
+        List<YoloDetector.DetectionResult> toAnnounce = new ArrayList<>();
+        if (!critical.isEmpty()) {
+            toAnnounce = critical;  // 只播報關鍵物體
+        } else if (!important.isEmpty()) {
+            toAnnounce = important;  // 或播報重要物體
+        } else if (optional.size() <= 3) {
+            toAnnounce = optional;  // 只播報少量裝飾品
         }
         
-        ttsManager.speak(announcement.toString(), announcement.toString(), false);
+        if (toAnnounce.isEmpty()) {
+            return;
+        }
+        
+        // 3. 優化語音播報
+        StringBuilder announcement = new StringBuilder();
+        
+        if (toAnnounce.size() == 1) {
+            // 單個物體：簡潔描述
+            YoloDetector.DetectionResult result = toAnnounce.get(0);
+            String position = getPositionDescription(result.getBoundingBox());
+            String distance = estimateDistance(result.getBoundingBox());
+            announcement.append(position).append(distance).append("有").append(result.getLabelZh());
+        } else {
+            // 多個物體：列舉最重要的
+            announcement.append("檢測到");
+            for (int i = 0; i < Math.min(toAnnounce.size(), 3); i++) {
+                announcement.append(toAnnounce.get(i).getLabelZh());
+                if (i < Math.min(toAnnounce.size(), 3) - 1) {
+                    announcement.append("、");
+                }
+            }
+            if (toAnnounce.size() > 3) {
+                announcement.append("等").append(toAnnounce.size()).append("個物體");
+            }
+        }
+        
+        // 4. 根據語言播報
+        String cantoneseText = currentLanguage.equals("english") ? translateToEnglish(announcement.toString()) : announcement.toString();
+        String englishText = currentLanguage.equals("english") ? announcement.toString() : translateToEnglish(announcement.toString());
+        
+        ttsManager.speak(cantoneseText, englishText, false);
+    }
+    
+    private String categorizeImportance(String label) {
+        // 關鍵物體：人、車輛、障礙物
+        if (label.contains("person") || label.contains("car") || 
+            label.contains("truck") || label.contains("bus") || 
+            label.contains("motorcycle") || label.contains("obstacle")) {
+            return "critical";
+        }
+        
+        // 重要物體：家具、門、開關
+        if (label.contains("chair") || label.contains("table") || 
+            label.contains("door") || label.contains("sofa") ||
+            label.contains("bed") || label.contains("keyboard")) {
+            return "important";
+        }
+        
+        // 可選物體：裝飾品
+        return "optional";
+    }
+    
+    private String estimateDistance(Rect boundingBox) {
+        if (boundingBox == null) return "";
+        
+        // 估算相對距離
+        float area = boundingBox.width() * boundingBox.height();
+        float normalizedArea = area / (1080 * 1920); // 假設標準屏幕
+        
+        if (normalizedArea > 0.1) {
+            return "約1米處";
+        } else if (normalizedArea > 0.05) {
+            return "約2米處";
+        } else if (normalizedArea > 0.02) {
+            return "約3米處";
+        } else {
+            return "遠處約";
+        }
+    }
+    
+    private String translateToEnglish(String text) {
+        // 簡單翻譯映射
+        if (text.contains("檢測到")) text = text.replace("檢測到", "detected");
+        if (text.contains("個物體")) text = text.replace("個物體", " objects");
+        if (text.contains("有")) text = text.replace("有", "has");
+        if (text.contains("左側")) text = text.replace("左側", "left side");
+        if (text.contains("右側")) text = text.replace("右側", "right side");
+        if (text.contains("上方")) text = text.replace("上方", "above");
+        if (text.contains("下方")) text = text.replace("下方", "below");
+        if (text.contains("中央")) text = text.replace("中央", "center");
+        return text;
     }
     
     private String getPositionDescription(Rect boundingBox) {
