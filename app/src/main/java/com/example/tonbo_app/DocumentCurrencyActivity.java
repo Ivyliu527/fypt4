@@ -1,12 +1,22 @@
 package com.example.tonbo_app;
 
 import android.Manifest;
+import android.app.Dialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -363,6 +373,9 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
                         announceInfo("分析完成，共識別到" + 
                             String.format(getString(R.string.items_detected), (ocrResults.size() + currencyResults.size())));
                         isAnalyzing = false;
+                        
+                        // 顯示結果彈窗
+                        showResultDialog(ocrResults, currencyResults);
                     });
 
                 } catch (Exception e) {
@@ -372,6 +385,9 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
                         updateStatus("分析失敗");
                         announceError("分析失敗，請重試");
                         isAnalyzing = false;
+                        
+                        // 顯示錯誤彈窗
+                        showErrorDialog("分析失敗：" + e.getMessage());
                     });
                 }
             }).start();
@@ -691,5 +707,148 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
                 .replace("Mauritian rupee", "毛里求斯盧比")
                 .replace("Seychellois rupee", "塞舌爾盧比")
                 .replace("Comorian franc", "科摩羅法郎");
+    }
+    
+    /**
+     * 顯示識別結果彈窗
+     */
+    private void showResultDialog(List<OCRHelper.OCRResult> ocrResults, 
+                                 List<CurrencyDetector.CurrencyResult> currencyResults) {
+        // 創建對話框
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_ocr_result);
+        
+        // 設置窗口大小
+        Window window = dialog.getWindow();
+        if (window != null) {
+            WindowManager.LayoutParams params = window.getAttributes();
+            params.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
+            params.height = (int) (getResources().getDisplayMetrics().heightPixels * 0.8);
+            window.setAttributes(params);
+        }
+        
+        // 獲取視圖元素
+        TextView resultText = dialog.findViewById(R.id.resultText);
+        Button copyButton = dialog.findViewById(R.id.copyButton);
+        Button speakButton = dialog.findViewById(R.id.speakButton);
+        Button closeButton = dialog.findViewById(R.id.closeButton);
+        TextView dialogTitle = dialog.findViewById(R.id.dialogTitle);
+        
+        // 設置標題
+        if (isTextMode) {
+            dialogTitle.setText("文字識別結果");
+        } else {
+            dialogTitle.setText("貨幣識別結果");
+        }
+        
+        // 格式化結果文本
+        StringBuilder resultBuilder = new StringBuilder();
+        
+        if (!ocrResults.isEmpty()) {
+            resultBuilder.append("📄 文字識別結果：\n\n");
+            for (int i = 0; i < ocrResults.size(); i++) {
+                OCRHelper.OCRResult result = ocrResults.get(i);
+                resultBuilder.append(result.getText());
+                if (i < ocrResults.size() - 1) {
+                    resultBuilder.append("\n\n");
+                }
+            }
+        }
+        
+        if (!currencyResults.isEmpty()) {
+            if (resultBuilder.length() > 0) {
+                resultBuilder.append("\n\n");
+            }
+            resultBuilder.append("💰 貨幣識別結果：\n\n");
+            for (int i = 0; i < currencyResults.size(); i++) {
+                CurrencyDetector.CurrencyResult result = currencyResults.get(i);
+                resultBuilder.append(result.getCurrencyName())
+                            .append(" ")
+                            .append(result.getAmount());
+                if (i < currencyResults.size() - 1) {
+                    resultBuilder.append("\n\n");
+                }
+            }
+        }
+        
+        if (resultBuilder.length() == 0) {
+            resultBuilder.append("未識別到任何內容");
+        }
+        
+        resultText.setText(resultBuilder.toString());
+        
+        // 複製按鈕
+        copyButton.setOnClickListener(v -> {
+            vibrationManager.vibrateClick();
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("識別結果", resultBuilder.toString());
+            clipboard.setPrimaryClip(clip);
+            
+            String message = currentLanguage.equals("english") 
+                ? "Copied to clipboard" 
+                : "已複製到剪貼板";
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            announceInfo(message);
+        });
+        
+        // 朗讀按鈕
+        speakButton.setOnClickListener(v -> {
+            vibrationManager.vibrateClick();
+            String textToSpeak = resultBuilder.toString();
+            if (textToSpeak.isEmpty() || textToSpeak.equals("未識別到任何內容")) {
+                announceInfo("沒有內容可朗讀");
+            } else {
+                String cantoneseText = currentLanguage.equals("english") ? "" : textToSpeak;
+                String englishText = currentLanguage.equals("english") ? textToSpeak : "";
+                ttsManager.speak(cantoneseText, englishText, true);
+            }
+        });
+        
+        // 關閉按鈕
+        closeButton.setOnClickListener(v -> {
+            vibrationManager.vibrateClick();
+            dialog.dismiss();
+            announceInfo("已關閉結果視窗");
+        });
+        
+        // 顯示對話框
+        dialog.show();
+        announceInfo("識別結果已顯示");
+    }
+    
+    /**
+     * 顯示錯誤彈窗
+     */
+    private void showErrorDialog(String errorMessage) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_ocr_result);
+        
+        Window window = dialog.getWindow();
+        if (window != null) {
+            WindowManager.LayoutParams params = window.getAttributes();
+            params.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
+            window.setAttributes(params);
+        }
+        
+        TextView resultText = dialog.findViewById(R.id.resultText);
+        TextView dialogTitle = dialog.findViewById(R.id.dialogTitle);
+        Button closeButton = dialog.findViewById(R.id.closeButton);
+        Button copyButton = dialog.findViewById(R.id.copyButton);
+        Button speakButton = dialog.findViewById(R.id.speakButton);
+        
+        dialogTitle.setText("錯誤");
+        resultText.setText(errorMessage);
+        
+        copyButton.setVisibility(View.GONE);
+        speakButton.setVisibility(View.GONE);
+        
+        closeButton.setOnClickListener(v -> {
+            vibrationManager.vibrateClick();
+            dialog.dismiss();
+        });
+        
+        dialog.show();
     }
 }
