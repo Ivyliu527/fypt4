@@ -763,9 +763,10 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
             resultBuilder.append("💰 貨幣識別結果：\n\n");
             for (int i = 0; i < currencyResults.size(); i++) {
                 CurrencyDetector.CurrencyResult result = currencyResults.get(i);
-                resultBuilder.append(result.getCurrencyName())
+                resultBuilder.append(result.getName())
                             .append(" ")
-                            .append(result.getAmount());
+                            .append(result.getAmount())
+                            .append("元");
                 if (i < currencyResults.size() - 1) {
                     resultBuilder.append("\n\n");
                 }
