@@ -34,18 +34,9 @@ public class SplashActivity extends AppCompatActivity {
     }
     
     private void checkLoginStatusAndNavigate() {
-        UserManager userManager = UserManager.getInstance(this);
-        
-        // 檢查是否需要登入
-        if (userManager.needsLogin()) {
-            // 需要登入，跳轉到登入頁面
-            Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
-            startActivity(intent);
-        } else {
-            // 已登入或訪客模式，跳轉到主頁
-            Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-            startActivity(intent);
-        }
+        // 取消登入流程，直接進入主頁
+        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+        startActivity(intent);
         finish();
     }
 
