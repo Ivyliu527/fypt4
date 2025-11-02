@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -177,6 +178,15 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         flashButton = findViewById(R.id.flashButton);
         startDetectionButton = findViewById(R.id.startDetectionButton);
 
+        // 確保覆蓋層可見並正確初始化
+        if (detectionOverlay != null) {
+            detectionOverlay.setVisibility(View.VISIBLE);
+            detectionOverlay.setAlpha(1.0f);
+            Log.d(TAG, "✅ 覆蓋層初始化成功，設置為可見");
+        } else {
+            Log.e(TAG, "❌ 覆蓋層為 null，無法初始化！");
+        }
+
         // 設置按鈕點擊事件
         backButton.setOnClickListener(v -> {
             announceNavigation(getString(R.string.go_home_announcement));
@@ -255,6 +265,20 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         // 清除之前的檢測結果
         detectionResults.setText(getString(R.string.point_to_objects_instruction));
         lastDetectionResult = "";
+        
+        // 添加測試邊界框以驗證顯示功能（3秒後移除）
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            Log.d(TAG, "添加測試邊界框以驗證顯示功能");
+            addTestBoundingBox();
+            
+            // 5秒後清除測試邊界框
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                if (detectionOverlay != null) {
+                    detectionOverlay.clearDetections();
+                    Log.d(TAG, "測試邊界框已清除");
+                }
+            }, 5000);
+        }, 1000);
     }
     
     /**
@@ -530,16 +554,15 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                 runOnUiThread(() -> {
                                     Log.d(TAG, "更新UI，檢測結果數量: " + results.size());
                                     
-                                    // 更新覆蓋層顯示檢測框
-                                    detectionOverlay.updateDetections(results);
-                                    
-                                    // 設置覆蓋層的語言
-                                    detectionOverlay.setCurrentLanguage(currentLanguage);
-                                    
-                                    // 添加測試邊界框（用於調試）
-                                    if (results.isEmpty()) {
-                                        Log.d(TAG, "沒有檢測到物體，添加測試邊界框");
-                                        addTestBoundingBox();
+                                    // 更新覆蓋層顯示檢測框 - 確保覆蓋層可見
+                                    if (detectionOverlay != null) {
+                                        detectionOverlay.setVisibility(View.VISIBLE);
+                                        detectionOverlay.updateDetections(results);
+                                        // 設置覆蓋層的語言
+                                        detectionOverlay.setCurrentLanguage(currentLanguage);
+                                        Log.d(TAG, "✅ 已更新覆蓋層，檢測結果數量: " + results.size());
+                                    } else {
+                                        Log.e(TAG, "❌ detectionOverlay 為 null！");
                                     }
                                     
                                     updateDetectionResults(resultText);
@@ -575,7 +598,9 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                             } else {
                                 runOnUiThread(() -> {
                                     // 清除覆蓋層
-                                    detectionOverlay.clearDetections();
+                                    if (detectionOverlay != null) {
+                                        detectionOverlay.clearDetections();
+                                    }
                                     updateDetectionStatus(getString(R.string.detection_no_objects));
                                 });
                             }
@@ -1219,26 +1244,61 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private void addTestBoundingBox() {
         Log.d(TAG, "添加測試邊界框");
         
-        // 創建一個測試檢測結果
-        List<ObjectDetectorHelper.DetectionResult> testResults = new ArrayList<>();
+        if (detectionOverlay == null) {
+            Log.e(TAG, "detectionOverlay為null，無法添加測試邊界框");
+            return;
+        }
         
-        // 在屏幕中央添加一個大的測試邊界框（像素座標）
-        android.graphics.RectF testBoundingBox = new android.graphics.RectF(200.0f, 200.0f, 600.0f, 500.0f);
-        ObjectDetectorHelper.DetectionResult testDetection = new ObjectDetectorHelper.DetectionResult(
-            "test", "測試邊界框", 0.9f, testBoundingBox
-        );
-        testResults.add(testDetection);
-        
-        // 添加第二個測試邊界框
-        android.graphics.RectF testBoundingBox2 = new android.graphics.RectF(800.0f, 300.0f, 1200.0f, 600.0f);
-        ObjectDetectorHelper.DetectionResult testDetection2 = new ObjectDetectorHelper.DetectionResult(
-            "test2", "測試邊界框2", 0.85f, testBoundingBox2
-        );
-        testResults.add(testDetection2);
-        
-        // 更新覆蓋層
-        detectionOverlay.updateDetections(testResults);
-        
-        Log.d(TAG, "測試邊界框已添加 - 兩個大邊界框");
+        // 獲取覆蓋層尺寸
+        detectionOverlay.post(() -> {
+            int overlayWidth = detectionOverlay.getWidth();
+            int overlayHeight = detectionOverlay.getHeight();
+            
+            Log.d(TAG, "覆蓋層尺寸: " + overlayWidth + "x" + overlayHeight);
+            
+            // 創建一個測試檢測結果
+            List<ObjectDetectorHelper.DetectionResult> testResults = new ArrayList<>();
+            
+            if (overlayWidth > 0 && overlayHeight > 0) {
+                // 使用相對座標（0-1範圍），這與SSD檢測器的格式一致
+                float centerX = overlayWidth / 2.0f;
+                float centerY = overlayHeight / 2.0f;
+                float boxWidth = overlayWidth * 0.4f;  // 寬度為屏幕的40%
+                float boxHeight = overlayHeight * 0.3f; // 高度為屏幕的30%
+                
+                // 第一個測試邊界框 - 使用相對座標（0-1）
+                android.graphics.RectF testBoundingBox = new android.graphics.RectF(
+                    0.3f, 0.3f, 0.7f, 0.6f  // 相對座標
+                );
+                ObjectDetectorHelper.DetectionResult testDetection = new ObjectDetectorHelper.DetectionResult(
+                    "test", "測試物體1", 0.95f, testBoundingBox
+                );
+                testResults.add(testDetection);
+                
+                // 第二個測試邊界框 - 使用相對座標（0-1）
+                android.graphics.RectF testBoundingBox2 = new android.graphics.RectF(
+                    0.1f, 0.65f, 0.5f, 0.9f  // 相對座標
+                );
+                ObjectDetectorHelper.DetectionResult testDetection2 = new ObjectDetectorHelper.DetectionResult(
+                    "test2", "測試物體2", 0.88f, testBoundingBox2
+                );
+                testResults.add(testDetection2);
+                
+                Log.d(TAG, "測試邊界框1: " + testBoundingBox);
+                Log.d(TAG, "測試邊界框2: " + testBoundingBox2);
+            } else {
+                // 如果尺寸為0，使用默認相對座標
+                android.graphics.RectF testBoundingBox = new android.graphics.RectF(0.3f, 0.3f, 0.7f, 0.6f);
+                ObjectDetectorHelper.DetectionResult testDetection = new ObjectDetectorHelper.DetectionResult(
+                    "test", "測試邊界框", 0.9f, testBoundingBox
+                );
+                testResults.add(testDetection);
+            }
+            
+            // 更新覆蓋層
+            detectionOverlay.updateDetections(testResults);
+            
+            Log.d(TAG, "測試邊界框已添加，數量: " + testResults.size());
+        });
     }
 }

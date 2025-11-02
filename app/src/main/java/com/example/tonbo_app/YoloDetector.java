@@ -263,26 +263,135 @@ public class YoloDetector {
             Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, AppConstants.INPUT_SIZE, AppConstants.INPUT_SIZE, true);
             ByteBuffer inputBuffer = bitmapToByteBuffer(resizedBitmap);
             
-            // 準備輸出緩衝區 - SSD MobileNet 輸出格式
-            float[][][] detectionBoxes = new float[1][1917][4]; // 邊界框
-            float[][][] detectionClasses = new float[1][1917][91]; // 類別概率
-            float[][] detectionScores = new float[1][1917]; // 置信度分數
-            float[] numDetections = new float[1]; // 檢測數量
+            // 動態獲取輸出張量的形狀
+            int numOutputs = tflite.getOutputTensorCount();
+            Log.d(TAG, "模型輸出張量數量: " + numOutputs);
             
-            // 執行推理
-            Object[] inputs = {inputBuffer};
-            Map<Integer, Object> outputs = new HashMap<>();
-            outputs.put(0, detectionBoxes);
-            outputs.put(1, detectionClasses);
-            outputs.put(2, detectionScores);
-            outputs.put(3, numDetections);
+            // 檢查第一個輸出張量的形狀，判斷模型格式
+            org.tensorflow.lite.Tensor firstOutputTensor = tflite.getOutputTensor(0);
+            int[] firstOutputShape = firstOutputTensor.shape();
+            Log.d(TAG, "第一個輸出張量形狀: " + java.util.Arrays.toString(firstOutputShape));
             
-            tflite.runForMultipleInputsOutputs(inputs, outputs);
+            List<DetectionResult> results = new ArrayList<>();
             
-            // 後處理結果
-            List<DetectionResult> results = postProcessSSDOutput(
-                detectionBoxes[0], detectionClasses[0], detectionScores[0], 
-                (int)numDetections[0], bitmap.getWidth(), bitmap.getHeight());
+            // 根據第一個輸出張量的形狀判斷模型格式
+            // 如果形狀是 [1, num_detections, 4] 或 [1, num_detections, 6]，說明是後處理版本
+            boolean isPostProcessed = (numOutputs == 1 && firstOutputShape.length == 3 && 
+                                      firstOutputShape[0] == 1 && 
+                                      (firstOutputShape[2] == 4 || firstOutputShape[2] == 6));
+            
+            if (isPostProcessed || numOutputs == 1) {
+                // 後處理版本：單一輸出 [1, num_detections, 4] 或 [1, num_detections, 6]
+                int maxDetections = firstOutputShape.length >= 2 ? firstOutputShape[1] : 10;
+                int coordsPerDetection = firstOutputShape.length >= 3 ? firstOutputShape[2] : 4;
+                
+                Log.d(TAG, "檢測到後處理版本，最大檢測數: " + maxDetections + ", 每檢測座標數: " + coordsPerDetection);
+                
+                // 分配輸出緩衝區
+                float[][][] detectionOutput = new float[1][maxDetections][coordsPerDetection];
+                
+                // 執行推理
+                Object[] inputs = {inputBuffer};
+                Map<Integer, Object> outputs = new HashMap<>();
+                outputs.put(0, detectionOutput);
+                
+                tflite.runForMultipleInputsOutputs(inputs, outputs);
+                
+                // 處理後處理輸出格式 [1, num_detections, 6] 或 [1, num_detections, 4]
+                results = postProcessDetections(
+                    detectionOutput[0], bitmap.getWidth(), bitmap.getHeight(), coordsPerDetection);
+                    
+            } else if (numOutputs >= 2) {
+                // 後處理版本：多個輸出張量
+                // 格式可能是：boxes [1, N, 4], classes [1, N], scores [1, N], num_detections [1]
+                // 或者：boxes [1, N, 4], classes [1, N, 91], scores [1, N], num_detections [1]
+                Log.d(TAG, "檢測到多輸出格式，動態檢測輸出張量形狀");
+                
+                // 檢查所有輸出張量的形狀
+                int maxDetections = 10; // 默認值
+                boolean isClassIndexFormat = false; // classes 是索引還是概率矩陣
+                
+                // 檢查第一個輸出張量（boxes）的形狀
+                if (firstOutputShape.length >= 2) {
+                    maxDetections = firstOutputShape[1];
+                    Log.d(TAG, "從第一個輸出張量檢測到最大檢測數: " + maxDetections);
+                }
+                
+                // 檢查第二個輸出張量（classes）的形狀
+                if (numOutputs > 1) {
+                    org.tensorflow.lite.Tensor classesTensor = tflite.getOutputTensor(1);
+                    int[] classesShape = classesTensor.shape();
+                    Log.d(TAG, "第二個輸出張量（classes）形狀: " + java.util.Arrays.toString(classesShape));
+                    
+                    // 如果形狀是 [1, N]，說明是類別索引格式
+                    // 如果形狀是 [1, N, num_classes]，說明是類別概率矩陣格式
+                    if (classesShape.length == 2) {
+                        isClassIndexFormat = true;
+                        Log.d(TAG, "檢測到類別索引格式 [1, N]");
+                    } else if (classesShape.length == 3) {
+                        Log.d(TAG, "檢測到類別概率矩陣格式 [1, N, num_classes]");
+                    }
+                }
+                
+                // 根據實際形狀分配輸出緩衝區
+                float[][][] detectionBoxes = new float[1][maxDetections][4];
+                
+                Object[] inputs = {inputBuffer};
+                Map<Integer, Object> outputs = new HashMap<>();
+                outputs.put(0, detectionBoxes);
+                
+                // 根據格式分配不同的輸出緩衝區
+                if (isClassIndexFormat) {
+                    // 後處理格式：classes 是索引數組 [1, N]
+                    float[][] detectionClasses = new float[1][maxDetections];
+                    float[][] detectionScores = numOutputs > 2 ? new float[1][maxDetections] : null;
+                    float[] numDetections = numOutputs > 3 ? new float[1] : null;
+                    
+                    if (numOutputs > 1) outputs.put(1, detectionClasses);
+                    if (numOutputs > 2 && detectionScores != null) outputs.put(2, detectionScores);
+                    if (numOutputs > 3 && numDetections != null) outputs.put(3, numDetections);
+                    
+                    tflite.runForMultipleInputsOutputs(inputs, outputs);
+                    
+                    // 處理後處理格式的輸出
+                    results = postProcessPostProcessedOutput(
+                        detectionBoxes[0],
+                        detectionClasses[0],
+                        detectionScores != null ? detectionScores[0] : null,
+                        numDetections != null ? (int)numDetections[0] : maxDetections,
+                        bitmap.getWidth(), bitmap.getHeight());
+                } else {
+                    // 原始格式：classes 是概率矩陣 [1, N, num_classes]
+                    int numClasses = 91; // 默認值
+                    if (numOutputs > 1) {
+                        org.tensorflow.lite.Tensor classesTensor = tflite.getOutputTensor(1);
+                        int[] classesShape = classesTensor.shape();
+                        if (classesShape.length >= 3) {
+                            numClasses = classesShape[2];
+                        }
+                    }
+                    
+                    float[][][] detectionClasses = new float[1][maxDetections][numClasses];
+                    float[][] detectionScores = numOutputs > 2 ? new float[1][maxDetections] : null;
+                    float[] numDetections = numOutputs > 3 ? new float[1] : null;
+                    
+                    if (numOutputs > 1) outputs.put(1, detectionClasses);
+                    if (numOutputs > 2 && detectionScores != null) outputs.put(2, detectionScores);
+                    if (numOutputs > 3 && numDetections != null) outputs.put(3, numDetections);
+                    
+                    tflite.runForMultipleInputsOutputs(inputs, outputs);
+                    
+                    results = postProcessSSDOutput(
+                        detectionBoxes[0], 
+                        detectionClasses[0],
+                        detectionScores != null ? detectionScores[0] : null, 
+                        numDetections != null ? (int)numDetections[0] : maxDetections, 
+                        bitmap.getWidth(), bitmap.getHeight());
+                }
+            } else {
+                Log.e(TAG, "未知的輸出格式，輸出張量數量: " + numOutputs);
+                return getFallbackDetections(bitmap);
+            }
             
             // 記錄性能數據
             long detectionTime = System.currentTimeMillis() - startTime;
@@ -298,32 +407,262 @@ public class YoloDetector {
             
         } catch (Exception e) {
             Log.e(TAG, "真實AI檢測失敗，使用備用方法: " + e.getMessage());
+            e.printStackTrace();
             return getFallbackDetections(bitmap);
         }
     }
     
     /**
      * 將 Bitmap 轉換為 ByteBuffer
+     * SSD MobileNet 模型期望 uint8 格式 (0-255)，不是 float
      */
     private ByteBuffer bitmapToByteBuffer(Bitmap bitmap) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * AppConstants.INPUT_SIZE * AppConstants.INPUT_SIZE * 3);
+        // 模型期望：INPUT_SIZE × INPUT_SIZE × 3 字節 (uint8格式)
+        // 而不是：INPUT_SIZE × INPUT_SIZE × 3 × 4 字節 (float格式)
+        int bufferSize = AppConstants.INPUT_SIZE * AppConstants.INPUT_SIZE * 3;
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(bufferSize);
         byteBuffer.order(ByteOrder.nativeOrder());
+        
+        // 確保bitmap是正確尺寸
+        if (bitmap.getWidth() != AppConstants.INPUT_SIZE || 
+            bitmap.getHeight() != AppConstants.INPUT_SIZE) {
+            Log.w(TAG, "Bitmap尺寸不正確: " + bitmap.getWidth() + "x" + bitmap.getHeight() + 
+                       ", 期望: " + AppConstants.INPUT_SIZE + "x" + AppConstants.INPUT_SIZE);
+            return byteBuffer;
+        }
         
         int[] pixels = new int[AppConstants.INPUT_SIZE * AppConstants.INPUT_SIZE];
         bitmap.getPixels(pixels, 0, AppConstants.INPUT_SIZE, 0, 0, AppConstants.INPUT_SIZE, AppConstants.INPUT_SIZE);
         
+        // 將像素值轉換為RGB字節並添加到緩衝區
+        // SSD MobileNet 期望的格式：RGBRGBRGB... (uint8, 0-255)
         for (int pixel : pixels) {
-            // 提取 RGB 值並正規化到 [0, 1]
+            // 提取 RGB 值 (ARGB格式)
             int r = (pixel >> 16) & 0xFF;
             int g = (pixel >> 8) & 0xFF;
             int b = pixel & 0xFF;
             
-            byteBuffer.putFloat(r / 255.0f);
-            byteBuffer.putFloat(g / 255.0f);
-            byteBuffer.putFloat(b / 255.0f);
+            // 使用 put() 而不是 putFloat()，因為模型期望 uint8 (0-255)
+            byteBuffer.put((byte) r);
+            byteBuffer.put((byte) g);
+            byteBuffer.put((byte) b);
         }
         
+        byteBuffer.rewind(); // 重置位置到開始
         return byteBuffer;
+    }
+    
+    /**
+     * 處理後處理版本的檢測輸出
+     * 輸出格式可能是 [num_detections, 4] 或 [num_detections, 6]
+     * 格式：[ymin, xmin, ymax, xmax] 或 [ymin, xmin, ymax, xmax, class, score]
+     */
+    private List<DetectionResult> postProcessDetections(float[][] detections, 
+                                                       int originalWidth, int originalHeight, 
+                                                       int coordsPerDetection) {
+        List<DetectionResult> results = new ArrayList<>();
+        
+        for (float[] detection : detections) {
+            if (detection == null || detection.length < 4) {
+                continue;
+            }
+            
+            float ymin, xmin, ymax, xmax;
+            float confidence = 1.0f;
+            int classIndex = 0;
+            
+            if (coordsPerDetection >= 6) {
+                // 格式：[ymin, xmin, ymax, xmax, class, score]
+                ymin = detection[0];
+                xmin = detection[1];
+                ymax = detection[2];
+                xmax = detection[3];
+                classIndex = (int) detection[4];
+                confidence = detection[5];
+            } else {
+                // 格式：[ymin, xmin, ymax, xmax] 或 [xmin, ymin, xmax, ymax]
+                // 嘗試檢測格式
+                if (detection[0] > detection[2] || detection[1] > detection[3]) {
+                    // 可能是 [xmin, ymin, xmax, ymax]
+                    xmin = detection[0];
+                    ymin = detection[1];
+                    xmax = detection[2];
+                    ymax = detection[3];
+                } else {
+                    // 可能是 [ymin, xmin, ymax, xmax]
+                    ymin = detection[0];
+                    xmin = detection[1];
+                    ymax = detection[2];
+                    xmax = detection[3];
+                }
+            }
+            
+            // 過濾低置信度檢測
+            if (confidence < AppConstants.CONFIDENCE_THRESHOLD) {
+                continue;
+            }
+            
+            // 轉換為相對座標 (0-1)，因為 DetectionResult 期望 RectF 格式
+            // 座標已經是相對座標 (0-1)，直接使用
+            // 確保座標在有效範圍內 (0-1)
+            xmin = Math.max(0.0f, Math.min(1.0f, xmin));
+            ymin = Math.max(0.0f, Math.min(1.0f, ymin));
+            xmax = Math.max(0.0f, Math.min(1.0f, xmax));
+            ymax = Math.max(0.0f, Math.min(1.0f, ymax));
+            
+            // 確保 xmax >= xmin 且 ymax >= ymin
+            if (xmax < xmin) {
+                float temp = xmin;
+                xmin = xmax;
+                xmax = temp;
+            }
+            if (ymax < ymin) {
+                float temp = ymin;
+                ymin = ymax;
+                ymax = temp;
+            }
+            
+            // 驗證邊界框合理性（相對座標）
+            float width = xmax - xmin;
+            float height = ymax - ymin;
+            // 最小尺寸約為 2% 的圖像尺寸
+            if (width < 0.02f || height < 0.02f || width <= 0 || height <= 0) {
+                continue;
+            }
+            
+            // 獲取類別名稱
+            String className = "object";
+            if (classIndex > 0 && classIndex <= COCO_CLASSES.length) {
+                className = COCO_CLASSES[classIndex - 1];
+            }
+            String chineseName = CLASS_NAMES_ZH.get(className);
+            if (chineseName == null) {
+                chineseName = className;
+            }
+            
+            // 創建檢測結果（使用相對座標轉換為像素座標）
+            // DetectionResult 期望 Rect，所以需要轉換為像素座標
+            int left = (int)(xmin * originalWidth);
+            int top = (int)(ymin * originalHeight);
+            int right = (int)(xmax * originalWidth);
+            int bottom = (int)(ymax * originalHeight);
+            
+            // 確保座標在有效範圍內
+            left = Math.max(0, Math.min(originalWidth - 1, left));
+            top = Math.max(0, Math.min(originalHeight - 1, top));
+            right = Math.max(left + 1, Math.min(originalWidth, right));
+            bottom = Math.max(top + 1, Math.min(originalHeight, bottom));
+            
+            android.graphics.Rect boundingBox = new android.graphics.Rect(left, top, right, bottom);
+            results.add(new DetectionResult(className, chineseName, confidence, boundingBox));
+        }
+        
+        return results;
+    }
+    
+    /**
+     * 處理後處理版本的輸出格式
+     * boxes: [N, 4] - 邊界框座標（相對座標 0-1）
+     * classes: [N] - 類別索引
+     * scores: [N] - 置信度分數
+     * numDetections: 實際檢測數量
+     */
+    private List<DetectionResult> postProcessPostProcessedOutput(float[][] boxes, 
+                                                                 float[] classes,
+                                                                 float[] scores,
+                                                                 int numDetections,
+                                                                 int originalWidth, 
+                                                                 int originalHeight) {
+        List<DetectionResult> results = new ArrayList<>();
+        
+        int actualDetections = Math.min(numDetections, boxes.length);
+        Log.d(TAG, "處理後處理輸出，實際檢測數: " + actualDetections);
+        
+        for (int i = 0; i < actualDetections; i++) {
+            // 獲取置信度
+            float confidence = (scores != null && i < scores.length) ? scores[i] : 1.0f;
+            
+            // 過濾低置信度檢測
+            if (confidence < AppConstants.CONFIDENCE_THRESHOLD) {
+                continue;
+            }
+            
+            // 獲取類別索引
+            int classIndex = (classes != null && i < classes.length) ? (int)classes[i] : 0;
+            
+            // 跳過背景類別 (索引0)
+            if (classIndex == 0) {
+                continue;
+            }
+            
+            // 獲取邊界框座標（相對座標 0-1）
+            // 格式通常是 [ymin, xmin, ymax, xmax]
+            float ymin = boxes[i][0];
+            float xmin = boxes[i][1];
+            float ymax = boxes[i][2];
+            float xmax = boxes[i][3];
+            
+            // 確保座標順序正確
+            if (xmax < xmin) {
+                float temp = xmin;
+                xmin = xmax;
+                xmax = temp;
+            }
+            if (ymax < ymin) {
+                float temp = ymin;
+                ymin = ymax;
+                ymax = temp;
+            }
+            
+            // 驗證邊界框合理性（相對座標）
+            float width = xmax - xmin;
+            float height = ymax - ymin;
+            if (width < 0.02f || height < 0.02f || width <= 0 || height <= 0) {
+                continue;
+            }
+            
+            // 轉換為像素座標
+            int left = (int)(xmin * originalWidth);
+            int top = (int)(ymin * originalHeight);
+            int right = (int)(xmax * originalWidth);
+            int bottom = (int)(ymax * originalHeight);
+            
+            // 確保座標在有效範圍內
+            left = Math.max(0, Math.min(originalWidth - 1, left));
+            top = Math.max(0, Math.min(originalHeight - 1, top));
+            right = Math.max(left + 1, Math.min(originalWidth, right));
+            bottom = Math.max(top + 1, Math.min(originalHeight, bottom));
+            
+            // 獲取類別名稱
+            String className = "object";
+            if (classIndex > 0 && classIndex <= COCO_CLASSES.length) {
+                className = COCO_CLASSES[classIndex - 1];
+            }
+            String chineseName = CLASS_NAMES_ZH.get(className);
+            if (chineseName == null) {
+                chineseName = className;
+            }
+            
+            // 創建檢測結果
+            android.graphics.Rect boundingBox = new android.graphics.Rect(left, top, right, bottom);
+            results.add(new DetectionResult(className, chineseName, confidence, boundingBox));
+        }
+        
+        // 按置信度排序
+        Collections.sort(results, new Comparator<DetectionResult>() {
+            @Override
+            public int compare(DetectionResult a, DetectionResult b) {
+                return Float.compare(b.getConfidence(), a.getConfidence());
+            }
+        });
+        
+        // 只返回置信度最高的2個物體
+        if (results.size() > 2) {
+            results = results.subList(0, 2);
+            Log.d(TAG, "後處理檢測限制為2個物體");
+        }
+        
+        return results;
     }
     
     /**
