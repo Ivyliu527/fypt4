@@ -74,6 +74,22 @@ public class DetectionOverlayView extends View {
         
         // 設置透明背景
         setBackgroundColor(Color.TRANSPARENT);
+        
+        // 確保視圖可點擊和可見（但點擊事件穿透）
+        setClickable(false);
+        setFocusable(false);
+    }
+    
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        Log.d(TAG, "onSizeChanged: " + w + "x" + h + " (之前: " + oldw + "x" + oldh + ")");
+        
+        // 當尺寸改變時，如果有檢測結果，觸發重繪
+        if (w > 0 && h > 0 && !detections.isEmpty()) {
+            Log.d(TAG, "視圖尺寸已確定，觸發重繪檢測框");
+            postInvalidate();
+        }
     }
     
     /**
@@ -82,10 +98,22 @@ public class DetectionOverlayView extends View {
     public void updateDetections(List<ObjectDetectorHelper.DetectionResult> newDetections) {
         Log.d(TAG, "updateDetections called with " + (newDetections != null ? newDetections.size() : 0) + " detections");
         
+        // 過濾掉無效的檢測結果
+        List<ObjectDetectorHelper.DetectionResult> validDetections = new ArrayList<>();
+        if (newDetections != null) {
+            for (ObjectDetectorHelper.DetectionResult detection : newDetections) {
+                if (detection != null && detection.getBoundingBox() != null) {
+                    validDetections.add(detection);
+                } else {
+                    Log.w(TAG, "跳過無效檢測結果: " + detection);
+                }
+            }
+        }
+        
         // 只顯示最多2個檢測結果
-        if (newDetections != null && newDetections.size() > 2) {
+        if (validDetections.size() > 2) {
             // 按置信度排序並只取前2個
-            List<ObjectDetectorHelper.DetectionResult> sortedDetections = new ArrayList<>(newDetections);
+            List<ObjectDetectorHelper.DetectionResult> sortedDetections = new ArrayList<>(validDetections);
             Collections.sort(sortedDetections, new Comparator<ObjectDetectorHelper.DetectionResult>() {
                 @Override
                 public int compare(ObjectDetectorHelper.DetectionResult a, ObjectDetectorHelper.DetectionResult b) {
@@ -95,13 +123,16 @@ public class DetectionOverlayView extends View {
             this.detections = new ArrayList<>(sortedDetections.subList(0, 2));
             Log.d(TAG, "限制檢測結果為2個，按置信度排序");
         } else {
-            this.detections = newDetections != null ? new ArrayList<>(newDetections) : new ArrayList<>();
+            this.detections = validDetections;
         }
         
         Log.d(TAG, "Updated detections list size: " + this.detections.size());
+        Log.d(TAG, "Current view visibility: " + getVisibility());
+        Log.d(TAG, "Current view width: " + getWidth() + ", height: " + getHeight());
         
         // 確保視圖可見
         setVisibility(VISIBLE);
+        setAlpha(1.0f); // 確保完全不透明
         
         // 強制重繪
         postInvalidate();
@@ -112,7 +143,9 @@ public class DetectionOverlayView extends View {
         // 打印檢測結果詳情
         for (int i = 0; i < this.detections.size(); i++) {
             ObjectDetectorHelper.DetectionResult detection = this.detections.get(i);
-            Log.d(TAG, "Detection " + i + ": " + detection.getLabel() + " (" + detection.getConfidence() + ") at " + detection.getBoundingBox());
+            if (detection != null && detection.getBoundingBox() != null) {
+                Log.d(TAG, "Detection " + i + ": " + detection.getLabel() + " (" + detection.getConfidence() + ") at " + detection.getBoundingBox());
+            }
         }
     }
     
@@ -136,26 +169,56 @@ public class DetectionOverlayView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         
-        Log.d(TAG, "onDraw called, detections size: " + detections.size());
+        // 獲取視圖尺寸（在檢查前獲取，以便記錄）
+        int viewWidth = getWidth();
+        int viewHeight = getHeight();
+        
+        Log.d(TAG, "onDraw called - detections: " + detections.size() + 
+                   ", view size: " + viewWidth + "x" + viewHeight +
+                   ", visibility: " + getVisibility() + 
+                   ", alpha: " + getAlpha());
         
         if (detections.isEmpty()) {
             Log.d(TAG, "No detections to draw");
             return;
         }
         
-        // 獲取視圖尺寸
-        int viewWidth = getWidth();
-        int viewHeight = getHeight();
+        // 檢查視圖尺寸是否有效
+        if (viewWidth <= 0 || viewHeight <= 0) {
+            Log.w(TAG, "視圖尺寸無效，無法繪製邊界框。將在尺寸確定後重繪。");
+            // 如果視圖尺寸還未確定，稍後再試
+            if (viewWidth == 0 || viewHeight == 0) {
+                postDelayed(() -> {
+                    if (getWidth() > 0 && getHeight() > 0 && !detections.isEmpty()) {
+                        invalidate();
+                    }
+                }, 100);
+            }
+            return;
+        }
         
-        Log.d(TAG, "View size: " + viewWidth + "x" + viewHeight);
+        Log.d(TAG, "開始繪製 " + detections.size() + " 個檢測結果");
         
         // 繪製每個檢測結果，使用不同顏色
+        int drawnCount = 0;
         for (int i = 0; i < detections.size(); i++) {
             ObjectDetectorHelper.DetectionResult detection = detections.get(i);
+            if (detection == null || detection.getBoundingBox() == null) {
+                Log.w(TAG, "檢測結果 " + i + " 或邊界框為 null，跳過");
+                continue;
+            }
             int color = (i % 2 == 0) ? BOX_COLOR : BOX_COLOR_ALT;
-            Log.d(TAG, "Drawing detection " + i + ": " + detection.getLabel() + " at " + detection.getBoundingBox());
-            drawDetection(canvas, detection, viewWidth, viewHeight, color);
+            Log.d(TAG, "繪製檢測 " + i + ": " + detection.getLabel() + " (" + detection.getConfidence() + ") at " + detection.getBoundingBox());
+            try {
+                drawDetection(canvas, detection, viewWidth, viewHeight, color);
+                drawnCount++;
+            } catch (Exception e) {
+                Log.e(TAG, "繪製檢測 " + i + " 時出錯: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
+        
+        Log.d(TAG, "繪製完成，成功繪製 " + drawnCount + " 個檢測框");
     }
     
     /**
@@ -174,24 +237,39 @@ public class DetectionOverlayView extends View {
         float left, top, right, bottom;
         
         // 更精確的座標轉換邏輯
-        boolean isScaledCoords = (boundingBox.left > 1.0f || boundingBox.top > 1.0f ||
-                                boundingBox.right > 1.0f || boundingBox.bottom > 1.0f);
+        // SSD檢測器返回的是相對座標 (0-1)，TensorFlow Lite Task Vision API也是相對座標
+        // YOLO可能返回像素座標或縮放座標 (0-1000)
         
-        if (isScaledCoords) {
-            // 縮放座標 (0-1000)，需要轉換為相對座標再轉為像素座標
-            Log.d(TAG, "檢測到縮放座標，轉換為像素座標");
-            left = (boundingBox.left / 1000.0f) * viewWidth;
-            top = (boundingBox.top / 1000.0f) * viewHeight;
-            right = (boundingBox.right / 1000.0f) * viewWidth;
-            bottom = (boundingBox.bottom / 1000.0f) * viewHeight;
-        } else if (boundingBox.left <= 1.0f && boundingBox.top <= 1.0f &&
-                  boundingBox.right <= 1.0f && boundingBox.bottom <= 1.0f) {
+        // 判斷邏輯：
+        // 1. 如果所有座標都在 [0, 1] 範圍內，視為相對座標
+        // 2. 如果座標大於1但小於等於1000，視為縮放座標 (0-1000)
+        // 3. 如果座標大於1000，視為像素座標
+        
+        boolean allInRange01 = (boundingBox.left >= 0 && boundingBox.left <= 1.0f &&
+                                boundingBox.top >= 0 && boundingBox.top <= 1.0f &&
+                                boundingBox.right >= 0 && boundingBox.right <= 1.0f &&
+                                boundingBox.bottom >= 0 && boundingBox.bottom <= 1.0f);
+        
+        boolean allInRange1000 = (!allInRange01 && 
+                                  boundingBox.left >= 0 && boundingBox.left <= 1000.0f &&
+                                  boundingBox.top >= 0 && boundingBox.top <= 1000.0f &&
+                                  boundingBox.right >= 0 && boundingBox.right <= 1000.0f &&
+                                  boundingBox.bottom >= 0 && boundingBox.bottom <= 1000.0f);
+        
+        if (allInRange01) {
             // 相對座標 (0-1)，需要轉換為像素座標
-            Log.d(TAG, "檢測到相對座標，轉換為像素座標");
+            Log.d(TAG, "檢測到相對座標 (0-1)，轉換為像素座標");
             left = boundingBox.left * viewWidth;
             top = boundingBox.top * viewHeight;
             right = boundingBox.right * viewWidth;
             bottom = boundingBox.bottom * viewHeight;
+        } else if (allInRange1000) {
+            // 縮放座標 (0-1000)，需要轉換為相對座標再轉為像素座標
+            Log.d(TAG, "檢測到縮放座標 (0-1000)，轉換為像素座標");
+            left = (boundingBox.left / 1000.0f) * viewWidth;
+            top = (boundingBox.top / 1000.0f) * viewHeight;
+            right = (boundingBox.right / 1000.0f) * viewWidth;
+            bottom = (boundingBox.bottom / 1000.0f) * viewHeight;
         } else {
             // 已經是像素座標，直接使用
             Log.d(TAG, "檢測到像素座標，直接使用");
@@ -201,11 +279,31 @@ public class DetectionOverlayView extends View {
             bottom = boundingBox.bottom;
         }
         
+        // 確保 right >= left 且 bottom >= top
+        if (right < left) {
+            float temp = left;
+            left = right;
+            right = temp;
+        }
+        if (bottom < top) {
+            float temp = top;
+            top = bottom;
+            bottom = temp;
+        }
+        
         // 精確的邊界檢查和調整
         left = Math.max(0, Math.min(left, viewWidth - 1));
         top = Math.max(0, Math.min(top, viewHeight - 1));
         right = Math.max(left + 1, Math.min(right, viewWidth));
         bottom = Math.max(top + 1, Math.min(bottom, viewHeight));
+        
+        // 驗證邊界框尺寸是否合理（至少20x20像素）
+        float width = right - left;
+        float height = bottom - top;
+        if (width < 20 || height < 20) {
+            Log.w(TAG, "邊界框尺寸過小，跳過繪製: " + width + "x" + height);
+            return;
+        }
         
         // 創建邊界框矩形
         RectF rect = new RectF(left, top, right, bottom);
@@ -213,7 +311,7 @@ public class DetectionOverlayView extends View {
         // 設置邊界框顏色
         boxPaint.setColor(boxColor);
         
-        Log.d(TAG, "繪製邊界框: " + rect + ", 顏色: " + Integer.toHexString(boxColor));
+        Log.d(TAG, "繪製邊界框: " + rect + ", 顏色: " + Integer.toHexString(boxColor) + ", 尺寸: " + width + "x" + height);
         
         // 繪製邊界框 - 先繪製填充，再繪製邊框
         Paint fillPaint = new Paint();

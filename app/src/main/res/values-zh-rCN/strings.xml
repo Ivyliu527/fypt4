@@ -121,4 +121,8 @@
     <string name="create_gesture">创建手势</string>
     <string name="bind_function">绑定功能</string>
     <string name="delete_gesture">删除手势</string>
+    
+    <!-- Content Descriptions -->
+    <string name="camera_preview_desc">相机预览画面</string>
+    <string name="object_detection_overlay_desc">物体检测结果覆盖层，显示检测框和标签</string>
 </resources>
