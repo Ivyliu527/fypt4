@@ -313,19 +313,10 @@ public class DetectionOverlayView extends View {
         
         Log.d(TAG, "繪製邊界框: " + rect + ", 顏色: " + Integer.toHexString(boxColor) + ", 尺寸: " + width + "x" + height);
         
-        // 繪製邊界框 - 先繪製填充，再繪製邊框
-        Paint fillPaint = new Paint();
-        fillPaint.setColor(boxColor);
-        fillPaint.setStyle(Paint.Style.FILL);
-        fillPaint.setAlpha(50); // 半透明填充
-        
-        // 繪製填充
-        canvas.drawRect(rect, fillPaint);
-        
-        // 繪製邊框
+        // 繪製空心邊框（只繪製邊框，不填充）
         canvas.drawRect(rect, boxPaint);
         
-        // 繪製角落標記
+        // 繪製角落標記（可選，增強視覺效果）
         drawCornerMarkers(canvas, rect, boxColor);
         
         // 準備標籤文字（根據當前語言選擇對應的標籤）
