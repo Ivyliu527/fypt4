@@ -181,7 +181,7 @@ public class YoloDetector {
             
             if (tflite != null) {
                 isInitialized = true;
-                Log.d(TAG, "真實AI檢測器初始化成功 - 使用SSD MobileNet模型");
+                Log.d(TAG, "真實AI檢測器初始化成功 - 使用YOLOv8模型");
             } else {
                 Log.e(TAG, "無法載入 TensorFlow Lite 模型");
                 isInitialized = false;
@@ -211,7 +211,7 @@ public class YoloDetector {
      */
     private MappedByteBuffer loadModelFromAssets() throws IOException {
         android.content.res.AssetFileDescriptor fileDescriptor = 
-            context.getAssets().openFd(AppConstants.MODEL_FILE);
+            context.getAssets().openFd(AppConstants.YOLO_MODEL_FILE);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();
         long startOffset = fileDescriptor.getStartOffset();
@@ -259,9 +259,24 @@ public class YoloDetector {
         try {
             long startTime = System.currentTimeMillis();
             
-            // 預處理圖像
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, AppConstants.INPUT_SIZE, AppConstants.INPUT_SIZE, true);
-            ByteBuffer inputBuffer = bitmapToByteBuffer(resizedBitmap);
+            // 動態檢測模型的輸入張量要求
+            org.tensorflow.lite.Tensor inputTensor = tflite.getInputTensor(0);
+            int[] inputShape = inputTensor.shape();
+            int inputHeight = inputShape[1];
+            int inputWidth = inputShape[2];
+            int inputChannels = inputShape.length > 3 ? inputShape[3] : 3;
+            
+            Log.d(TAG, String.format("模型輸入張量形狀: [%s], 期望尺寸: %dx%d, 通道數: %d", 
+                java.util.Arrays.toString(inputShape), inputWidth, inputHeight, inputChannels));
+            
+            // 檢查數據類型（float32 vs uint8）
+            org.tensorflow.lite.DataType inputDataType = inputTensor.dataType();
+            boolean isFloatInput = (inputDataType == org.tensorflow.lite.DataType.FLOAT32);
+            Log.d(TAG, "輸入數據類型: " + inputDataType + ", 是否為float: " + isFloatInput);
+            
+            // 根據模型要求調整圖像尺寸
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, inputWidth, inputHeight, true);
+            ByteBuffer inputBuffer = bitmapToByteBuffer(resizedBitmap, inputWidth, inputHeight, isFloatInput);
             
             // 動態獲取輸出張量的形狀
             int numOutputs = tflite.getOutputTensorCount();
@@ -414,38 +429,52 @@ public class YoloDetector {
     
     /**
      * 將 Bitmap 轉換為 ByteBuffer
-     * SSD MobileNet 模型期望 uint8 格式 (0-255)，不是 float
+     * 支持兩種格式：
+     * - uint8: 1字節/通道，值範圍 0-255
+     * - float32: 4字節/通道，值範圍 0.0-1.0 (歸一化)
      */
-    private ByteBuffer bitmapToByteBuffer(Bitmap bitmap) {
-        // 模型期望：INPUT_SIZE × INPUT_SIZE × 3 字節 (uint8格式)
-        // 而不是：INPUT_SIZE × INPUT_SIZE × 3 × 4 字節 (float格式)
-        int bufferSize = AppConstants.INPUT_SIZE * AppConstants.INPUT_SIZE * 3;
+    private ByteBuffer bitmapToByteBuffer(Bitmap bitmap, int inputWidth, int inputHeight, boolean isFloatInput) {
+        // 根據數據類型計算緩衝區大小
+        int bufferSize;
+        if (isFloatInput) {
+            // float32: width × height × 3 × 4 字節
+            bufferSize = inputWidth * inputHeight * 3 * 4;
+        } else {
+            // uint8: width × height × 3 字節
+            bufferSize = inputWidth * inputHeight * 3;
+        }
+        
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(bufferSize);
         byteBuffer.order(ByteOrder.nativeOrder());
         
         // 確保bitmap是正確尺寸
-        if (bitmap.getWidth() != AppConstants.INPUT_SIZE || 
-            bitmap.getHeight() != AppConstants.INPUT_SIZE) {
-            Log.w(TAG, "Bitmap尺寸不正確: " + bitmap.getWidth() + "x" + bitmap.getHeight() + 
-                       ", 期望: " + AppConstants.INPUT_SIZE + "x" + AppConstants.INPUT_SIZE);
+        if (bitmap.getWidth() != inputWidth || bitmap.getHeight() != inputHeight) {
+            Log.w(TAG, String.format("Bitmap尺寸不正確: %dx%d, 期望: %dx%d", 
+                bitmap.getWidth(), bitmap.getHeight(), inputWidth, inputHeight));
             return byteBuffer;
         }
         
-        int[] pixels = new int[AppConstants.INPUT_SIZE * AppConstants.INPUT_SIZE];
-        bitmap.getPixels(pixels, 0, AppConstants.INPUT_SIZE, 0, 0, AppConstants.INPUT_SIZE, AppConstants.INPUT_SIZE);
+        int[] pixels = new int[inputWidth * inputHeight];
+        bitmap.getPixels(pixels, 0, inputWidth, 0, 0, inputWidth, inputHeight);
         
-        // 將像素值轉換為RGB字節並添加到緩衝區
-        // SSD MobileNet 期望的格式：RGBRGBRGB... (uint8, 0-255)
+        // 將像素值轉換為RGB並添加到緩衝區
         for (int pixel : pixels) {
             // 提取 RGB 值 (ARGB格式)
             int r = (pixel >> 16) & 0xFF;
             int g = (pixel >> 8) & 0xFF;
             int b = pixel & 0xFF;
             
-            // 使用 put() 而不是 putFloat()，因為模型期望 uint8 (0-255)
-            byteBuffer.put((byte) r);
-            byteBuffer.put((byte) g);
-            byteBuffer.put((byte) b);
+            if (isFloatInput) {
+                // float32格式：歸一化到 0.0-1.0
+                byteBuffer.putFloat(r / 255.0f);
+                byteBuffer.putFloat(g / 255.0f);
+                byteBuffer.putFloat(b / 255.0f);
+            } else {
+                // uint8格式：值範圍 0-255
+                byteBuffer.put((byte) r);
+                byteBuffer.put((byte) g);
+                byteBuffer.put((byte) b);
+            }
         }
         
         byteBuffer.rewind(); // 重置位置到開始

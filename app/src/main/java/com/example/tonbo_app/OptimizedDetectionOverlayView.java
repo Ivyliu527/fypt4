@@ -98,11 +98,7 @@ public class OptimizedDetectionOverlayView extends View {
                        Color.MAGENTA, 0xFF00FF00, 0xFFFF00FF, 0xFFFF8000, 0xFF00FFFF};
         int objectColor = colors[index % colors.length];
         
-        // 繪製半透明填充遮罩
-        fillPaint.setColor(objectColor);
-        canvas.drawRect(boundingBox, fillPaint);
-        
-        // 繪製邊界框
+        // 繪製空心邊框（只繪製邊框，不填充）
         boxPaint.setColor(objectColor);
         canvas.drawRect(boundingBox, boxPaint);
         
