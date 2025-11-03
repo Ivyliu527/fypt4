@@ -290,12 +290,38 @@ public class YoloDetector {
             List<DetectionResult> results = new ArrayList<>();
             
             // 根據第一個輸出張量的形狀判斷模型格式
-            // 如果形狀是 [1, num_detections, 4] 或 [1, num_detections, 6]，說明是後處理版本
+            // YOLOv8格式: [1, 84, 8400] = [batch, 4+80, num_anchors]
+            // 後處理格式: [1, num_detections, 4] 或 [1, num_detections, 6]
+            boolean isYoloV8Format = (numOutputs == 1 && firstOutputShape.length == 3 && 
+                                      firstOutputShape[0] == 1 && 
+                                      firstOutputShape[1] == 84 && 
+                                      firstOutputShape[2] == 8400);
             boolean isPostProcessed = (numOutputs == 1 && firstOutputShape.length == 3 && 
                                       firstOutputShape[0] == 1 && 
+                                      !isYoloV8Format &&
                                       (firstOutputShape[2] == 4 || firstOutputShape[2] == 6));
             
-            if (isPostProcessed || numOutputs == 1) {
+            if (isYoloV8Format) {
+                // YOLOv8 原生格式：[1, 84, 8400]
+                // 84 = 4 (bbox坐标) + 80 (COCO类别)
+                // 8400 = 检测位置数量
+                Log.d(TAG, "檢測到YOLOv8原生格式: [1, 84, 8400]");
+                
+                // 分配輸出緩衝區 [1, 84, 8400]
+                float[][][] detectionOutput = new float[1][84][8400];
+                
+                // 執行推理
+                Object[] inputs = {inputBuffer};
+                Map<Integer, Object> outputs = new HashMap<>();
+                outputs.put(0, detectionOutput);
+                
+                tflite.runForMultipleInputsOutputs(inputs, outputs);
+                
+                // 處理YOLOv8輸出格式
+                results = postProcessYoloV8Output(
+                    detectionOutput[0], inputWidth, inputHeight, bitmap.getWidth(), bitmap.getHeight());
+                    
+            } else if (isPostProcessed || numOutputs == 1) {
                 // 後處理版本：單一輸出 [1, num_detections, 4] 或 [1, num_detections, 6]
                 int maxDetections = firstOutputShape.length >= 2 ? firstOutputShape[1] : 10;
                 int coordsPerDetection = firstOutputShape.length >= 3 ? firstOutputShape[2] : 4;
@@ -479,6 +505,181 @@ public class YoloDetector {
         
         byteBuffer.rewind(); // 重置位置到開始
         return byteBuffer;
+    }
+    
+    /**
+     * 處理YOLOv8原生輸出格式 [84, 8400]
+     * output[0-3][j] = bbox坐标 (x_center, y_center, width, height)，相对于模型输入尺寸
+     * output[4-83][j] = 80个类别的置信度分数
+     * j = 0-8399 是不同的检测位置
+     */
+    private List<DetectionResult> postProcessYoloV8Output(float[][] output, 
+                                                          int modelWidth, int modelHeight,
+                                                          int originalWidth, int originalHeight) {
+        List<DetectionResult> rawResults = new ArrayList<>();
+        int numAnchors = 8400;
+        int numClasses = 80;
+        
+        // 第一步：提取所有有效检测
+        for (int j = 0; j < numAnchors; j++) {
+            // YOLOv8输出格式：bbox坐标可能是归一化(0-1)或像素坐标
+            // 格式：output[0-3][j] = (x_center, y_center, width, height)
+            float x_center = output[0][j];
+            float y_center = output[1][j];
+            float width = output[2][j];
+            float height = output[3][j];
+            
+            // 找到最高置信度的类别
+            float maxConfidence = 0.0f;
+            int bestClassIndex = 0;
+            for (int c = 0; c < numClasses; c++) {
+                float confidence = output[4 + c][j];
+                if (confidence > maxConfidence) {
+                    maxConfidence = confidence;
+                    bestClassIndex = c;
+                }
+            }
+            
+            // 过滤低置信度检测
+            if (maxConfidence < AppConstants.CONFIDENCE_THRESHOLD) {
+                continue;
+            }
+            
+            // 判断坐标格式：如果坐标值 > 1，说明是像素坐标；否则是归一化坐标(0-1)
+            boolean isNormalized = (x_center <= 1.0f && y_center <= 1.0f && 
+                                   width <= 1.0f && height <= 1.0f && 
+                                   x_center >= 0 && y_center >= 0);
+            
+            float left, top, right, bottom;
+            if (isNormalized) {
+                // 归一化坐标：直接转换为(left, top, right, bottom)
+                left = x_center - width / 2;
+                top = y_center - height / 2;
+                right = x_center + width / 2;
+                bottom = y_center + height / 2;
+            } else {
+                // 像素坐标：先归一化再转换
+                left = (x_center - width / 2) / modelWidth;
+                top = (y_center - height / 2) / modelHeight;
+                right = (x_center + width / 2) / modelWidth;
+                bottom = (y_center + height / 2) / modelHeight;
+            }
+            
+            // 跳过无效的bbox
+            if (width <= 0 || height <= 0 || left >= right || top >= bottom ||
+                left < 0 || top < 0 || right > 1.0f || bottom > 1.0f) {
+                continue;
+            }
+            
+            // 确保坐标在有效范围内 (0-1)
+            left = Math.max(0.0f, Math.min(1.0f, left));
+            top = Math.max(0.0f, Math.min(1.0f, top));
+            right = Math.max(left + 0.01f, Math.min(1.0f, right));
+            bottom = Math.max(top + 0.01f, Math.min(1.0f, bottom));
+            
+            // 转换到像素坐标
+            int pixelLeft = (int)(left * originalWidth);
+            int pixelTop = (int)(top * originalHeight);
+            int pixelRight = (int)(right * originalWidth);
+            int pixelBottom = (int)(bottom * originalHeight);
+            
+            // 验证bbox尺寸（至少20像素）
+            if (pixelRight - pixelLeft < 20 || pixelBottom - pixelTop < 20) {
+                continue;
+            }
+            
+            // 获取类别名称（YOLOv8使用COCO类别，索引0-79对应类别1-80，不包括background）
+            // COCO_CLASSES[0]是"background"，所以YOLOv8的索引0对应COCO_CLASSES[1]
+            String className = "object";
+            int cocoClassIndex = bestClassIndex + 1; // YOLOv8索引+1 = COCO索引
+            if (cocoClassIndex >= 1 && cocoClassIndex < COCO_CLASSES.length) {
+                className = COCO_CLASSES[cocoClassIndex];
+            } else if (bestClassIndex >= 0 && bestClassIndex < COCO_CLASSES.length) {
+                // 备用：直接使用索引（如果数组对齐）
+                className = COCO_CLASSES[bestClassIndex];
+            }
+            String chineseName = CLASS_NAMES_ZH.get(className);
+            if (chineseName == null) {
+                chineseName = className;
+            }
+            
+            // 创建检测结果
+            android.graphics.Rect boundingBox = new android.graphics.Rect(
+                pixelLeft, pixelTop, pixelRight, pixelBottom);
+            DetectionResult result = new DetectionResult(className, chineseName, maxConfidence, boundingBox);
+            rawResults.add(result);
+        }
+        
+        Log.d(TAG, "YOLOv8原始检测数量: " + rawResults.size());
+        
+        // 第二步：应用非极大值抑制（NMS）过滤重复检测
+        List<DetectionResult> filteredResults = applyNMS(rawResults, AppConstants.NMS_THRESHOLD);
+        
+        // 第三步：按置信度排序并限制数量
+        Collections.sort(filteredResults, new Comparator<DetectionResult>() {
+            @Override
+            public int compare(DetectionResult a, DetectionResult b) {
+                return Float.compare(b.getConfidence(), a.getConfidence());
+            }
+        });
+        
+        int maxResults = Math.min(AppConstants.MAX_RESULTS, filteredResults.size());
+        List<DetectionResult> finalResults = filteredResults.subList(0, maxResults);
+        
+        Log.d(TAG, "YOLOv8最终检测数量: " + finalResults.size());
+        return finalResults;
+    }
+    
+    /**
+     * 非极大值抑制（NMS）过滤重叠的检测框
+     */
+    private List<DetectionResult> applyNMS(List<DetectionResult> detections, float iouThreshold) {
+        if (detections.isEmpty()) {
+            return detections;
+        }
+        
+        List<DetectionResult> kept = new ArrayList<>();
+        boolean[] suppressed = new boolean[detections.size()];
+        
+        for (int i = 0; i < detections.size(); i++) {
+            if (suppressed[i]) {
+                continue;
+            }
+            
+            DetectionResult detection = detections.get(i);
+            kept.add(detection);
+            
+            android.graphics.Rect box1 = detection.getBoundingBox();
+            int area1 = box1.width() * box1.height();
+            
+            for (int j = i + 1; j < detections.size(); j++) {
+                if (suppressed[j]) {
+                    continue;
+                }
+                
+                DetectionResult other = detections.get(j);
+                android.graphics.Rect box2 = other.getBoundingBox();
+                
+                // 计算IoU
+                int x1 = Math.max(box1.left, box2.left);
+                int y1 = Math.max(box1.top, box2.top);
+                int x2 = Math.min(box1.right, box2.right);
+                int y2 = Math.min(box1.bottom, box2.bottom);
+                
+                int intersectionArea = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+                int area2 = box2.width() * box2.height();
+                int unionArea = area1 + area2 - intersectionArea;
+                
+                float iou = unionArea > 0 ? (float)intersectionArea / unionArea : 0.0f;
+                
+                // 如果IoU超过阈值，抑制检测
+                if (iou > iouThreshold) {
+                    suppressed[j] = true;
+                }
+            }
+        }
+        
+        return kept;
     }
     
     /**
