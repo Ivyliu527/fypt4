@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import java.util.List;
 
@@ -76,20 +77,50 @@ public class OptimizedDetectionOverlayView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         
-        if (detectionResults == null || detectionResults.isEmpty()) {
+        if (viewWidth <= 0 || viewHeight <= 0) {
+            Log.w(TAG, "onDraw: 視圖尺寸無效，跳過繪製");
             return;
         }
         
+        if (detectionResults == null || detectionResults.isEmpty()) {
+            Log.d(TAG, "onDraw: 沒有檢測結果，跳過繪製");
+            return;
+        }
+        
+        Log.d(TAG, "onDraw: 開始繪製 " + detectionResults.size() + " 個檢測結果");
+        
         // 繪製檢測結果
+        int drawnCount = 0;
         for (int i = 0; i < detectionResults.size(); i++) {
             YoloDetector.DetectionResult result = detectionResults.get(i);
-            drawDetectionResult(canvas, result, i);
+            if (result != null && result.getBoundingBox() != null) {
+                drawDetectionResult(canvas, result, i);
+                drawnCount++;
+            }
         }
+        
+        Log.d(TAG, "onDraw: 完成繪製 " + drawnCount + " 個檢測框");
     }
     
     private void drawDetectionResult(Canvas canvas, YoloDetector.DetectionResult result, int index) {
         Rect boundingBox = result.getBoundingBox();
         if (boundingBox == null) {
+            Log.w(TAG, "drawDetectionResult: boundingBox 為 null");
+            return;
+        }
+        
+        // 驗證邊界框是否在視圖範圍內
+        if (boundingBox.left < 0 || boundingBox.top < 0 || 
+            boundingBox.right > viewWidth || boundingBox.bottom > viewHeight) {
+            Log.w(TAG, String.format("drawDetectionResult: 邊界框超出視圖範圍 [%d,%d,%d,%d] vs 視圖 [0,0,%d,%d]",
+                boundingBox.left, boundingBox.top, boundingBox.right, boundingBox.bottom,
+                viewWidth, viewHeight));
+        }
+        
+        // 驗證邊界框尺寸
+        if (boundingBox.width() <= 0 || boundingBox.height() <= 0) {
+            Log.w(TAG, String.format("drawDetectionResult: 邊界框尺寸無效 [%d,%d]", 
+                boundingBox.width(), boundingBox.height()));
             return;
         }
         
@@ -169,8 +200,36 @@ public class OptimizedDetectionOverlayView extends View {
      * 更新檢測結果
      */
     public void updateDetectionResults(List<YoloDetector.DetectionResult> results) {
+        Log.d(TAG, "updateDetectionResults 被調用，結果數量: " + (results != null ? results.size() : 0));
+        Log.d(TAG, "當前視圖尺寸: " + viewWidth + "x" + viewHeight);
+        Log.d(TAG, "當前視圖可見性: " + getVisibility() + ", Alpha: " + getAlpha());
+        
         this.detectionResults = results;
-        invalidate(); // 觸發重繪
+        
+        if (results != null && !results.isEmpty()) {
+            Log.d(TAG, "檢測結果詳情:");
+            for (int i = 0; i < results.size(); i++) {
+                YoloDetector.DetectionResult result = results.get(i);
+                android.graphics.Rect bbox = result.getBoundingBox();
+                if (bbox != null) {
+                    Log.d(TAG, String.format("  結果[%d]: %s, 置信度: %.2f, bbox: [%d,%d,%d,%d] (寬:%d, 高:%d)", 
+                        i, result.getLabelZh(), result.getConfidence(),
+                        bbox.left, bbox.top, bbox.right, bbox.bottom,
+                        bbox.width(), bbox.height()));
+                } else {
+                    Log.w(TAG, "  結果[" + i + "]: bbox 為 null！");
+                }
+            }
+        }
+        
+        // 確保視圖可見
+        setVisibility(VISIBLE);
+        setAlpha(1.0f);
+        
+        // 觸發重繪
+        postInvalidate();
+        invalidate();
+        Log.d(TAG, "已觸發重繪");
     }
     
     /**
