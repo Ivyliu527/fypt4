@@ -251,8 +251,29 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     
     private void analyzeImage(ImageProxy image) {
         try {
+            if (!isDetecting) {
+                image.close();
+                return;
+            }
+            
+            Log.d(TAG, "開始分析圖像，寬度: " + image.getWidth() + ", 高度: " + image.getHeight());
+            
             // 執行AI檢測
             List<YoloDetector.DetectionResult> results = yoloDetector.detect(image);
+            
+            Log.d(TAG, "檢測完成，結果數量: " + (results != null ? results.size() : 0));
+            if (results != null && !results.isEmpty()) {
+                for (int i = 0; i < results.size(); i++) {
+                    YoloDetector.DetectionResult result = results.get(i);
+                    android.graphics.Rect bbox = result.getBoundingBox();
+                    Log.d(TAG, String.format("檢測結果[%d]: %s, 置信度: %.2f, bbox: [%d,%d,%d,%d]", 
+                        i, result.getLabelZh(), result.getConfidence(),
+                        bbox != null ? bbox.left : -1,
+                        bbox != null ? bbox.top : -1,
+                        bbox != null ? bbox.right : -1,
+                        bbox != null ? bbox.bottom : -1));
+                }
+            }
             
             // 在主線程更新UI
             runOnUiThread(() -> {
@@ -261,11 +282,15 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     
                     // 更新檢測結果覆蓋層
                     if (detectionOverlay != null) {
+                        Log.d(TAG, "更新檢測結果到覆蓋層，數量: " + results.size());
                         detectionOverlay.updateDetectionResults(results);
+                    } else {
+                        Log.e(TAG, "❌ detectionOverlay 為 null，無法更新檢測結果！");
                     }
                     
                     announceDetectionResults(results);
                 } else {
+                    Log.d(TAG, "檢測結果為空，清除覆蓋層");
                     updateStatusIndicator("scanning");
                     
                     // 清除檢測結果覆蓋層
@@ -275,9 +300,12 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 }
             });
             
+            image.close();
+            
         } catch (Exception e) {
-            Log.e(TAG, "圖像分析失敗: " + e.getMessage());
+            Log.e(TAG, "圖像分析失敗: " + e.getMessage(), e);
             runOnUiThread(() -> updateStatusIndicator("error"));
+            image.close();
         }
     }
     
