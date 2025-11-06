@@ -96,20 +96,54 @@
 
     </LinearLayout>
 
-    <!-- 相機預覽區域 -->
+    <!-- 相機預覽區域（上） -->
     <androidx.camera.view.PreviewView
         android:id="@+id/cameraPreview"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@id/modeSelector"
-        app:layout_constraintBottom_toTopOf="@id/controlButtons"
+        app:layout_constraintBottom_toTopOf="@id/resultsContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_margin="8dp"
         android:contentDescription="相機預覽畫面，用於掃描文件和貨幣" />
 
+    <!-- 掃描結果區域（下） -->
+    <LinearLayout
+        android:id="@+id/resultsContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/background_dark"
+        android:padding="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/controlButtons">
 
+        <TextView
+            android:id="@+id/resultsTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="掃描結果"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
 
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/resultsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:lineSpacingExtra="4dp" />
+        </ScrollView>
+    </LinearLayout>
 
     <!-- 底部控制按鈕 - 改為方形設計 -->
     <LinearLayout

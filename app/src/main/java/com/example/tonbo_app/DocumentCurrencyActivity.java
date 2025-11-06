@@ -48,6 +48,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
     private Button readButton;
     private Button clearButton;
     private TextView pageTitle;
+    private TextView resultsText;
 
     private ExecutorService cameraExecutor;
     private ProcessCameraProvider cameraProvider;
@@ -102,6 +103,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
         readButton = findViewById(R.id.readButton);
         clearButton = findViewById(R.id.clearButton);
         pageTitle = findViewById(R.id.pageTitle);
+        resultsText = findViewById(R.id.resultsText);
 
         // 返回按鈕
         backButton.setOnClickListener(v -> {
@@ -373,9 +375,6 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
                         announceInfo("分析完成，共識別到" + 
                             String.format(getString(R.string.items_detected), (ocrResults.size() + currencyResults.size())));
                         isAnalyzing = false;
-                        
-                        // 顯示結果彈窗
-                        showResultDialog(ocrResults, currencyResults);
                     });
 
                 } catch (Exception e) {
@@ -385,9 +384,6 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
                         updateStatus("分析失敗");
                         announceError("分析失敗，請重試");
                         isAnalyzing = false;
-                        
-                        // 顯示錯誤彈窗
-                        showErrorDialog("分析失敗：" + e.getMessage());
                     });
                 }
             }).start();
@@ -452,6 +448,9 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
         lastRecognitionResult = "";
         lastOCRResults = null;
         lastCurrencyResults = null;
+        if (resultsText != null) {
+            resultsText.setText("");
+        }
         announceInfo(getString(R.string.results_cleared));
     }
 
@@ -461,8 +460,9 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
     }
 
     private void updateResults(String results) {
-        // 結果更新現在通過語音播報
-        announceInfo("掃描完成：" + results);
+        if (resultsText != null) {
+            resultsText.setText(results);
+        }
     }
 
     private void toggleFlash() {
