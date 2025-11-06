@@ -312,6 +312,11 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         if (detectionOverlay != null) {
             detectionOverlay.clearDetections();
         }
+
+        // 停止一切語音播報
+        if (ttsManager != null) {
+            ttsManager.stopSpeaking();
+        }
     }
     
 

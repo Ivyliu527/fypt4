@@ -363,6 +363,11 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         updateStatusIndicator("ready");
         
         Toast.makeText(this, "環境識別已停止", Toast.LENGTH_SHORT).show();
+
+        // 停止一切語音播報
+        if (ttsManager != null) {
+            ttsManager.stopSpeaking();
+        }
     }
     
     
