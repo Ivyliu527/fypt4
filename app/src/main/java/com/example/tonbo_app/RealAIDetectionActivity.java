@@ -283,6 +283,8 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     // 更新檢測結果覆蓋層
                     if (detectionOverlay != null) {
                         Log.d(TAG, "更新檢測結果到覆蓋層，數量: " + results.size());
+                        // 告知覆蓋層來源影像尺寸，確保像素坐標正確映射
+                        detectionOverlay.setSourceImageSize(image.getWidth(), image.getHeight());
                         detectionOverlay.updateDetectionResults(results);
                     } else {
                         Log.e(TAG, "❌ detectionOverlay 為 null，無法更新檢測結果！");

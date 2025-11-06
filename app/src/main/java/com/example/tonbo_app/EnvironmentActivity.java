@@ -557,6 +557,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                     // 更新覆蓋層顯示檢測框 - 確保覆蓋層可見
                                     if (detectionOverlay != null) {
                                         detectionOverlay.setVisibility(View.VISIBLE);
+                                        // 告知覆蓋層來源影像尺寸，便於像素座標做正確映射
+                                        detectionOverlay.setSourceImageSize(bitmap.getWidth(), bitmap.getHeight());
                                         detectionOverlay.updateDetections(results);
                                         // 設置覆蓋層的語言
                                         detectionOverlay.setCurrentLanguage(currentLanguage);

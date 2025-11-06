@@ -26,6 +26,9 @@ public class DetectionOverlayView extends View {
     private Paint textPaint;
     private Paint backgroundPaint;
     private String currentLanguage = "cantonese"; // 當前語言
+    // 原始影像尺寸（用於將像素座標映射到檢視座標）
+    private int sourceImageWidth = -1;
+    private int sourceImageHeight = -1;
     
     // 繪製參數 - 優化為更高精度和清晰度
     private static final int BOX_COLOR = Color.BLUE;
@@ -165,6 +168,15 @@ public class DetectionOverlayView extends View {
         postInvalidate(); // 重新繪製以更新標籤語言
     }
     
+    /**
+     * 設定原始影像尺寸（例如相機幀的寬高），
+     * 讓以像素為單位的檢測框能正確映射至覆蓋層檢視。
+     */
+    public void setSourceImageSize(int width, int height) {
+        this.sourceImageWidth = width;
+        this.sourceImageHeight = height;
+    }
+    
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -271,12 +283,14 @@ public class DetectionOverlayView extends View {
             right = (boundingBox.right / 1000.0f) * viewWidth;
             bottom = (boundingBox.bottom / 1000.0f) * viewHeight;
         } else {
-            // 已經是像素座標，直接使用
-            Log.d(TAG, "檢測到像素座標，直接使用");
-            left = boundingBox.left;
-            top = boundingBox.top;
-            right = boundingBox.right;
-            bottom = boundingBox.bottom;
+            // 已經是像素座標，需按來源影像 -> 視圖做比例映射（考慮CenterCrop）
+            Log.d(TAG, "檢測到像素座標，進行來源到視圖的映射");
+            float[] lt = mapSourceToView(boundingBox.left, boundingBox.top, viewWidth, viewHeight);
+            float[] rb = mapSourceToView(boundingBox.right, boundingBox.bottom, viewWidth, viewHeight);
+            left = lt[0];
+            top = lt[1];
+            right = rb[0];
+            bottom = rb[1];
         }
         
         // 確保 right >= left 且 bottom >= top
@@ -297,9 +311,32 @@ public class DetectionOverlayView extends View {
         right = Math.max(left + 1, Math.min(right, viewWidth));
         bottom = Math.max(top + 1, Math.min(bottom, viewHeight));
         
-        // 驗證邊界框尺寸是否合理（至少20x20像素）
+        // 如邊界框過大，按視圖最大比例縮小（保持中心不變）
         float width = right - left;
         float height = bottom - top;
+        float maxBoxScale = 0.9f; // 盒子最大佔比
+        float maxW = viewWidth * maxBoxScale;
+        float maxH = viewHeight * maxBoxScale;
+        if (width > maxW || height > maxH) {
+            float cx = (left + right) * 0.5f;
+            float cy = (top + bottom) * 0.5f;
+            float scaleRatio = Math.min(maxW / width, maxH / height);
+            float newW = width * scaleRatio;
+            float newH = height * scaleRatio;
+            left = cx - newW * 0.5f;
+            right = cx + newW * 0.5f;
+            top = cy - newH * 0.5f;
+            bottom = cy + newH * 0.5f;
+            // 重新夾在視圖範圍內
+            left = Math.max(0, Math.min(left, viewWidth - 1));
+            top = Math.max(0, Math.min(top, viewHeight - 1));
+            right = Math.max(left + 1, Math.min(right, viewWidth));
+            bottom = Math.max(top + 1, Math.min(bottom, viewHeight));
+            width = right - left;
+            height = bottom - top;
+        }
+        
+        // 驗證邊界框尺寸是否合理（至少20x20像素）
         if (width < 20 || height < 20) {
             Log.w(TAG, "邊界框尺寸過小，跳過繪製: " + width + "x" + height);
             return;
@@ -350,6 +387,22 @@ public class DetectionOverlayView extends View {
         float textX = textLeft + TEXT_PADDING;
         float textY = textBottom - TEXT_PADDING;
         canvas.drawText(label, textX, textY, textPaint);
+    }
+    
+    /**
+     * 將來源影像座標(x, y)映射到覆蓋層視圖座標。
+     * 預設依照 PreviewView 的 FILL_CENTER（CenterCrop）策略計算縮放與偏移。
+     */
+    private float[] mapSourceToView(float x, float y, int viewWidth, int viewHeight) {
+        if (sourceImageWidth <= 0 || sourceImageHeight <= 0 || viewWidth <= 0 || viewHeight <= 0) {
+            return new float[]{x, y};
+        }
+        float scale = Math.max((float) viewWidth / sourceImageWidth, (float) viewHeight / sourceImageHeight);
+        float scaledW = sourceImageWidth * scale;
+        float scaledH = sourceImageHeight * scale;
+        float dx = (viewWidth - scaledW) * 0.5f;
+        float dy = (viewHeight - scaledH) * 0.5f;
+        return new float[]{x * scale + dx, y * scale + dy};
     }
     
     /**

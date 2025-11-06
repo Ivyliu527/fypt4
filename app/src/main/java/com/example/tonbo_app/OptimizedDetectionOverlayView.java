@@ -24,6 +24,8 @@ public class OptimizedDetectionOverlayView extends View {
     private Paint backgroundPaint;
     private int viewWidth;
     private int viewHeight;
+    private int sourceImageWidth = -1;
+    private int sourceImageHeight = -1;
     
     public OptimizedDetectionOverlayView(Context context) {
         super(context);
@@ -129,9 +131,32 @@ public class OptimizedDetectionOverlayView extends View {
                        Color.MAGENTA, 0xFF00FF00, 0xFFFF00FF, 0xFFFF8000, 0xFF00FFFF};
         int objectColor = colors[index % colors.length];
         
+        // 將來源像素座標映射到目前覆蓋層座標（依CenterCrop）
+        float[] lt = mapSourceToView(boundingBox.left, boundingBox.top);
+        float[] rb = mapSourceToView(boundingBox.right, boundingBox.bottom);
+        Rect mapped = new Rect((int) lt[0], (int) lt[1], (int) rb[0], (int) rb[1]);
+
+        // 若盒子過大，縮小到不超過視圖的90%
+        int maxW = (int) (viewWidth * 0.9f);
+        int maxH = (int) (viewHeight * 0.9f);
+        int w = mapped.width();
+        int h = mapped.height();
+        if (w > maxW || h > maxH) {
+            float cx = mapped.centerX();
+            float cy = mapped.centerY();
+            float scale = Math.min(maxW / (float) w, maxH / (float) h);
+            int newW = Math.max(1, Math.round(w * scale));
+            int newH = Math.max(1, Math.round(h * scale));
+            int left = Math.max(0, Math.round(cx - newW / 2f));
+            int top = Math.max(0, Math.round(cy - newH / 2f));
+            int right = Math.min(viewWidth, left + newW);
+            int bottom = Math.min(viewHeight, top + newH);
+            mapped.set(left, top, right, bottom);
+        }
+
         // 繪製空心邊框（只繪製邊框，不填充）
         boxPaint.setColor(objectColor);
-        canvas.drawRect(boundingBox, boxPaint);
+        canvas.drawRect(mapped, boxPaint);
         
         // 準備標籤文本
         String label = result.getLabelZh();
@@ -143,8 +168,8 @@ public class OptimizedDetectionOverlayView extends View {
         float textHeight = textPaint.getTextSize();
         
         // 繪製文本背景
-        float textX = boundingBox.left;
-        float textY = boundingBox.top - 10;
+        float textX = mapped.left;
+        float textY = mapped.top - 10;
         
         // 確保文本不超出屏幕
         if (textY < textHeight) {
@@ -172,8 +197,8 @@ public class OptimizedDetectionOverlayView extends View {
         // 繪製檢測索引
         if (index < 3) { // 只顯示前3個檢測結果的索引
             String indexText = String.valueOf(index + 1);
-            float indexX = boundingBox.right - 30;
-            float indexY = boundingBox.top + 30;
+            float indexX = mapped.right - 30;
+            float indexY = mapped.top + 30;
             
             // 繪製索引背景圓圈
             canvas.drawCircle(indexX, indexY, 15, backgroundPaint);
@@ -184,6 +209,26 @@ public class OptimizedDetectionOverlayView extends View {
             indexPaint.setTextAlign(Paint.Align.CENTER);
             canvas.drawText(indexText, indexX, indexY + 8, indexPaint);
         }
+    }
+    
+    /**
+     * 設定來源影像尺寸，讓像素座標可正確映射至覆蓋層。
+     */
+    public void setSourceImageSize(int width, int height) {
+        this.sourceImageWidth = width;
+        this.sourceImageHeight = height;
+    }
+    
+    private float[] mapSourceToView(float x, float y) {
+        if (sourceImageWidth <= 0 || sourceImageHeight <= 0 || viewWidth <= 0 || viewHeight <= 0) {
+            return new float[]{x, y};
+        }
+        float scale = Math.max((float) viewWidth / sourceImageWidth, (float) viewHeight / sourceImageHeight);
+        float scaledW = sourceImageWidth * scale;
+        float scaledH = sourceImageHeight * scale;
+        float dx = (viewWidth - scaledW) * 0.5f;
+        float dy = (viewHeight - scaledH) * 0.5f;
+        return new float[]{x * scale + dx, y * scale + dy};
     }
     
     private int getColorForConfidence(float confidence) {
