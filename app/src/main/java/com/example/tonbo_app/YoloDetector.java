@@ -1242,23 +1242,27 @@ public class YoloDetector {
     
     /**
      * 格式化檢測結果為語音文本
+     * 只播報物體名稱，不包含前綴、距離或位置信息
      */
     public String formatResultsForSpeech(List<DetectionResult> results) {
         if (results.isEmpty()) {
             return "未偵測到任何物體";
         }
         
-        StringBuilder sb = new StringBuilder("偵測到：");
-        for (int i = 0; i < Math.min(results.size(), 2); i++) {
+        StringBuilder sb = new StringBuilder();
+        // 最多播報2個物體
+        int maxObjects = Math.min(results.size(), 2);
+        for (int i = 0; i < maxObjects; i++) {
             DetectionResult result = results.get(i);
             sb.append(result.getLabelZh());
-            if (i < Math.min(results.size(), 2) - 1) {
+            if (i < maxObjects - 1) {
                 sb.append("、");
             }
         }
         
+        // 如果物體超過2個，添加總數
         if (results.size() > 2) {
-            sb.append("等").append(results.size()).append("個物體");
+            sb.append("等").append(results.size()).append("個");
         }
         
         return sb.toString();

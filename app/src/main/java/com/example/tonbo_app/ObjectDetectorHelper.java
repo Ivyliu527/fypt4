@@ -614,6 +614,7 @@ public class ObjectDetectorHelper {
     
     /**
      * 格式化檢測結果為語音文本 - 專為視障人士優化（簡潔版本）
+     * 只播報物體名稱，不包含距離、位置或置信度信息
      */
     public String formatResultsForSpeech(List<DetectionResult> results) {
         if (results.isEmpty()) {
@@ -628,14 +629,9 @@ public class ObjectDetectorHelper {
         for (int i = 0; i < maxObjects; i++) {
             DetectionResult result = results.get(i);
             
-            // 物體名稱 - 根據當前語言選擇對應的標籤
+            // 只播報物體名稱 - 根據當前語言選擇對應的標籤
             String objectLabel = getObjectLabelForCurrentLanguage(result);
             sb.append(objectLabel);
-            
-            // 簡潔的置信度描述
-            if (result.getConfidence() > 0.7f) {
-                sb.append("（高置信度）");
-            }
             
             // 分隔符
             if (i < maxObjects - 1) {
@@ -645,7 +641,7 @@ public class ObjectDetectorHelper {
         
         // 如果物體超過2個，添加總數
         if (results.size() > 2) {
-            sb.append("等").append(results.size()).append("個物體");
+            sb.append("等").append(results.size()).append("個");
         }
         
         return sb.toString();

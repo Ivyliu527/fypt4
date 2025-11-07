@@ -428,27 +428,21 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             return;
         }
         
-        // 3. 優化語音播報
+        // 3. 優化語音播報 - 只播報物體名稱，不包含距離和位置信息
         StringBuilder announcement = new StringBuilder();
         
-        if (toAnnounce.size() == 1) {
-            // 單個物體：簡潔描述
-            YoloDetector.DetectionResult result = toAnnounce.get(0);
-            String position = getPositionDescription(result.getBoundingBox());
-            String distance = estimateDistance(result.getBoundingBox());
-            announcement.append(position).append(distance).append("有").append(result.getLabelZh());
-        } else {
-            // 多個物體：列舉最重要的
-            announcement.append("檢測到");
-            for (int i = 0; i < Math.min(toAnnounce.size(), 3); i++) {
-                announcement.append(toAnnounce.get(i).getLabelZh());
-                if (i < Math.min(toAnnounce.size(), 3) - 1) {
-                    announcement.append("、");
-                }
+        // 直接列舉物體名稱，最多2個
+        int maxObjects = Math.min(toAnnounce.size(), 2);
+        for (int i = 0; i < maxObjects; i++) {
+            announcement.append(toAnnounce.get(i).getLabelZh());
+            if (i < maxObjects - 1) {
+                announcement.append("、");
             }
-            if (toAnnounce.size() > 3) {
-                announcement.append("等").append(toAnnounce.size()).append("個物體");
-            }
+        }
+        
+        // 如果物體超過2個，添加總數
+        if (toAnnounce.size() > 2) {
+            announcement.append("等").append(toAnnounce.size()).append("個");
         }
         
         // 4. 根據語言播報
