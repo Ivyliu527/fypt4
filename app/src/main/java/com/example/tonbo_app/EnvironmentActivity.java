@@ -1199,6 +1199,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     
     /**
      * 語音播報檢測結果（原版本，保留用於其他場景）
+     * 已簡化為直接播報物體名稱，不添加前綴
      */
     private void speakDetectionResults(String speechText) {
         Log.d(TAG, "🔊 speakDetectionResults 被調用，speechText: " + speechText);
@@ -1208,14 +1209,10 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         if (ttsManager != null && speechText != null && !speechText.isEmpty()) {
             Log.d(TAG, "語音播報檢測結果: " + speechText);
             
-            // 添加環境描述前綴
-            String fullSpeechText = getEnvironmentDescriptionPrefix() + speechText;
-            Log.d(TAG, "🔊 完整語音文本: " + fullSpeechText);
-            
-            // 播報檢測結果 - 使用優先播放確保檢測結果語音不被其他語音打斷
+            // 直接播報檢測結果，不添加前綴，只說物體名稱
             // 根據當前語言選擇對應的語音內容
-            String cantoneseText = currentLanguage.equals("english") ? translateToChinese(fullSpeechText) : fullSpeechText;
-            String englishText = currentLanguage.equals("english") ? fullSpeechText : translateToEnglish(fullSpeechText);
+            String cantoneseText = currentLanguage.equals("english") ? translateToChinese(speechText) : speechText;
+            String englishText = currentLanguage.equals("english") ? speechText : translateToEnglish(speechText);
             ttsManager.speak(cantoneseText, englishText, true);
             
             // 震動反饋
