@@ -38,11 +38,11 @@ public final class AppConstants {
     public static final int SLIDE_TRANSITION_DURATION_MS = 300;
     public static final int SCALE_TRANSITION_DURATION_MS = 250;
     
-    // 置信度閾值（恢復較寬鬆的預設，確保能看到檢測框）
-    public static final float CONFIDENCE_THRESHOLD = 0.4f;        // 預設0.3-0.4，先確保可見
-    public static final float HIGH_CONFIDENCE_THRESHOLD = 0.6f;   // 降低以提升召回
-    public static final float SCORE_THRESHOLD = 0.35f;            // 平衡召回與精度
-    public static final float NMS_THRESHOLD = 0.45f;              // 常用NMS閾值
+    // 置信度閾值（優化以提高準確率）
+    public static final float CONFIDENCE_THRESHOLD = 0.5f;        // 提高到0.5，減少誤報
+    public static final float HIGH_CONFIDENCE_THRESHOLD = 0.7f;   // 高置信度閾值
+    public static final float SCORE_THRESHOLD = 0.45f;            // 提高到0.45，平衡精度與召回
+    public static final float NMS_THRESHOLD = 0.5f;               // 提高到0.5，減少重複檢測
     public static final float IOU_THRESHOLD = 0.5f;               // 保持0.5
     
     // 模型參數

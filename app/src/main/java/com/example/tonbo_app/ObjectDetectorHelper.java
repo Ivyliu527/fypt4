@@ -128,6 +128,12 @@ public class ObjectDetectorHelper {
     private List<DetectionResult> lastSuccessfulResults = new ArrayList<>();
     private long lastDetectionTime = 0;
     
+    // 多幀融合穩定性過濾（提高準確率）
+    private static final int STABILITY_FRAME_COUNT = 3;  // 需要連續3幀檢測到才認為穩定
+    private final Map<String, Integer> detectionStability = new HashMap<>();  // 物體標籤 -> 連續檢測次數
+    private final Map<String, Float> detectionConfidenceSum = new HashMap<>();  // 物體標籤 -> 置信度累加
+    private final Map<String, android.graphics.RectF> detectionBoundingBox = new HashMap<>();  // 物體標籤 -> 邊界框
+    
     // COCO類別中文映射
     private static final Map<String, String> LABEL_MAP_ZH = new HashMap<>();
     
@@ -395,6 +401,9 @@ public class ObjectDetectorHelper {
         // 應用非極大值抑制
         results = applyNMS(results);
         
+        // 應用多幀融合穩定性過濾（提高準確率）
+        results = applyStabilityFilter(results);
+        
         // 按置信度排序
         Collections.sort(results, (a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
         
@@ -407,12 +416,110 @@ public class ObjectDetectorHelper {
     }
     
     /**
+     * 應用多幀融合穩定性過濾 - 只保留在連續多幀中穩定出現的檢測結果
+     * 這可以顯著提高準確率，減少誤報和閃爍
+     */
+    private List<DetectionResult> applyStabilityFilter(List<DetectionResult> results) {
+        if (results.isEmpty()) {
+            // 如果當前幀沒有檢測結果，減少所有物體的穩定性計數
+            List<String> toRemove = new ArrayList<>();
+            for (Map.Entry<String, Integer> entry : detectionStability.entrySet()) {
+                int count = entry.getValue() - 1;
+                if (count <= 0) {
+                    toRemove.add(entry.getKey());
+                } else {
+                    detectionStability.put(entry.getKey(), count);
+                }
+            }
+            for (String key : toRemove) {
+                detectionStability.remove(key);
+                detectionConfidenceSum.remove(key);
+                detectionBoundingBox.remove(key);
+            }
+            return new ArrayList<>();
+        }
+        
+        // 更新當前幀檢測到的物體
+        Set<String> currentDetections = new HashSet<>();
+        for (DetectionResult result : results) {
+            String key = result.getLabel() + "_" + result.getLabelZh();
+            currentDetections.add(key);
+            
+            // 更新穩定性計數
+            int stabilityCount = detectionStability.getOrDefault(key, 0) + 1;
+            detectionStability.put(key, Math.min(stabilityCount, STABILITY_FRAME_COUNT));
+            
+            // 累加置信度（用於計算平均置信度）
+            float currentSum = detectionConfidenceSum.getOrDefault(key, 0f);
+            detectionConfidenceSum.put(key, currentSum + result.getConfidence());
+            
+            // 更新邊界框（使用最新的）
+            detectionBoundingBox.put(key, result.getBoundingBox());
+        }
+        
+        // 減少未檢測到的物體的穩定性計數
+        List<String> toRemove = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : detectionStability.entrySet()) {
+            String key = entry.getKey();
+            if (!currentDetections.contains(key)) {
+                int count = entry.getValue() - 1;
+                if (count <= 0) {
+                    toRemove.add(key);
+                } else {
+                    detectionStability.put(key, count);
+                }
+            }
+        }
+        for (String key : toRemove) {
+            detectionStability.remove(key);
+            detectionConfidenceSum.remove(key);
+            detectionBoundingBox.remove(key);
+        }
+        
+        // 只返回穩定性達到閾值的檢測結果
+        List<DetectionResult> stableResults = new ArrayList<>();
+        for (DetectionResult result : results) {
+            String key = result.getLabel() + "_" + result.getLabelZh();
+            int stability = detectionStability.getOrDefault(key, 0);
+            
+            // 只有連續檢測到足夠次數的物體才被認為是穩定的
+            if (stability >= STABILITY_FRAME_COUNT) {
+                // 使用平均置信度（更穩定）
+                float avgConfidence = detectionConfidenceSum.getOrDefault(key, 0f) / stability;
+                android.graphics.RectF bbox = detectionBoundingBox.getOrDefault(key, result.getBoundingBox());
+                
+                stableResults.add(new DetectionResult(
+                    result.getLabel(),
+                    result.getLabelZh(),
+                    avgConfidence,
+                    bbox
+                ));
+                
+                Log.d(TAG, String.format("穩定檢測: %s (穩定性: %d/%d, 平均置信度: %.2f)", 
+                    result.getLabelZh(), stability, STABILITY_FRAME_COUNT, avgConfidence));
+            } else {
+                Log.d(TAG, String.format("不穩定檢測（跳過）: %s (穩定性: %d/%d)", 
+                    result.getLabelZh(), stability, STABILITY_FRAME_COUNT));
+            }
+        }
+        
+        Log.d(TAG, String.format("穩定性過濾: %d -> %d", results.size(), stableResults.size()));
+        return stableResults;
+    }
+    
+    /**
      * 過濾環境相關物體 - 增強版本，提高精準度
      */
     private List<DetectionResult> filterEnvironmentRelevantObjects(List<DetectionResult> results) {
         List<DetectionResult> filtered = new ArrayList<>();
         
         for (DetectionResult result : results) {
+            // 檢查邊界框合理性（過濾異常檢測）
+            if (!isValidBoundingBox(result.getBoundingBox())) {
+                Log.d(TAG, "過濾無效邊界框: " + result.getLabelZh());
+                continue;
+            }
+            
             // 檢查是否為環境相關物體
             if (ENVIRONMENT_RELEVANT_OBJECTS.contains(result.getLabel())) {
                 // 額外檢查置信度，確保檢測質量
@@ -432,6 +539,42 @@ public class ObjectDetectorHelper {
         
         Log.d(TAG, String.format("環境物體過濾: %d -> %d", results.size(), filtered.size()));
         return filtered;
+    }
+    
+    /**
+     * 檢查邊界框是否合理 - 過濾異常檢測，提高準確率
+     */
+    private boolean isValidBoundingBox(android.graphics.RectF bbox) {
+        if (bbox == null) {
+            return false;
+        }
+        
+        float width = bbox.right - bbox.left;
+        float height = bbox.bottom - bbox.top;
+        
+        // 檢查邊界框尺寸是否合理（不能太小或太大）
+        if (width <= 0 || height <= 0) {
+            return false;
+        }
+        
+        // 檢查邊界框是否在有效範圍內（0-1）
+        if (bbox.left < 0 || bbox.top < 0 || bbox.right > 1.0f || bbox.bottom > 1.0f) {
+            return false;
+        }
+        
+        // 檢查邊界框面積是否合理（不能太小，避免噪聲檢測）
+        float area = width * height;
+        if (area < 0.001f) {  // 面積小於0.1%的檢測視為噪聲
+            return false;
+        }
+        
+        // 檢查寬高比是否合理（避免極端比例）
+        float aspectRatio = width / height;
+        if (aspectRatio < 0.1f || aspectRatio > 10.0f) {
+            return false;
+        }
+        
+        return true;
     }
     
     /**
