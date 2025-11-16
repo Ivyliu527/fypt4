@@ -30,7 +30,7 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
     private static final int PERMISSION_REQUEST_CAMERA = 102;
 
     // UI元素
-    private Button backButton;
+    private android.widget.ImageButton backButton;
     private Button helpButton;
     private Button quickCallButton;
     private Button quickMessageButton;

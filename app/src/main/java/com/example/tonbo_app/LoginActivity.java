@@ -51,7 +51,7 @@ public class LoginActivity extends BaseAccessibleActivity {
         loginForm = findViewById(R.id.login_form);
         
         // 設置返回按鈕
-        Button backButton = findViewById(R.id.back_button);
+        android.widget.ImageButton backButton = findViewById(R.id.back_button);
         if (backButton != null) {
             backButton.setOnClickListener(v -> {
                 vibrationManager.vibrateClick();

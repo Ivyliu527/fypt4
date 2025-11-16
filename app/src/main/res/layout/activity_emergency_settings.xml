@@ -16,15 +16,14 @@
         android:gravity="center_vertical"
         app:layout_constraintTop_toTopOf="parent">
 
-        <Button
+        <ImageButton
             android:id="@+id/backButton"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:text="←"
-            android:textSize="24sp"
-            android:textColor="@color/white"
-            android:background="@drawable/button_circle_background"
-            android:backgroundTint="@null"
+            android:background="@drawable/button_square_background"
+            android:backgroundTint="@color/menu_blue"
+            android:src="@drawable/ic_back_arrow_white"
+            android:scaleType="center"
             android:contentDescription="返回主頁按鈕" />
 
         <TextView

@@ -14,16 +14,14 @@
         android:gravity="center_vertical">
 
         <!-- 回上一頁按鈕 -->
-        <Button
+        <ImageButton
             android:id="@+id/backButton"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:text="←"
-            android:textSize="28sp"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:background="@drawable/button_modern_background"
-            android:backgroundTint="@null"
+            android:background="@drawable/button_square_background"
+            android:backgroundTint="@color/menu_blue"
+            android:src="@drawable/ic_back_arrow_white"
+            android:scaleType="center"
             android:contentDescription="返回主頁"
             android:gravity="center"
             android:includeFontPadding="false"

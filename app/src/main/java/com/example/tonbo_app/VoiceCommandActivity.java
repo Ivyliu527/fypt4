@@ -78,7 +78,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         });
         
         // 返回按鈕
-        Button backButton = findViewById(R.id.backButton);
+        android.widget.ImageButton backButton = findViewById(R.id.backButton);
         if (backButton != null) {
             backButton.setOnClickListener(v -> {
                 vibrationManager.vibrateClick();
