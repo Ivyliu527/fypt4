@@ -39,7 +39,7 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private DetectionOverlayView detectionOverlay;
     private TextView detectionStatus;
     private TextView detectionResults;
-    private Button backButton;
+    private android.widget.ImageButton backButton;
     private Button flashButton;
     private Button startDetectionButton;
 

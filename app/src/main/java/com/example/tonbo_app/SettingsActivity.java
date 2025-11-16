@@ -84,8 +84,8 @@ public class SettingsActivity extends BaseAccessibleActivity {
         resetSettingsButton = findViewById(R.id.resetSettingsButton);
         testVoiceButton = findViewById(R.id.testVoiceButton);
         
-        // 返回按鈕
-        Button backButton = findViewById(R.id.backButton);
+        // 返回按鈕（ImageButton，而非一般 Button）
+        android.widget.ImageButton backButton = findViewById(R.id.backButton);
         if (backButton != null) {
             backButton.setOnClickListener(v -> {
                 vibrationManager.vibrateClick();

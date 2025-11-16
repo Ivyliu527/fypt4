@@ -40,7 +40,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
     private static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.CAMERA};
 
     private PreviewView cameraPreview;
-    private Button backButton;
+    private android.widget.ImageButton backButton;
     private Button flashButton;
     private Button textModeButton;
     private Button currencyModeButton;

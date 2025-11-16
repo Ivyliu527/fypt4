@@ -23,7 +23,7 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
     private GestureDrawView gestureDrawView;
     private Button saveButton;
     private Button clearButton;
-    private Button backButton;
+    private android.widget.ImageButton backButton;
     private TextView pageTitle;
     private LinearLayout savedGesturesList;
     

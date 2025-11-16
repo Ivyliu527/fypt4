@@ -37,7 +37,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     
     private PreviewView previewView;
     private View statusIndicator;
-    private Button backButton;
+    private android.widget.ImageButton backButton;
     private Button startButton;
     private Button stopButton;
     

@@ -35,7 +35,7 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
     private EditText newContactEditText;
     private Button addContactButton;
     private Button testEmergencyButton;
-    private Button backButton;
+    private android.widget.ImageButton backButton;
     private Button setupCompleteButton;
     private TextView messagePreviewText;
     private LinearLayout addContactSection;

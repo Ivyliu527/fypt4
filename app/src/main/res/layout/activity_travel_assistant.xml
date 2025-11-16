@@ -18,15 +18,14 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <!-- 返回按鈕 -->
-        <Button
+        <ImageButton
             android:id="@+id/back_button"
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:text="←"
-            android:textSize="24sp"
-            android:textColor="#FFFFFF"
             android:background="@drawable/button_square_background"
-            android:backgroundTint="@null"
+            android:backgroundTint="@color/menu_blue"
+            android:src="@drawable/ic_back_arrow_white"
+            android:scaleType="center"
             android:contentDescription="@string/back_button_desc"
             android:layout_marginEnd="16dp" />
 
