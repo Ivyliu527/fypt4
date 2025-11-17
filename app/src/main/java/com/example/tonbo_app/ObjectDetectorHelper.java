@@ -25,11 +25,34 @@ import java.util.Set;
 public class ObjectDetectorHelper {
     private static final String TAG = "ObjectDetectorHelper";
     
-    // 環境識別相關的物體類別（優先檢測）
+    // 環境識別相關的物體類別（只檢測這些常見物體）
     private static final Set<String> ENVIRONMENT_RELEVANT_OBJECTS = new HashSet<>();
     
+    // 黑名單：明確排除不常見或不相關的物體
+    private static final Set<String> EXCLUDED_OBJECTS = new HashSet<>();
+    
     static {
-        // 環境識別相關的重要物體
+        // 黑名單：排除不常見的物體
+        EXCLUDED_OBJECTS.add("giraffe");          // 長頸鹿
+        EXCLUDED_OBJECTS.add("zebra");            // 斑馬
+        EXCLUDED_OBJECTS.add("elephant");         // 大象
+        EXCLUDED_OBJECTS.add("bear");             // 熊
+        EXCLUDED_OBJECTS.add("cow");              // 牛
+        EXCLUDED_OBJECTS.add("sheep");            // 羊
+        EXCLUDED_OBJECTS.add("horse");            // 馬
+        EXCLUDED_OBJECTS.add("airplane");         // 飛機（通常不在室內環境）
+        EXCLUDED_OBJECTS.add("train");            // 火車
+        EXCLUDED_OBJECTS.add("boat");             // 船
+        EXCLUDED_OBJECTS.add("surfboard");        // 衝浪板
+        EXCLUDED_OBJECTS.add("kite");             // 風箏
+        EXCLUDED_OBJECTS.add("frisbee");          // 飛盤
+        EXCLUDED_OBJECTS.add("baseball bat");     // 棒球棒
+        EXCLUDED_OBJECTS.add("baseball glove");   // 棒球手套
+        EXCLUDED_OBJECTS.add("tennis racket");    // 網球拍
+        EXCLUDED_OBJECTS.add("skateboard");       // 滑板
+        
+        // 環境識別相關的重要物體（白名單）- 只包含對視障人士有用的常見物體
+        // 交通相關
         ENVIRONMENT_RELEVANT_OBJECTS.add("person");           // 人
         ENVIRONMENT_RELEVANT_OBJECTS.add("car");              // 汽車
         ENVIRONMENT_RELEVANT_OBJECTS.add("truck");            // 卡車
@@ -38,75 +61,56 @@ public class ObjectDetectorHelper {
         ENVIRONMENT_RELEVANT_OBJECTS.add("bicycle");          // 腳踏車
         ENVIRONMENT_RELEVANT_OBJECTS.add("traffic light");    // 交通燈
         ENVIRONMENT_RELEVANT_OBJECTS.add("stop sign");        // 停車標誌
+        
+        // 家具
         ENVIRONMENT_RELEVANT_OBJECTS.add("bench");            // 長椅
         ENVIRONMENT_RELEVANT_OBJECTS.add("chair");            // 椅子
         ENVIRONMENT_RELEVANT_OBJECTS.add("table");            // 桌子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bed");              // 床
-        ENVIRONMENT_RELEVANT_OBJECTS.add("couch");            // 沙發
-        ENVIRONMENT_RELEVANT_OBJECTS.add("tv");               // 電視
-        ENVIRONMENT_RELEVANT_OBJECTS.add("laptop");           // 筆記本電腦
-        ENVIRONMENT_RELEVANT_OBJECTS.add("book");             // 書
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bottle");           // 瓶子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("cup");              // 杯子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bowl");             // 碗
-        ENVIRONMENT_RELEVANT_OBJECTS.add("clock");            // 時鐘
-        ENVIRONMENT_RELEVANT_OBJECTS.add("vase");             // 花瓶
-        ENVIRONMENT_RELEVANT_OBJECTS.add("scissors");         // 剪刀
-        ENVIRONMENT_RELEVANT_OBJECTS.add("teddy bear");       // 泰迪熊
-        ENVIRONMENT_RELEVANT_OBJECTS.add("toothbrush");       // 牙刷
-        ENVIRONMENT_RELEVANT_OBJECTS.add("hair drier");       // 吹風機
-        ENVIRONMENT_RELEVANT_OBJECTS.add("umbrella");         // 雨傘
-        ENVIRONMENT_RELEVANT_OBJECTS.add("handbag");          // 手提包
-        ENVIRONMENT_RELEVANT_OBJECTS.add("backpack");         // 背包
-        ENVIRONMENT_RELEVANT_OBJECTS.add("suitcase");         // 手提箱
-        ENVIRONMENT_RELEVANT_OBJECTS.add("frisbee");          // 飛盤
-        ENVIRONMENT_RELEVANT_OBJECTS.add("sports ball");      // 運動球
-        ENVIRONMENT_RELEVANT_OBJECTS.add("kite");             // 風箏
-        ENVIRONMENT_RELEVANT_OBJECTS.add("baseball bat");     // 棒球棒
-        ENVIRONMENT_RELEVANT_OBJECTS.add("baseball glove");   // 棒球手套
-        ENVIRONMENT_RELEVANT_OBJECTS.add("skateboard");       // 滑板
-        ENVIRONMENT_RELEVANT_OBJECTS.add("surfboard");        // 衝浪板
-        ENVIRONMENT_RELEVANT_OBJECTS.add("tennis racket");    // 網球拍
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bottle");           // 瓶子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("wine glass");       // 酒杯
-        ENVIRONMENT_RELEVANT_OBJECTS.add("cup");              // 杯子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("fork");             // 叉子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("knife");            // 刀子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("spoon");            // 勺子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bowl");             // 碗
-        ENVIRONMENT_RELEVANT_OBJECTS.add("banana");           // 香蕉
-        ENVIRONMENT_RELEVANT_OBJECTS.add("apple");            // 蘋果
-        ENVIRONMENT_RELEVANT_OBJECTS.add("sandwich");         // 三明治
-        ENVIRONMENT_RELEVANT_OBJECTS.add("orange");           // 橙子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("broccoli");         // 西蘭花
-        ENVIRONMENT_RELEVANT_OBJECTS.add("carrot");           // 胡蘿蔔
-        ENVIRONMENT_RELEVANT_OBJECTS.add("hot dog");          // 熱狗
-        ENVIRONMENT_RELEVANT_OBJECTS.add("pizza");            // 披薩
-        ENVIRONMENT_RELEVANT_OBJECTS.add("donut");            // 甜甜圈
-        ENVIRONMENT_RELEVANT_OBJECTS.add("cake");             // 蛋糕
-        ENVIRONMENT_RELEVANT_OBJECTS.add("chair");            // 椅子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("couch");            // 沙發
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bed");              // 床
         ENVIRONMENT_RELEVANT_OBJECTS.add("dining table");     // 餐桌
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bed");              // 床
+        ENVIRONMENT_RELEVANT_OBJECTS.add("couch");            // 沙發
         ENVIRONMENT_RELEVANT_OBJECTS.add("toilet");           // 廁所
+        
+        // 電子設備
         ENVIRONMENT_RELEVANT_OBJECTS.add("tv");               // 電視
         ENVIRONMENT_RELEVANT_OBJECTS.add("laptop");           // 筆記本電腦
         ENVIRONMENT_RELEVANT_OBJECTS.add("mouse");            // 滑鼠
         ENVIRONMENT_RELEVANT_OBJECTS.add("remote");           // 遙控器
         ENVIRONMENT_RELEVANT_OBJECTS.add("keyboard");         // 鍵盤
         ENVIRONMENT_RELEVANT_OBJECTS.add("cell phone");       // 手機
+        ENVIRONMENT_RELEVANT_OBJECTS.add("clock");            // 時鐘
+        
+        // 廚房用品
         ENVIRONMENT_RELEVANT_OBJECTS.add("microwave");        // 微波爐
         ENVIRONMENT_RELEVANT_OBJECTS.add("oven");             // 烤箱
         ENVIRONMENT_RELEVANT_OBJECTS.add("toaster");          // 烤麵包機
         ENVIRONMENT_RELEVANT_OBJECTS.add("sink");             // 水槽
         ENVIRONMENT_RELEVANT_OBJECTS.add("refrigerator");     // 冰箱
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bottle");           // 瓶子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("cup");              // 杯子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("wine glass");       // 酒杯
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bowl");             // 碗
+        ENVIRONMENT_RELEVANT_OBJECTS.add("fork");             // 叉子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("knife");            // 刀子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("spoon");            // 勺子
+        
+        // 日常用品
         ENVIRONMENT_RELEVANT_OBJECTS.add("book");             // 書
-        ENVIRONMENT_RELEVANT_OBJECTS.add("clock");            // 時鐘
+        ENVIRONMENT_RELEVANT_OBJECTS.add("umbrella");         // 雨傘
+        ENVIRONMENT_RELEVANT_OBJECTS.add("handbag");          // 手提包
+        ENVIRONMENT_RELEVANT_OBJECTS.add("backpack");         // 背包
+        ENVIRONMENT_RELEVANT_OBJECTS.add("suitcase");         // 手提箱
         ENVIRONMENT_RELEVANT_OBJECTS.add("vase");             // 花瓶
         ENVIRONMENT_RELEVANT_OBJECTS.add("scissors");         // 剪刀
-        ENVIRONMENT_RELEVANT_OBJECTS.add("teddy bear");       // 泰迪熊
         ENVIRONMENT_RELEVANT_OBJECTS.add("hair drier");       // 吹風機
         ENVIRONMENT_RELEVANT_OBJECTS.add("toothbrush");       // 牙刷
+        
+        // 食物（常見的）
+        ENVIRONMENT_RELEVANT_OBJECTS.add("banana");           // 香蕉
+        ENVIRONMENT_RELEVANT_OBJECTS.add("apple");            // 蘋果
+        ENVIRONMENT_RELEVANT_OBJECTS.add("orange");           // 橙子
+        ENVIRONMENT_RELEVANT_OBJECTS.add("sandwich");         // 三明治
+        ENVIRONMENT_RELEVANT_OBJECTS.add("pizza");            // 披薩
     }
     
     // 穩定性增強參數
@@ -508,36 +512,48 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 過濾環境相關物體 - 增強版本，提高精準度
+     * 過濾檢測結果（白名單 + 黑名單 + 基本驗證）
+     * 只保留對視障人士有用的常見物體，排除不常見或不相關的物體（如長頸鹿、斑馬等）
      */
     private List<DetectionResult> filterEnvironmentRelevantObjects(List<DetectionResult> results) {
         List<DetectionResult> filtered = new ArrayList<>();
-        
+
         for (DetectionResult result : results) {
-            // 檢查邊界框合理性（過濾異常檢測）
+            String label = result.getLabel().toLowerCase();
+            
+            // 1. 檢查黑名單（優先排除不常見物體）
+            if (EXCLUDED_OBJECTS.contains(label)) {
+                Log.d(TAG, "黑名單過濾: " + result.getLabelZh() + " (不常見物體)");
+                continue;
+            }
+            
+            // 2. 檢查邊界框合理性（過濾異常檢測）
             if (!isValidBoundingBox(result.getBoundingBox())) {
                 Log.d(TAG, "過濾無效邊界框: " + result.getLabelZh());
                 continue;
             }
-            
-            // 檢查是否為環境相關物體
-            if (ENVIRONMENT_RELEVANT_OBJECTS.contains(result.getLabel())) {
-                // 額外檢查置信度，確保檢測質量
-                if (result.getConfidence() >= AppConstants.SCORE_THRESHOLD) {
-                    filtered.add(result);
-                    Log.d(TAG, "保留環境相關物體: " + result.getLabelZh() + " (置信度: " + result.getConfidence() + ")");
-                } else {
-                    Log.d(TAG, "過濾低置信度環境物體: " + result.getLabelZh() + " (置信度: " + result.getConfidence() + ")");
-                }
-            } else {
-                Log.d(TAG, "過濾非環境物體: " + result.getLabelZh());
+
+            // 3. 檢查置信度閾值
+            if (result.getConfidence() < AppConstants.SCORE_THRESHOLD) {
+                Log.d(TAG, "過濾低置信度物體: " + result.getLabelZh() + " (置信度: " + result.getConfidence() + ")");
+                continue;
             }
+            
+            // 4. 白名單檢查：只保留環境識別相關的常見物體
+            if (!ENVIRONMENT_RELEVANT_OBJECTS.contains(label)) {
+                Log.d(TAG, "白名單過濾: " + result.getLabelZh() + " (不在常見物體列表中)");
+                continue;
+            }
+
+            // 通過所有檢查，保留此物體
+            filtered.add(result);
+            Log.d(TAG, "保留物體: " + result.getLabelZh() + " (置信度: " + String.format("%.2f", result.getConfidence()) + ")");
         }
-        
+
         // 按置信度排序，優先顯示高置信度結果
         filtered.sort((a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
-        
-        Log.d(TAG, String.format("環境物體過濾: %d -> %d", results.size(), filtered.size()));
+
+        Log.d(TAG, String.format("物體過濾: %d -> %d (白名單+黑名單過濾)", results.size(), filtered.size()));
         return filtered;
     }
     
@@ -649,6 +665,8 @@ public class ObjectDetectorHelper {
         
         try {
             List<YoloDetector.DetectionResult> yoloResults = yoloDetector.detect(bitmap);
+            int imageWidth = bitmap.getWidth();
+            int imageHeight = bitmap.getHeight();
             
             for (YoloDetector.DetectionResult yoloResult : yoloResults) {
                 if (yoloResult.getConfidence() >= AppConstants.SCORE_THRESHOLD) {
@@ -659,11 +677,21 @@ public class ObjectDetectorHelper {
                     
                     // 檢查邊界框是否為null
                     android.graphics.Rect rect = yoloResult.getBoundingBox();
-                    if (rect != null) {
-                        // 轉換Rect為RectF
+                    if (rect != null && imageWidth > 0 && imageHeight > 0) {
+                        // YOLO返回的是像素座標，需要標準化為0-1範圍
+                        // 轉換為標準化的RectF（0.0-1.0）
                         android.graphics.RectF rectF = new android.graphics.RectF(
-                                rect.left, rect.top, rect.right, rect.bottom
+                                (float)rect.left / imageWidth,      // 標準化left
+                                (float)rect.top / imageHeight,      // 標準化top
+                                (float)rect.right / imageWidth,     // 標準化right
+                                (float)rect.bottom / imageHeight    // 標準化bottom
                         );
+                        
+                        // 確保座標在有效範圍內 (0-1)
+                        rectF.left = Math.max(0.0f, Math.min(1.0f, rectF.left));
+                        rectF.top = Math.max(0.0f, Math.min(1.0f, rectF.top));
+                        rectF.right = Math.max(rectF.left + 0.01f, Math.min(1.0f, rectF.right));
+                        rectF.bottom = Math.max(rectF.top + 0.01f, Math.min(1.0f, rectF.bottom));
                         
                         results.add(new DetectionResult(
                                 yoloResult.getLabel(),
@@ -673,7 +701,7 @@ public class ObjectDetectorHelper {
                         ));
                     } else {
                         // 如果邊界框為null，創建一個默認邊界框
-                        Log.w(TAG, "YOLO檢測結果邊界框為null，使用默認邊界框");
+                        Log.w(TAG, "YOLO檢測結果邊界框為null或圖像尺寸無效，使用默認邊界框");
                         android.graphics.RectF defaultRect = new android.graphics.RectF(0.1f, 0.1f, 0.9f, 0.9f);
                         results.add(new DetectionResult(
                                 yoloResult.getLabel(),
@@ -756,8 +784,8 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 格式化檢測結果為語音文本 - 專為視障人士優化（簡潔版本）
-     * 只播報物體名稱，不包含距離、位置或置信度信息
+     * 格式化檢測結果為語音文本 - 專為視障人士優化（包含位置描述）
+     * 播報物體名稱和位置信息（左/右/中央）
      */
     public String formatResultsForSpeech(List<DetectionResult> results) {
         if (results.isEmpty()) {
@@ -765,29 +793,59 @@ public class ObjectDetectorHelper {
         }
         
         StringBuilder sb = new StringBuilder();
+        String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
         
         // 簡潔的物體描述，最多2個物體
         int maxObjects = Math.min(results.size(), 2);
         
+        Log.d(TAG, "開始格式化語音文本，物體數量: " + results.size() + ", 將播報: " + maxObjects);
+        
         for (int i = 0; i < maxObjects; i++) {
             DetectionResult result = results.get(i);
             
-            // 只播報物體名稱 - 根據當前語言選擇對應的標籤
+            // 獲取物體名稱 - 根據當前語言選擇對應的標籤
             String objectLabel = getObjectLabelForCurrentLanguage(result);
             sb.append(objectLabel);
+            Log.d(TAG, "物體 " + (i + 1) + ": " + objectLabel);
+            
+            // 添加位置描述（左/右/中央）
+            android.graphics.RectF bbox = result.getBoundingBox();
+            if (bbox != null) {
+                Log.d(TAG, "邊界框: left=" + bbox.left + ", top=" + bbox.top + 
+                      ", right=" + bbox.right + ", bottom=" + bbox.bottom);
+                String positionDesc = getPositionDescription(bbox);
+                if (positionDesc != null && !positionDesc.isEmpty()) {
+                    sb.append(positionDesc);
+                    Log.d(TAG, "添加位置描述: " + positionDesc);
+                } else {
+                    Log.w(TAG, "位置描述為空或null");
+                }
+            } else {
+                Log.w(TAG, "邊界框為null，無法添加位置描述");
+            }
             
             // 分隔符
             if (i < maxObjects - 1) {
-                sb.append("、");
+                if (currentLang.equals("english")) {
+                    sb.append(", ");
+                } else {
+                    sb.append("，");
+                }
             }
         }
         
         // 如果物體超過2個，添加總數
         if (results.size() > 2) {
-            sb.append("等").append(results.size()).append("個");
+            if (currentLang.equals("english")) {
+                sb.append(" and ").append(results.size()).append(" more objects");
+            } else {
+                sb.append("等").append(results.size()).append("個");
+            }
         }
         
-        return sb.toString();
+        String finalText = sb.toString();
+        Log.d(TAG, "最終語音文本: " + finalText);
+        return finalText;
     }
     
     /**
@@ -865,50 +923,74 @@ public class ObjectDetectorHelper {
         
         switch (currentLang) {
             case "english":
-                return result.getLabel() != null ? result.getLabel() : result.getLabelZh();
+                // 英文模式：優先使用英文標籤，如果為空則從中文標籤映射回英文
+                String englishLabel = result.getLabel();
+                if (englishLabel != null && !englishLabel.trim().isEmpty()) {
+                    return englishLabel;
+                }
+                // 如果英文標籤為空，嘗試從中文標籤映射回英文
+                String chineseLabel = result.getLabelZh();
+                if (chineseLabel != null && !chineseLabel.trim().isEmpty()) {
+                    // 從中文映射回英文（反向查找）
+                    for (Map.Entry<String, String> entry : LABEL_MAP_ZH.entrySet()) {
+                        if (entry.getValue().equals(chineseLabel)) {
+                            return entry.getKey();
+                        }
+                    }
+                }
+                // 如果都找不到，返回英文標籤（即使為空）
+                return englishLabel != null ? englishLabel : "object";
+                
             case "mandarin":
-                return result.getLabelZh() != null ? result.getLabelZh() : result.getLabel();
+                // 普通話模式：優先使用中文標籤
+                return result.getLabelZh() != null && !result.getLabelZh().trim().isEmpty() 
+                    ? result.getLabelZh() 
+                    : (result.getLabel() != null ? result.getLabel() : "物體");
+                    
             case "cantonese":
             default:
-                return result.getLabelZh() != null ? result.getLabelZh() : result.getLabel();
+                // 粵語模式：優先使用中文標籤
+                return result.getLabelZh() != null && !result.getLabelZh().trim().isEmpty() 
+                    ? result.getLabelZh() 
+                    : (result.getLabel() != null ? result.getLabel() : "物體");
         }
     }
     
     /**
-     * 獲取位置描述
+     * 獲取位置描述（簡潔版 - 只描述水平位置：左/右/中央）
+     * 專為視障人士優化，提供清晰的位置指引
      */
     private String getPositionDescription(android.graphics.RectF boundingBox) {
+        if (boundingBox == null) {
+            Log.w(TAG, "邊界框為null，無法獲取位置描述");
+            return "";
+        }
+        
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
         
-        // 計算物體在畫面中的大致位置
-        float centerX = (boundingBox.left + boundingBox.right) / 2;
-        float centerY = (boundingBox.top + boundingBox.bottom) / 2;
+        // 計算物體在畫面中的水平位置（相對於畫面中心）
+        // 邊界框座標是標準化的（0.0-1.0）
+        float centerX = (boundingBox.left + boundingBox.right) / 2.0f;
         
-        String horizontalPos, verticalPos;
+        String horizontalPos;
         
-        // 水平位置
-        if (centerX < 0.33f) {
-            horizontalPos = currentLang.equals("english") ? "left side" : "左側";
-        } else if (centerX < 0.67f) {
-            horizontalPos = currentLang.equals("english") ? "center" : "中央";
+        // 水平位置分為三區：左側、中央、右側
+        // 使用更精確的閾值，避免邊界模糊
+        if (centerX < 0.35f) {
+            // 左側（0-35%）
+            horizontalPos = currentLang.equals("english") ? " on the left" : "在左側";
+            Log.d(TAG, String.format("位置描述: 左側 (centerX=%.2f)", centerX));
+        } else if (centerX > 0.65f) {
+            // 右側（65-100%）
+            horizontalPos = currentLang.equals("english") ? " on the right" : "在右側";
+            Log.d(TAG, String.format("位置描述: 右側 (centerX=%.2f)", centerX));
         } else {
-            horizontalPos = currentLang.equals("english") ? "right side" : "右側";
+            // 中央（35-65%）
+            horizontalPos = currentLang.equals("english") ? " in the center" : "在中央";
+            Log.d(TAG, String.format("位置描述: 中央 (centerX=%.2f)", centerX));
         }
         
-        // 垂直位置
-        if (centerY < 0.33f) {
-            verticalPos = currentLang.equals("english") ? "top" : "上方";
-        } else if (centerY < 0.67f) {
-            verticalPos = currentLang.equals("english") ? "middle" : "中間";
-        } else {
-            verticalPos = currentLang.equals("english") ? "bottom" : "下方";
-        }
-        
-        String positionText = currentLang.equals("english") 
-            ? " located at " + verticalPos + " " + horizontalPos
-            : "位於" + verticalPos + horizontalPos;
-            
-        return positionText;
+        return horizontalPos;
     }
     
     /**

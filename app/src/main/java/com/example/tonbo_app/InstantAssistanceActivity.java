@@ -10,6 +10,7 @@ import android.os.Looper;
 import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,9 +33,12 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
     // UI元素
     private android.widget.ImageButton backButton;
     private Button helpButton;
-    private Button quickCallButton;
-    private Button quickMessageButton;
-    private Button videoCallButton;
+    private LinearLayout quickCallButton;
+    private LinearLayout quickMessageButton;
+    private LinearLayout videoCallButton;
+    private TextView quickCallButtonText;
+    private TextView quickMessageButtonText;
+    private TextView videoCallButtonText;
     private TextView statusText;
     private TextView connectionStatus;
     private TextView pageTitle;
@@ -90,6 +94,9 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
         quickCallButton = findViewById(R.id.quickCallButton);
         quickMessageButton = findViewById(R.id.quickMessageButton);
         videoCallButton = findViewById(R.id.videoCallButton);
+        quickCallButtonText = findViewById(R.id.quickCallButtonText);
+        quickMessageButtonText = findViewById(R.id.quickMessageButtonText);
+        videoCallButtonText = findViewById(R.id.videoCallButtonText);
         statusText = findViewById(R.id.statusText);
         connectionStatus = findViewById(R.id.connectionStatus);
         pageTitle = findViewById(R.id.pageTitle);
@@ -137,16 +144,28 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
             pageTitle.setText(getLocalizedString("instant_assistance_title"));
         }
         
-        if (quickCallButton != null) {
-            quickCallButton.setText(getLocalizedString("quick_call"));
+        if (quickCallButtonText != null) {
+            String text = getLocalizedString("quick_call");
+            quickCallButtonText.setText(text);
+            if (quickCallButton != null) {
+                quickCallButton.setContentDescription(text);
+            }
         }
         
-        if (quickMessageButton != null) {
-            quickMessageButton.setText(getLocalizedString("quick_message"));
+        if (quickMessageButtonText != null) {
+            String text = getLocalizedString("quick_message");
+            quickMessageButtonText.setText(text);
+            if (quickMessageButton != null) {
+                quickMessageButton.setContentDescription(text);
+            }
         }
         
-        if (videoCallButton != null) {
-            videoCallButton.setText(getLocalizedString("video_call"));
+        if (videoCallButtonText != null) {
+            String text = getLocalizedString("video_call");
+            videoCallButtonText.setText(text);
+            if (videoCallButton != null) {
+                videoCallButton.setContentDescription(text);
+            }
         }
         
         if (statusText != null) {
@@ -173,27 +192,27 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
                 }
             case "quick_call":
                 if ("english".equals(currentLanguage)) {
-                    return "📞 One-touch Call Volunteer";
+                    return "One-touch Call";
                 } else if ("mandarin".equals(currentLanguage)) {
-                    return "📞 一键呼叫志愿者";
+                    return "一键呼叫";
                 } else {
-                    return "📞 一鍵呼叫志工";
+                    return "一鍵呼叫";
                 }
             case "quick_message":
                 if ("english".equals(currentLanguage)) {
-                    return "💬 Quick Message";
+                    return "Quick Message";
                 } else if ("mandarin".equals(currentLanguage)) {
-                    return "💬 快速消息";
+                    return "快速消息";
                 } else {
-                    return "💬 快速訊息";
+                    return "快速訊息";
                 }
             case "video_call":
                 if ("english".equals(currentLanguage)) {
-                    return "📹 Video Call";
+                    return "Video Call";
                 } else if ("mandarin".equals(currentLanguage)) {
-                    return "📹 视频通话";
+                    return "视频通话";
                 } else {
-                    return "📹 視訊連線";
+                    return "視訊連線";
                 }
             case "ready_to_assist":
                 if ("english".equals(currentLanguage)) {

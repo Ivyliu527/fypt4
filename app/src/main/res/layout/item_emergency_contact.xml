@@ -2,11 +2,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:background="@drawable/button_simple_background"
-    android:padding="12dp"
-    android:layout_marginVertical="4dp"
-    android:gravity="center_vertical">
+    android:background="@drawable/card_background"
+    android:padding="20dp"
+    android:layout_marginVertical="8dp"
+    android:gravity="center_vertical"
+    android:minHeight="80dp">
 
+    <!-- 聯絡人電話號碼 - 更大字體 -->
     <TextView
         android:id="@+id/contactText"
         android:layout_width="0dp"
@@ -14,20 +16,28 @@
         android:layout_weight="1"
         android:text="@string/contact_phone_placeholder"
         android:textColor="@color/text_primary"
-        android:textSize="16sp"
+        android:textSize="20sp"
         android:textStyle="bold"
+        android:minHeight="48dp"
+        android:gravity="center_vertical"
         android:contentDescription="緊急聯絡人電話號碼" />
 
+    <!-- 移除按鈕 - 更大更易點擊 -->
     <Button
         android:id="@+id/removeButton"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="72dp"
         android:text="@string/remove_button"
-        android:textSize="14sp"
+        android:textSize="18sp"
+        android:textStyle="bold"
         android:textColor="@color/white"
         android:background="@drawable/button_square_background"
-        android:backgroundTint="@null"
-        android:paddingHorizontal="16dp"
-        android:contentDescription="移除聯絡人按鈕" />
+        android:backgroundTint="@color/emergency_red"
+        android:paddingHorizontal="24dp"
+        android:minWidth="120dp"
+        android:minHeight="72dp"
+        android:layout_marginStart="16dp"
+        android:contentDescription="移除聯絡人按鈕"
+        android:elevation="2dp" />
 
 </LinearLayout>
