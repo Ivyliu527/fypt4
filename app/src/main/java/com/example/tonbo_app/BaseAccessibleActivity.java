@@ -52,9 +52,12 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
         // 頁面載入完成後播放頁面標題
         getWindow().getDecorView().post(() -> {
             // 延遲播報，確保TTS初始化完成
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                Log.d("BaseAccessibleActivity", "🔊 開始播報頁面標題");
-                announcePageTitle();
+            android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+            handler.postDelayed(() -> {
+                if (!isFinishing() && !isDestroyed()) {
+                    Log.d("BaseAccessibleActivity", "🔊 開始播報頁面標題");
+                    announcePageTitle();
+                }
             }, 1000); // 延遲1秒確保TTS初始化完成
         });
     }

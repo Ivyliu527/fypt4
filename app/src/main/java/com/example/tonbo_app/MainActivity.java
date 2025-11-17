@@ -22,11 +22,16 @@ public class MainActivity extends BaseAccessibleActivity {
     private EmergencyManager emergencyManager;
     private ArrayList<ArrayList<HomeFunction>> functionPages = new ArrayList<>();
     private FunctionListFragment.OnFunctionClickListener functionClickListener;
+    private ViewPager2.OnPageChangeCallback pageChangeCallback;
+    private Handler mainHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // 初始化主線程Handler
+        mainHandler = new Handler(Looper.getMainLooper());
 
         // 初始化緊急管理器
         emergencyManager = EmergencyManager.getInstance(this);
@@ -158,6 +163,10 @@ public class MainActivity extends BaseAccessibleActivity {
 
 
     public void toggleLanguage() {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        
         currentLanguage = getNextLanguage(currentLanguage);
         
         // 保存語言設置
@@ -172,8 +181,18 @@ public class MainActivity extends BaseAccessibleActivity {
         // 立即更新界面文字
         updateLanguageUI();
         
-        // 重新創建Activity以應用新語言
-        recreate();
+        // 重新創建Activity以應用新語言（延遲執行，避免在生命週期關鍵時刻調用）
+        if (mainHandler != null) {
+            mainHandler.postDelayed(() -> {
+                if (!isFinishing() && !isDestroyed()) {
+                    try {
+                        recreate();
+                    } catch (Exception e) {
+                        Log.e("MainActivity", "重新創建Activity失敗: " + e.getMessage());
+                    }
+                }
+            }, 300); // 延遲300ms，確保當前操作完成
+        }
     }
     
     /**
@@ -200,11 +219,15 @@ public class MainActivity extends BaseAccessibleActivity {
     }
     
     private void setupFragmentClickListeners() {
-        viewPager.post(() -> {
-            for (int i = 0; i < functionPages.size(); i++) {
-                setupFragmentClickListener(i);
-            }
-        });
+        if (viewPager != null && !isFinishing() && !isDestroyed()) {
+            viewPager.post(() -> {
+                if (viewPager != null && !isFinishing() && !isDestroyed()) {
+                    for (int i = 0; i < functionPages.size(); i++) {
+                        setupFragmentClickListener(i);
+                    }
+                }
+            });
+        }
     }
     
     /**
@@ -352,15 +375,19 @@ public class MainActivity extends BaseAccessibleActivity {
             pagerAdapter.notifyDataSetChanged();
             
             // 重新設置點擊監聽器
-            viewPager.post(() -> {
-                for (int i = 0; i < functionPages.size(); i++) {
-                    long itemId = pagerAdapter.getItemId(i);
-                    Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + itemId);
-                    if (fragment instanceof FunctionListFragment) {
-                        ((FunctionListFragment) fragment).setOnFunctionClickListener(functionClickListener);
+            if (viewPager != null && !isFinishing() && !isDestroyed()) {
+                viewPager.post(() -> {
+                    if (viewPager != null && !isFinishing() && !isDestroyed()) {
+                        for (int i = 0; i < functionPages.size(); i++) {
+                            long itemId = pagerAdapter.getItemId(i);
+                            Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + itemId);
+                            if (fragment instanceof FunctionListFragment) {
+                                ((FunctionListFragment) fragment).setOnFunctionClickListener(functionClickListener);
+                            }
+                        }
                     }
-                }
-            });
+                });
+            }
         }
     }
     
@@ -555,15 +582,18 @@ public class MainActivity extends BaseAccessibleActivity {
         };
         
         // 設置頁面變更監聽器，更新指示器
-        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+        pageChangeCallback = new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
-                updatePageIndicator(position);
-                
-                // 為當前頁面的Fragment設置點擊監聽器
-                setupFragmentClickListener(position);
+                if (viewPager != null && pageIndicator != null) {
+                    updatePageIndicator(position);
+                    
+                    // 為當前頁面的Fragment設置點擊監聽器
+                    setupFragmentClickListener(position);
+                }
             }
-        });
+        };
+        viewPager.registerOnPageChangeCallback(pageChangeCallback);
         
         // 初始化指示器
         if (functionPages.size() > 0) {
@@ -571,18 +601,30 @@ public class MainActivity extends BaseAccessibleActivity {
         }
         
         // 延後設置點擊監聽器，確保 Fragment 已完全創建
-        viewPager.post(() -> {
-            for (int i = 0; i < functionPages.size(); i++) {
-                setupFragmentClickListener(i);
-            }
-        });
+        if (viewPager != null && !isFinishing() && !isDestroyed()) {
+            viewPager.post(() -> {
+                if (viewPager != null && !isFinishing() && !isDestroyed()) {
+                    for (int i = 0; i < functionPages.size(); i++) {
+                        setupFragmentClickListener(i);
+                    }
+                }
+            });
+        }
     }
     
     private void setupFragmentClickListener(int position) {
-        long itemId = pagerAdapter.getItemId(position);
-        Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + itemId);
-        if (fragment instanceof FunctionListFragment) {
-            ((FunctionListFragment) fragment).setOnFunctionClickListener(functionClickListener);
+        if (pagerAdapter == null || viewPager == null || isFinishing() || isDestroyed()) {
+            return;
+        }
+        
+        try {
+            long itemId = pagerAdapter.getItemId(position);
+            Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + itemId);
+            if (fragment instanceof FunctionListFragment && functionClickListener != null) {
+                ((FunctionListFragment) fragment).setOnFunctionClickListener(functionClickListener);
+            }
+        } catch (Exception e) {
+            Log.e("MainActivity", "設置Fragment點擊監聽器失敗: " + e.getMessage());
         }
     }
     
@@ -763,11 +805,68 @@ public class MainActivity extends BaseAccessibleActivity {
     }
     
     @Override
+    protected void onPause() {
+        super.onPause();
+        // 暫停時停止所有待處理的操作
+        if (mainHandler != null) {
+            mainHandler.removeCallbacksAndMessages(null);
+        }
+    }
+    
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-        // 清理資源
+        
+        Log.d("MainActivity", "開始清理資源...");
+        
+        // 移除所有待處理的 Handler 消息
+        if (mainHandler != null) {
+            mainHandler.removeCallbacksAndMessages(null);
+            mainHandler = null;
+        }
+        
+        // 註銷 ViewPager2 的頁面變更監聽器
+        if (viewPager != null && pageChangeCallback != null) {
+            try {
+                viewPager.unregisterOnPageChangeCallback(pageChangeCallback);
+            } catch (Exception e) {
+                Log.e("MainActivity", "註銷頁面變更監聽器失敗: " + e.getMessage());
+            }
+            pageChangeCallback = null;
+        }
+        
+        // 清理 ViewPager2 和 Adapter
+        if (viewPager != null) {
+            viewPager.setAdapter(null);
+            viewPager = null;
+        }
+        
+        if (pagerAdapter != null) {
+            pagerAdapter = null;
+        }
+        
+        // 清理功能列表
+        if (functionPages != null) {
+            functionPages.clear();
+            functionPages = null;
+        }
+        
+        // 清理監聽器
+        functionClickListener = null;
+        
+        // 清理視圖引用
+        pageIndicator = null;
+        emergencyButton = null;
+        
+        // 清理緊急管理器引用（不關閉實例，因為是單例）
+        emergencyManager = null;
+        
+        // 清理 TTS 管理器（僅在 MainActivity 中關閉）
         if (ttsManager != null) {
             ttsManager.shutdown();
+            ttsManager = null;
         }
+        
+        Log.d("MainActivity", "資源清理完成");
     }
 }

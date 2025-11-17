@@ -13,9 +13,9 @@
         android:layout_height="120dp"
         android:src="@drawable/ic_tonbo_logo"
         android:alpha="0"
-        android:contentDescription="瞳伴應用程式標誌" />
+        android:contentDescription="Tonbo app logo" />
 
-    <!-- App 名稱 -->
+    <!-- App Name -->
     <TextView
         android:id="@+id/appNameText"
         android:layout_width="wrap_content"
@@ -28,7 +28,7 @@
         android:alpha="0"
         android:contentDescription="@string/app_name" />
 
-    <!-- 口號 -->
+    <!-- Slogan -->
     <TextView
         android:id="@+id/sloganText"
         android:layout_width="wrap_content"

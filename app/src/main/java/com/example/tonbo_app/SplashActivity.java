@@ -24,6 +24,11 @@ public class SplashActivity extends AppCompatActivity {
         appNameText = findViewById(R.id.appNameText);
         sloganText = findViewById(R.id.sloganText);
 
+        // 強制使用英文文本，無論系統語言設置
+        appNameText.setText("Tonbo");
+        sloganText.setText("Your Visual Partner");
+        logoImage.setContentDescription("Tonbo app logo");
+
         // 啟動動畫
         startEntranceAnimation();
 

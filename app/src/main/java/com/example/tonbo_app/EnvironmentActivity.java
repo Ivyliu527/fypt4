@@ -62,7 +62,9 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     
     // 語音播報控制
     private long lastSpeechTime = 0;
-    private static final long SPEECH_INTERVAL_MS = 2000; // 語音播報間隔2秒
+    private static final long SPEECH_INTERVAL_MS = 1500; // 語音播報間隔1.5秒
+    private static final long SAME_OBJECT_SILENCE_MS = 5000; // 相同物體靜默期5秒（縮短）
+    private String lastSpokenObjects = ""; // 上次播報的物體名稱（不含位置）
     
     // 顏色和光線分析
     private ColorLightingAnalyzer colorLightingAnalyzer;
@@ -265,6 +267,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         // 清除之前的檢測結果
         detectionResults.setText(getString(R.string.point_to_objects_instruction));
         lastDetectionResult = "";
+        lastSpokenObjects = "";
+        lastSpeechTime = 0;
         
         // 添加測試邊界框以驗證顯示功能（3秒後移除）
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
@@ -307,6 +311,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         // 清除檢測結果
         detectionResults.setText(getString(R.string.point_to_objects_instruction));
         lastDetectionResult = "";
+        lastSpokenObjects = "";
+        lastSpeechTime = 0;
         
         // 清除檢測覆蓋層
         if (detectionOverlay != null) {
@@ -579,22 +585,46 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                         (int)detectionTime
                                     ));
                                     
-                                    // 實時語音播報檢測結果（優化版本）
-                                    if (!speechText.equals(lastDetectionResult)) {
-                                        lastDetectionResult = speechText;
-                                        Log.d(TAG, "🔊 檢測到新物體，準備播報語音: " + speechText);
+                                    // 實時語音播報檢測結果（優化版本 - 檢測到什麼就說什麼）
+                                    // 提取物體名稱（不含位置描述），用於去重比較
+                                    String objectsOnly = extractObjectsOnly(speechText);
+                                    
+                                    long currentTime = System.currentTimeMillis();
+                                    boolean shouldSpeak = false;
+                                    
+                                    // 檢查是否為新物體或物體組合
+                                    if (!objectsOnly.equals(lastSpokenObjects)) {
+                                        // 檢測到新的物體組合 - 立即播報
+                                        Log.d(TAG, "🔊 檢測到新物體組合: " + objectsOnly + " (上次: " + lastSpokenObjects + ")");
                                         
-                                        // 檢查語音播報間隔，避免過於頻繁
-                                        long currentTime = System.currentTimeMillis();
+                                        // 檢查語音播報間隔（避免過於頻繁）
                                         if (currentTime - lastSpeechTime >= SPEECH_INTERVAL_MS) {
+                                            shouldSpeak = true;
+                                            lastSpokenObjects = objectsOnly;
+                                            lastDetectionResult = speechText;
                                             lastSpeechTime = currentTime;
-                                            // 立即播報檢測結果
-                                            speakDetectionResultsImmediate(speechText);
+                                            Log.d(TAG, "🔊 新物體組合，立即播報: " + speechText);
                                         } else {
-                                            Log.d(TAG, "🔊 語音播報間隔太短，跳過此次播報");
+                                            Log.d(TAG, "🔊 語音播報間隔太短，跳過此次播報 (距離上次: " + (currentTime - lastSpeechTime) + "ms)");
                                         }
                                     } else {
-                                        Log.d(TAG, "🔊 檢測結果與上次相同，跳過語音播報");
+                                        // 相同的物體組合 - 只在靜默期後且位置有明顯變化時才播報
+                                        long timeSinceLastSpeech = currentTime - lastSpeechTime;
+                                        
+                                        // 如果距離上次播報超過靜默期，且檢測結果文本有變化（位置變化），可以再次播報
+                                        if (timeSinceLastSpeech >= SAME_OBJECT_SILENCE_MS && !speechText.equals(lastDetectionResult)) {
+                                            Log.d(TAG, "🔊 相同物體但位置變化，且超過靜默期，準備播報: " + speechText);
+                                            shouldSpeak = true;
+                                            lastDetectionResult = speechText;
+                                            lastSpeechTime = currentTime;
+                                        } else {
+                                            Log.d(TAG, "🔊 檢測結果與上次相同，跳過語音播報 (距離上次: " + timeSinceLastSpeech + "ms, 靜默期: " + SAME_OBJECT_SILENCE_MS + "ms)");
+                                        }
+                                    }
+                                    
+                                    if (shouldSpeak) {
+                                        // 立即播報檢測結果
+                                        speakDetectionResultsImmediate(speechText);
                                     }
                                     
                                     // 定期進行顏色和光線分析
@@ -1098,6 +1128,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         // 清理其他引用
         lastDetections = null;
         lastDetectionResult = "";
+        lastSpokenObjects = "";
+        lastSpeechTime = 0;
         
         // 清理顏色光線分析器
         if (colorLightingAnalyzer != null) {
@@ -1176,14 +1208,29 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
      */
     private void speakDetectionResultsImmediate(String speechText) {
         Log.d(TAG, "🔊 speakDetectionResultsImmediate 被調用，speechText: " + speechText);
+        Log.d(TAG, "🔊 當前語言: " + currentLanguage);
         
         if (ttsManager != null && speechText != null && !speechText.isEmpty()) {
             // 直接播報檢測結果，不添加前綴，讓語音更簡潔
             Log.d(TAG, "🔊 立即播報檢測結果: " + speechText);
             
             // 根據當前語言選擇對應的語音內容
-            String cantoneseText = currentLanguage.equals("english") ? translateToChinese(speechText) : speechText;
-            String englishText = currentLanguage.equals("english") ? speechText : translateToEnglish(speechText);
+            // speechText 已經根據當前語言格式化了，所以不需要再翻譯
+            String cantoneseText;
+            String englishText;
+            
+            if (currentLanguage.equals("english")) {
+                // 英文模式：speechText 應該是英文，直接使用
+                englishText = speechText;
+                cantoneseText = translateToChinese(speechText);
+            } else {
+                // 中文模式：speechText 應該是中文，直接使用
+                cantoneseText = speechText;
+                englishText = translateToEnglish(speechText);
+            }
+            
+            Log.d(TAG, "🔊 粵語文本: " + cantoneseText);
+            Log.d(TAG, "🔊 英文文本: " + englishText);
             
             // 使用優先播放，確保檢測結果語音不被其他語音打斷
             ttsManager.speak(cantoneseText, englishText, true);
@@ -1223,6 +1270,31 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             Log.w(TAG, "❌ 語音播報條件不滿足 - ttsManager: " + (ttsManager != null) + 
                   ", speechText: " + speechText + ", isEmpty: " + (speechText != null && speechText.isEmpty()));
         }
+    }
+    
+    /**
+     * 從語音文本中提取物體名稱（去除位置描述），用於去重比較
+     */
+    private String extractObjectsOnly(String speechText) {
+        if (speechText == null || speechText.isEmpty()) {
+            return "";
+        }
+        
+        // 移除位置描述（中文和英文）
+        String objectsOnly = speechText
+            .replaceAll("在左側|在右側|在中央", "")
+            .replaceAll(" on the left| on the right| in the center", "")
+            .replaceAll("、", ",")
+            .replaceAll("，", ",")
+            .replaceAll("\\s+", " ")
+            .trim();
+        
+        // 移除末尾的"等X個"或"and X more objects"
+        objectsOnly = objectsOnly.replaceAll("等\\d+個$", "");
+        objectsOnly = objectsOnly.replaceAll(" and \\d+ more objects$", "");
+        objectsOnly = objectsOnly.trim();
+        
+        return objectsOnly;
     }
     
     /**

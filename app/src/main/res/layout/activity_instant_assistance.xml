@@ -1,144 +1,258 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/background_dark"
-    android:padding="24dp">
+    android:background="@color/background_dark">
 
-    <!-- 頂部標題欄 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="32dp">
-
-        <!-- 返回按鈕 -->
-        <ImageButton
-            android:id="@+id/backButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:background="@drawable/button_square_background"
-            android:backgroundTint="@color/menu_blue"
-            android:src="@drawable/ic_back_arrow_white"
-            android:scaleType="center"
-            android:contentDescription="@string/back_button_desc"
-            android:layout_marginEnd="16dp" />
-
-        <!-- 標題 -->
-        <TextView
-            android:id="@+id/pageTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/instant_assistance_title"
-            android:textColor="@color/primary_blue"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:contentDescription="@string/instant_assistance_title" />
-
-        <!-- 幫助按鈕 -->
-        <Button
-            android:id="@+id/helpButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:text="?"
-            android:textSize="24sp"
-            android:textColor="@color/white"
-            android:background="@drawable/button_square_background"
-            android:backgroundTint="@null"
-            android:contentDescription="@string/help_button_desc"
-            android:layout_marginStart="16dp" />
-
-    </LinearLayout>
-
-    <!-- 主要功能區域 -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center">
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:padding="24dp">
 
-        <!-- 一鍵呼叫按鈕 -->
-        <Button
-            android:id="@+id/quickCallButton"
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:text="📞 一鍵呼叫志工"
-            android:textSize="24sp"
-            android:textColor="@color/white"
-            android:background="@drawable/button_emergency_background"
-            android:backgroundTint="@null"
-            android:layout_marginBottom="24dp"
-            android:contentDescription="一鍵呼叫志工協助"
-            android:elevation="8dp" />
-
-        <!-- 快速訊息按鈕 -->
-        <Button
-            android:id="@+id/quickMessageButton"
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:text="💬 快速訊息"
-            android:textSize="24sp"
-            android:textColor="@color/white"
-            android:background="@drawable/button_modern_background"
-            android:backgroundTint="@null"
-            android:layout_marginBottom="24dp"
-            android:contentDescription="快速發送訊息給志工"
-            android:elevation="8dp" />
-
-        <!-- 視訊連線按鈕 -->
-        <Button
-            android:id="@+id/videoCallButton"
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:text="📹 視訊連線"
-            android:textSize="24sp"
-            android:textColor="@color/white"
-            android:background="@drawable/button_language_background"
-            android:backgroundTint="@null"
-            android:layout_marginBottom="24dp"
-            android:contentDescription="視訊連線志工協助"
-            android:elevation="8dp" />
-
-    </LinearLayout>
-
-    <!-- 狀態顯示區域 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@drawable/settings_section_background"
-        android:padding="16dp"
-        android:layout_marginTop="16dp">
-
-        <!-- 狀態文字 -->
-        <TextView
-            android:id="@+id/statusText"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/ready_to_assist"
-            android:textColor="@color/primary_blue"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginBottom="8dp"
-            android:contentDescription="當前狀態" />
+            android:orientation="vertical">
 
-        <!-- 連接狀態 -->
-        <TextView
-            android:id="@+id/connectionStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/checking_connection"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp"
-            android:gravity="center"
-            android:contentDescription="連接狀態" />
+            <!-- 頂部標題欄 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="24dp">
 
-    </LinearLayout>
+                <ImageButton
+                    android:id="@+id/backButton"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/button_square_background"
+                    android:backgroundTint="@color/menu_blue"
+                    android:src="@drawable/ic_back_arrow_white"
+                    android:scaleType="center"
+                    android:contentDescription="@string/back_button_desc"
+                    android:layout_marginEnd="16dp" />
 
-</LinearLayout>
+                <TextView
+                    android:id="@+id/pageTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/instant_assistance_title"
+                    android:textColor="@color/primary_blue"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:contentDescription="@string/instant_assistance_title" />
+
+                <Button
+                    android:id="@+id/helpButton"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:text="?"
+                    android:textSize="22sp"
+                    android:textColor="@color/white"
+                    android:background="@drawable/button_square_background"
+                    android:backgroundTint="@null"
+                    android:contentDescription="@string/help_button_desc"
+                    android:layout_marginStart="16dp" />
+
+            </LinearLayout>
+
+            <!-- 狀態卡片 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/settings_section_background"
+                android:padding="20dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:id="@+id/statusText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ready_to_assist"
+                    android:textColor="@color/primary_blue"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:gravity="start"
+                    android:layout_marginBottom="4dp"
+                    android:contentDescription="當前狀態" />
+
+                <TextView
+                    android:id="@+id/connectionStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/checking_connection"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="15sp"
+                    android:layout_marginBottom="12dp"
+                    android:contentDescription="連接狀態" />
+
+                <TextView
+                    android:id="@+id/instructionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/instant_assistance_help"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- 聯絡人卡片 -->
+            <LinearLayout
+                android:id="@+id/contactCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/settings_section_background"
+                android:padding="20dp"
+                android:layout_marginBottom="20dp">
+
+                <TextView
+                    android:id="@+id/contactTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/emergency_contacts"
+                    android:textColor="@color/primary_blue"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/contactName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Volunteer Hotline"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/contactNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="+852 1234 5678"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <!-- 行動按鈕區域 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/quickCallButton"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/button_emergency_background"
+                        android:padding="12dp"
+                        android:layout_marginEnd="12dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:contentDescription="一鍵呼叫志工">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📞"
+                            android:textSize="32sp"
+                            android:textColor="@color/white" />
+
+                        <TextView
+                            android:id="@+id/quickCallButtonText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="一鍵呼叫"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="6dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/quickMessageButton"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/button_modern_background"
+                        android:padding="12dp"
+                        android:layout_marginStart="12dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:contentDescription="快速發送訊息給志工">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💬"
+                            android:textSize="32sp"
+                            android:textColor="@color/white" />
+
+                        <TextView
+                            android:id="@+id/quickMessageButtonText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="快速訊息"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="6dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/videoCallButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/button_language_background"
+                    android:padding="12dp"
+                    android:layout_marginBottom="20dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="視訊連線志工協助">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📹"
+                            android:textSize="32sp"
+                            android:textColor="@color/white" />
+
+                    <TextView
+                        android:id="@+id/videoCallButtonText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="視訊連線"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="6dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
