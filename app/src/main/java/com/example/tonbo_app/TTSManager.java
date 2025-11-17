@@ -211,11 +211,17 @@ public class TTSManager {
         // 強制確保TTS已初始化
         ensureTTSInitialized();
         
+        // 根據當前語言選擇對應的文本
         String textToSpeak = currentLanguage.equals("english") ?
                 (englishText != null ? englishText : cantoneseText) :
                 (cantoneseText != null ? cantoneseText : englishText);
         
         Log.d(TAG, "🔊 選擇的語音文本: " + textToSpeak);
+        
+        // 確保TTS語言設置與當前語言一致（在播報前設置）
+        if (textToSpeech != null && isInitialized) {
+            setLanguage(currentLanguage);
+        }
         
         // 如果TTS未初始化，等待初始化完成
         if (!isInitialized || textToSpeech == null) {
