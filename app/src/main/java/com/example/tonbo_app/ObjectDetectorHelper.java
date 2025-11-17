@@ -133,7 +133,7 @@ public class ObjectDetectorHelper {
     private long lastDetectionTime = 0;
     
     // 多幀融合穩定性過濾（提高準確率）
-    private static final int STABILITY_FRAME_COUNT = 3;  // 需要連續3幀檢測到才認為穩定
+    private static final int STABILITY_FRAME_COUNT = 2;  // 需要連續2幀檢測到才認為穩定（降低以提高檢測率）
     private final Map<String, Integer> detectionStability = new HashMap<>();  // 物體標籤 -> 連續檢測次數
     private final Map<String, Float> detectionConfidenceSum = new HashMap<>();  // 物體標籤 -> 置信度累加
     private final Map<String, android.graphics.RectF> detectionBoundingBox = new HashMap<>();  // 物體標籤 -> 邊界框
@@ -579,14 +579,16 @@ public class ObjectDetectorHelper {
         }
         
         // 檢查邊界框面積是否合理（不能太小，避免噪聲檢測）
+        // 降低最小面積要求，讓小型物體（如瓶子）更容易被檢測到
         float area = width * height;
-        if (area < 0.001f) {  // 面積小於0.1%的檢測視為噪聲
+        if (area < 0.0005f) {  // 面積小於0.05%的檢測視為噪聲（降低閾值以提高檢測率）
             return false;
         }
         
         // 檢查寬高比是否合理（避免極端比例）
+        // 放寬寬高比限制，讓細長物體（如瓶子）更容易被檢測到
         float aspectRatio = width / height;
-        if (aspectRatio < 0.1f || aspectRatio > 10.0f) {
+        if (aspectRatio < 0.05f || aspectRatio > 20.0f) {  // 放寬限制（從0.1-10改為0.05-20）
             return false;
         }
         

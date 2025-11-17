@@ -1211,6 +1211,9 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         Log.d(TAG, "🔊 當前語言: " + currentLanguage);
         
         if (ttsManager != null && speechText != null && !speechText.isEmpty()) {
+            // 確保TTS語言設置正確
+            ttsManager.setLanguageSilently(currentLanguage);
+            
             // 直接播報檢測結果，不添加前綴，讓語音更簡潔
             Log.d(TAG, "🔊 立即播報檢測結果: " + speechText);
             
@@ -1223,10 +1226,12 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 // 英文模式：speechText 應該是英文，直接使用
                 englishText = speechText;
                 cantoneseText = translateToChinese(speechText);
+                Log.d(TAG, "🔊 英文模式 - 英文文本: " + englishText);
             } else {
                 // 中文模式：speechText 應該是中文，直接使用
                 cantoneseText = speechText;
                 englishText = translateToEnglish(speechText);
+                Log.d(TAG, "🔊 中文模式 - 中文文本: " + cantoneseText);
             }
             
             Log.d(TAG, "🔊 粵語文本: " + cantoneseText);
@@ -1240,7 +1245,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 vibrationManager.vibrateClick();
             }
         } else {
-            Log.w(TAG, "❌ 立即語音播報條件不滿足");
+            Log.w(TAG, "❌ 立即語音播報條件不滿足 - ttsManager: " + (ttsManager != null) + 
+                  ", speechText: " + speechText);
         }
     }
     
