@@ -34,23 +34,6 @@
             android:focusable="true"
             android:minHeight="48dp" />
 
-        <!-- 緊急求助設置按鈕 - 現代化設計 -->
-        <Button
-            android:id="@+id/emergencySettingsButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:text="🚨"
-            android:textSize="24sp"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/button_emergency_background"
-            android:backgroundTint="@null"
-            android:contentDescription="@string/emergency_settings_desc"
-            android:layout_marginEnd="12dp"
-            android:minHeight="64dp"
-            android:minWidth="64dp"
-            android:elevation="4dp"
-            android:stateListAnimator="@null" />
-
         <!-- 系統設定按鈕 - 現代化設計 -->
         <Button
             android:id="@+id/systemSettingsButton"

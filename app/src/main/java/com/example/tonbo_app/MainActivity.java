@@ -13,8 +13,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends BaseAccessibleActivity {
+    private static final String TAG = "MainActivity";
+    
     private ViewPager2 viewPager;
     private TextView pageIndicator;
     private FunctionPagerAdapter pagerAdapter;
@@ -24,6 +27,12 @@ public class MainActivity extends BaseAccessibleActivity {
     private FunctionListFragment.OnFunctionClickListener functionClickListener;
     private ViewPager2.OnPageChangeCallback pageChangeCallback;
     private Handler mainHandler;
+    
+    // 緊急按鈕長按檢測
+    private long emergencyButtonPressStartTime = 0;
+    private boolean isEmergencyButtonPressed = false;
+    private Handler emergencyButtonHandler = new Handler(Looper.getMainLooper());
+    private Runnable emergencyButtonRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,17 +69,17 @@ public class MainActivity extends BaseAccessibleActivity {
         // 播報頁面標題和功能列表
         String cantoneseText = "瞳伴主頁。歡迎使用智能視覺助手。" +
                 "當前有七個主要功能：環境識別、閱讀助手、語音命令、尋找物品、即時協助、出行協助、手勢管理。" +
-                "右上角有三個按鈕：緊急設置、系統設定、語言切換。" +
+                "右上角有兩個按鈕：系統設定、語言切換。" +
                 "底部有緊急求助按鈕，長按三秒發送求助信息。" +
                 "請點擊選擇功能或使用語音命令控制。";
         String englishText = "Tonbo Home. Welcome to the smart visual assistant. " +
                 "Seven main functions available: Environment Recognition, Document Assistant, Voice Command, Find Items, Live Assistance, Travel Assistant, Gesture Management. " +
-                "Three buttons on top right: Emergency Settings, System Settings, Language Switch. " +
+                "Two buttons on top right: System Settings, Language Switch. " +
                 "Emergency button at bottom, long press for 3 seconds to send help request. " +
                 "Please tap to select function or use voice command control.";
         String mandarinText = "瞳伴主页。欢迎使用智能视觉助手。" +
                 "当前有七个主要功能：环境识别、阅读助手、语音命令、寻找物品、即时协助、出行协助、手势管理。" +
-                "右上角有三个按钮：紧急设置、系统设定、语言切换。" +
+                "右上角有两个按钮：系统设定、语言切换。" +
                 "底部有紧急求助按钮，长按三秒发送求助信息。" +
                 "请点击选择功能或使用语音命令控制。";
         
@@ -109,25 +118,60 @@ public class MainActivity extends BaseAccessibleActivity {
         pageIndicator = findViewById(R.id.pageIndicator);
         emergencyButton = findViewById(R.id.emergencyButton);
 
-        // 設置緊急按鈕
-        emergencyButton.setOnLongClickListener(v -> {
-            emergencyManager.triggerEmergencyAlert();
-            return true;
+        // 設置緊急按鈕 - 實現真正的3秒長按檢測
+        emergencyButton.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case android.view.MotionEvent.ACTION_DOWN:
+                    // 按下開始計時
+                    isEmergencyButtonPressed = true;
+                    emergencyButtonPressStartTime = System.currentTimeMillis();
+                    
+                    // 開始震動反饋（輕微震動，提示用戶已按下）
+                    vibrationManager.vibrateClick();
+                    
+                    // 播報提示（不中斷，讓用戶知道需要長按）
+                    String cantoneseHint = "緊急按鈕已按下，請繼續長按三秒";
+                    String englishHint = "Emergency button pressed, please continue holding for 3 seconds";
+                    ttsManager.speak(cantoneseHint, englishHint, false);
+                    
+                    // 設置3秒後顯示聯絡人選擇對話框
+                    emergencyButtonRunnable = () -> {
+                        if (isEmergencyButtonPressed) {
+                            // 3秒已到，顯示聯絡人選擇對話框
+                            Log.d(TAG, "緊急按鈕長按3秒，顯示聯絡人選擇");
+                            showEmergencyContactSelectionDialog();
+                            isEmergencyButtonPressed = false;
+                        }
+                    };
+                    emergencyButtonHandler.postDelayed(emergencyButtonRunnable, AppConstants.EMERGENCY_LONG_PRESS_DURATION_MS);
+                    
+                    return true;
+                    
+                case android.view.MotionEvent.ACTION_UP:
+                case android.view.MotionEvent.ACTION_CANCEL:
+                    // 釋放按鈕
+                    long pressDuration = System.currentTimeMillis() - emergencyButtonPressStartTime;
+                    
+                    if (isEmergencyButtonPressed) {
+                        // 取消3秒觸發
+                        if (emergencyButtonRunnable != null) {
+                            emergencyButtonHandler.removeCallbacks(emergencyButtonRunnable);
+                        }
+                        
+                        if (pressDuration < AppConstants.EMERGENCY_LONG_PRESS_DURATION_MS) {
+                            // 短按：提示用戶需要長按3秒
+                            vibrationManager.vibrateClick();
+                            String cantoneseText = "這是緊急求助按鈕，請長按三秒發送求助信息。點擊右上角紅色緊急按鈕可配置緊急聯絡人";
+                            String englishText = "This is the emergency button. Please long press for 3 seconds to send help request. Tap the red emergency button on top right to configure emergency contacts";
+                            announceInfo(cantoneseText);
+                        }
+                    }
+                    
+                    isEmergencyButtonPressed = false;
+                    return true;
+            }
+            return false;
         });
-
-        emergencyButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            announceInfo("這是緊急求助按鈕，請長按三秒發送求助信息。點擊右上角紅色緊急按鈕可配置緊急聯絡人");
-        });
-
-        // 緊急求助設置按鈕
-        Button emergencySettingsButton = findViewById(R.id.emergencySettingsButton);
-        if (emergencySettingsButton != null) {
-            emergencySettingsButton.setOnClickListener(v -> {
-                vibrationManager.vibrateClick();
-                openEmergencySettings();
-            });
-        }
 
         // 系統設定按鈕
         Button systemSettingsButton = findViewById(R.id.systemSettingsButton);
@@ -793,15 +837,100 @@ public class MainActivity extends BaseAccessibleActivity {
         }
     }
     
-    public void openEmergencySettings() {
-        try {
-            Intent intent = new Intent(MainActivity.this, EmergencySettingsActivity.class);
-            intent.putExtra("language", currentLanguage);
-            startActivity(intent);
-        } catch (Exception e) {
-            announceError(getString(R.string.emergency_settings_unavailable));
-            Log.e("MainActivity", "打開緊急設置失敗: " + e.getMessage());
+    /**
+     * 顯示緊急聯絡人選擇對話框
+     */
+    private void showEmergencyContactSelectionDialog() {
+        List<String> contacts = emergencyManager.getEmergencyContacts();
+        
+        if (contacts == null || contacts.isEmpty()) {
+            // 沒有聯絡人，直接發送給所有（默認999）
+            String cantoneseText = "沒有設置緊急聯絡人，將撥打緊急服務電話";
+            String englishText = "No emergency contacts set, will call emergency service";
+            ttsManager.speak(cantoneseText, englishText, true);
+            emergencyManager.triggerEmergencyAlert(null);
+            return;
         }
+        
+        // 創建多選對話框
+        boolean[] checkedItems = new boolean[contacts.size()];
+        String[] contactArray = contacts.toArray(new String[0]);
+        
+        // 默認選中所有聯絡人
+        for (int i = 0; i < checkedItems.length; i++) {
+            checkedItems[i] = true;
+        }
+        
+        // 根據當前語言設置對話框標題和按鈕文字
+        String dialogTitle;
+        String positiveButton;
+        String negativeButton;
+        
+        if ("english".equals(currentLanguage)) {
+            dialogTitle = "Select Emergency Contacts";
+            positiveButton = "Send";
+            negativeButton = "Cancel";
+        } else if ("mandarin".equals(currentLanguage)) {
+            dialogTitle = "選擇緊急聯絡人";
+            positiveButton = "發送";
+            negativeButton = "取消";
+        } else {
+            dialogTitle = "選擇緊急聯絡人";
+            positiveButton = "發送";
+            negativeButton = "取消";
+        }
+        
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle(dialogTitle);
+        
+        // 播報可選聯絡人
+        String cantoneseText = "請選擇要聯繫的緊急聯絡人，當前有" + contacts.size() + "個聯絡人";
+        String englishText = "Please select emergency contacts to notify, you have " + contacts.size() + " contacts";
+        ttsManager.speak(cantoneseText, englishText, true);
+        
+        builder.setMultiChoiceItems(contactArray, checkedItems, (dialog, which, isChecked) -> {
+            checkedItems[which] = isChecked;
+        });
+        
+        builder.setPositiveButton(positiveButton, (dialog, which) -> {
+            // 收集選中的聯絡人
+            List<String> selectedContacts = new java.util.ArrayList<>();
+            for (int i = 0; i < checkedItems.length; i++) {
+                if (checkedItems[i]) {
+                    selectedContacts.add(contacts.get(i));
+                }
+            }
+            
+            if (selectedContacts.isEmpty()) {
+                // 沒有選擇任何聯絡人，提示用戶
+                String cantoneseText2 = "未選擇任何聯絡人，將撥打緊急服務電話";
+                String englishText2 = "No contacts selected, will call emergency service";
+                ttsManager.speak(cantoneseText2, englishText2, true);
+                emergencyManager.triggerEmergencyAlert(null);
+            } else {
+                // 發送給選中的聯絡人
+                vibrationManager.vibrateClick();
+                emergencyManager.triggerEmergencyAlert(selectedContacts);
+            }
+        });
+        
+        builder.setNegativeButton(negativeButton, (dialog, which) -> {
+            // 取消操作
+            vibrationManager.vibrateClick();
+            String cantoneseText2 = "已取消緊急求助";
+            String englishText2 = "Emergency request cancelled";
+            ttsManager.speak(cantoneseText2, englishText2, false);
+        });
+        
+        builder.setCancelable(true);
+        builder.setOnCancelListener(dialog -> {
+            String cantoneseText2 = "已取消緊急求助";
+            String englishText2 = "Emergency request cancelled";
+            ttsManager.speak(cantoneseText2, englishText2, false);
+        });
+        
+        android.app.AlertDialog dialog = builder.create();
+        dialog.show();
     }
     
     @Override
@@ -824,6 +953,18 @@ public class MainActivity extends BaseAccessibleActivity {
             mainHandler.removeCallbacksAndMessages(null);
             mainHandler = null;
         }
+        
+        // 清理緊急按鈕 Handler
+        if (emergencyButtonHandler != null) {
+            if (emergencyButtonRunnable != null) {
+                emergencyButtonHandler.removeCallbacks(emergencyButtonRunnable);
+            }
+            emergencyButtonHandler.removeCallbacksAndMessages(null);
+            emergencyButtonHandler = null;
+        }
+        
+        // 重置緊急按鈕狀態
+        isEmergencyButtonPressed = false;
         
         // 註銷 ViewPager2 的頁面變更監聽器
         if (viewPager != null && pageChangeCallback != null) {

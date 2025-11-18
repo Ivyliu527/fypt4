@@ -222,9 +222,9 @@
 
             </LinearLayout>
 
-            <!-- 測試和完成按鈕卡片 -->
+            <!-- 完成設置按鈕卡片 - 只在設置未完成時顯示 -->
             <LinearLayout
-                android:id="@+id/testSection"
+                android:id="@+id/setupSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -232,46 +232,7 @@
                 android:padding="24dp"
                 android:layout_marginBottom="20dp"
                 android:elevation="4dp"
-                android:minHeight="300dp">
-
-                <!-- 標題 -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/test_emergency_function"
-                    android:textColor="@color/primary_blue"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="20dp"
-                    android:minHeight="32dp"
-                    android:contentDescription="測試緊急功能標題" />
-
-                <!-- 測試按鈕 - 大紅色按鈕，突出顯示 -->
-                <Button
-                    android:id="@+id/testEmergencyButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="90dp"
-                    android:text="@string/test_emergency_assistance"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/white"
-                    android:background="@drawable/emergency_button_background"
-                    android:backgroundTint="@null"
-                    android:minHeight="90dp"
-                    android:contentDescription="@string/test_emergency_button_desc"
-                    android:elevation="6dp"
-                    android:layout_marginBottom="16dp" />
-
-                <!-- 提示文字 -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/test_mode_warning"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="16sp"
-                    android:lineSpacingMultiplier="1.4"
-                    android:layout_marginBottom="24dp"
-                    android:contentDescription="測試模式說明" />
+                android:visibility="gone">
 
                 <!-- 完成設置按鈕 - 大按鈕 -->
                 <Button
