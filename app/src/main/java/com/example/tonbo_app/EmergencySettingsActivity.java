@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * 緊急求助設置頁面
- * 用於配置緊急聯絡人、測試緊急功能
+ * 用於配置緊急聯絡人
  */
 public class EmergencySettingsActivity extends BaseAccessibleActivity {
     private static final String TAG = "EmergencySettingsAct";
@@ -34,13 +34,13 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
     private List<String> emergencyContacts;
     private EditText newContactEditText;
     private Button addContactButton;
-    private Button testEmergencyButton;
     private android.widget.ImageButton backButton;
     private Button setupCompleteButton;
     private TextView messagePreviewText;
     private LinearLayout addContactSection;
     private LinearLayout contactsSection;
     private LinearLayout messageSection;
+    private LinearLayout setupSection;
     private boolean setupCompleted = false;
     
     @Override
@@ -74,6 +74,7 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         addContactSection = findViewById(R.id.addContactSection);
         contactsSection = findViewById(R.id.contactsSection);
         messageSection = findViewById(R.id.messageSection);
+        setupSection = findViewById(R.id.setupSection);
         
         // 聯絡人列表
         contactsRecyclerView = findViewById(R.id.contactsRecyclerView);
@@ -85,9 +86,6 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         newContactEditText.setContentDescription(getString(R.string.enter_phone_number_desc));
         
         addContactButton = findViewById(R.id.addContactButton);
-        
-        // 測試按鈕
-        testEmergencyButton = findViewById(R.id.testEmergencyButton);
         
         // 設置完成按鈕
         setupCompleteButton = findViewById(R.id.setupCompleteButton);
@@ -104,8 +102,6 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         
         addContactButton.setOnClickListener(v -> addEmergencyContact());
         
-        testEmergencyButton.setOnClickListener(v -> testEmergencyFunction());
-        
         setupCompleteButton.setOnClickListener(v -> completeSetup());
         
         // 設置內容描述
@@ -115,7 +111,6 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
     private void setContentDescriptions() {
         backButton.setContentDescription(getString(R.string.back_button_desc_emergency));
         addContactButton.setContentDescription(getString(R.string.add_contact_button_desc));
-        testEmergencyButton.setContentDescription(getString(R.string.test_emergency_button_desc));
         setupCompleteButton.setContentDescription(getString(R.string.setup_complete_button_desc));
         contactsRecyclerView.setContentDescription(getString(R.string.contacts_list_desc));
     }
@@ -231,21 +226,6 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         return phoneNumber.matches("^[+]?[0-9\\-\\s()]{8,}$");
     }
     
-    private void testEmergencyFunction() {
-        vibrationManager.vibrateClick();
-        
-        // 顯示確認對話框
-        String cantoneseText = getString(R.string.test_emergency_confirmation);
-        String englishText = "About to test emergency function, this will not send actual help request, just test voice and vibration. Continue?";
-        
-        announceInfo(cantoneseText);
-        
-        // 延遲執行測試
-        new android.os.Handler().postDelayed(() -> {
-            emergencyManager.testEmergencyAlert();
-        }, 2000);
-    }
-    
     private void saveSettings() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -263,31 +243,20 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
     }
     
     private void updateUIForSetupStatus() {
+        // 標題始終保持為"緊急求助設置"，不因設置完成而改變
+        TextView titleText = findViewById(R.id.titleText);
+        titleText.setText(getString(R.string.emergency_settings_page_title));
+        titleText.setContentDescription(getString(R.string.emergency_settings_page_desc));
+        
+        // 添加聯絡人區域始終顯示，允許用戶隨時添加/編輯聯絡人
+        addContactSection.setVisibility(View.VISIBLE);
+        
         if (setupCompleted) {
-            // 設置已完成，隱藏添加聯絡人區域，顯示簡化界面
-            addContactSection.setVisibility(View.GONE);
-            setupCompleteButton.setVisibility(View.GONE);
-            
-            // 更新標題
-            TextView titleText = findViewById(R.id.titleText);
-            titleText.setText(getString(R.string.emergency_setup_complete_title));
-            titleText.setContentDescription(getString(R.string.emergency_setup_complete_desc));
-            
-            // 更新測試按鈕文字
-            testEmergencyButton.setText(getString(R.string.test_emergency_button_complete));
-            
+            // 設置已完成，只隱藏完成設置按鈕區域
+            setupSection.setVisibility(View.GONE);
         } else {
-            // 設置未完成，顯示完整設置界面
-            addContactSection.setVisibility(View.VISIBLE);
-            setupCompleteButton.setVisibility(View.VISIBLE);
-            
-            // 更新標題
-            TextView titleText = findViewById(R.id.titleText);
-            titleText.setText(getString(R.string.emergency_settings_page_title));
-            titleText.setContentDescription(getString(R.string.emergency_settings_page_desc));
-            
-            // 更新測試按鈕文字
-            testEmergencyButton.setText(getString(R.string.test_emergency_button_incomplete));
+            // 設置未完成，顯示完成設置按鈕
+            setupSection.setVisibility(View.VISIBLE);
         }
     }
     
@@ -334,8 +303,8 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         // 延遲播報，確保語言設置生效
         new android.os.Handler().postDelayed(() -> {
             if (setupCompleted) {
-                String cantoneseText = "緊急求助已設置完成。當前有" + emergencyContacts.size() + "個緊急聯絡人。可以測試緊急功能。";
-                String englishText = "Emergency setup completed. Currently have " + emergencyContacts.size() + " emergency contacts. You can test emergency function.";
+                String cantoneseText = "緊急求助已設置完成。當前有" + emergencyContacts.size() + "個緊急聯絡人。";
+                String englishText = "Emergency setup completed. Currently have " + emergencyContacts.size() + " emergency contacts.";
                 ttsManager.speak(cantoneseText, englishText, true);
             } else {
                 String cantoneseText = "緊急求助設置頁面。當前有" + emergencyContacts.size() + "個緊急聯絡人。請添加聯絡人並完成設置。";

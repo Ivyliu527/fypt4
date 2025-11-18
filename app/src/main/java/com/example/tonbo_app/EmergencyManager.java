@@ -45,27 +45,48 @@ public class EmergencyManager {
     }
     
     public void triggerEmergencyAlert() {
-        Log.d(TAG, "緊急求助觸發");
+        triggerEmergencyAlert(null); // 發送給所有聯絡人
+    }
+    
+    /**
+     * 觸發緊急求助（可選擇特定聯絡人）
+     * @param selectedContacts 要發送給的聯絡人列表，如果為null則發送給所有聯絡人
+     */
+    public void triggerEmergencyAlert(List<String> selectedContacts) {
+        Log.d(TAG, "緊急求助觸發，選擇的聯絡人: " + (selectedContacts != null ? selectedContacts.toString() : "全部"));
+        
+        // 確定要發送的聯絡人列表
+        List<String> contactsToNotify = (selectedContacts != null && !selectedContacts.isEmpty()) 
+            ? selectedContacts 
+            : emergencyContacts;
         
         // 播放緊急提示音
-        String cantoneseText = "緊急求助已發送！請保持冷靜，協助正在趕來。已通知緊急聯絡人並撥打緊急服務。";
-        String englishText = "Emergency alert sent! Please stay calm, assistance is on the way. Emergency contacts have been notified and emergency services have been called.";
+        String cantoneseText = "緊急求助已發送！請保持冷靜，協助正在趕來。已通知" + contactsToNotify.size() + "個緊急聯絡人。";
+        String englishText = "Emergency alert sent! Please stay calm, assistance is on the way. " + contactsToNotify.size() + " emergency contacts have been notified.";
         ttsManager.speak(cantoneseText, englishText, true);
         
         // 強烈震動提醒
         vibrationManager.vibrateEmergencyPattern();
         
-        // 發送緊急短信
-        sendEmergencySMS();
+        // 發送緊急短信（只發送給選擇的聯絡人）
+        sendEmergencySMS(contactsToNotify);
         
-        // 撥打緊急電話
-        callEmergencyService();
+        // 撥打緊急電話（撥打給選中的聯絡人，如果選擇了999則撥打999，否則撥打第一個選中的聯絡人）
+        callEmergencyService(contactsToNotify);
         
         // 記錄緊急事件
         logEmergencyEvent();
     }
     
     private void sendEmergencySMS() {
+        sendEmergencySMS(emergencyContacts); // 發送給所有聯絡人
+    }
+    
+    /**
+     * 發送緊急短信給指定聯絡人
+     * @param contactsToNotify 要發送給的聯絡人列表
+     */
+    private void sendEmergencySMS(List<String> contactsToNotify) {
         try {
             SmsManager smsManager = SmsManager.getDefault();
             String message = emergencyMessage;
@@ -73,11 +94,28 @@ public class EmergencyManager {
                 message = emergencyMessageEn;
             }
             
-            for (String contact : emergencyContacts) {
-                if (contact.matches("\\d+")) { // 只發送給電話號碼
-                    smsManager.sendTextMessage(contact, null, message, null, null);
-                    Log.d(TAG, "緊急短信已發送給: " + contact);
+            int sentCount = 0;
+            for (String contact : contactsToNotify) {
+                // 清理電話號碼（移除空格、連字符等）
+                String cleanContact = contact.replaceAll("[\\s\\-()]", "");
+                if (cleanContact.matches("^[+]?\\d+$")) { // 只發送給有效的電話號碼
+                    try {
+                        smsManager.sendTextMessage(cleanContact, null, message, null, null);
+                        Log.d(TAG, "緊急短信已發送給: " + cleanContact);
+                        sentCount++;
+                    } catch (Exception e) {
+                        Log.e(TAG, "發送給 " + cleanContact + " 失敗: " + e.getMessage());
+                    }
+                } else {
+                    Log.w(TAG, "跳過無效的聯絡人號碼: " + contact);
                 }
+            }
+            
+            if (sentCount == 0) {
+                Log.w(TAG, "沒有成功發送任何緊急短信");
+                ttsManager.speakError("緊急短信發送失敗，請手動聯繫緊急服務");
+            } else {
+                Log.d(TAG, "成功發送 " + sentCount + " 條緊急短信");
             }
         } catch (Exception e) {
             Log.e(TAG, "發送緊急短信失敗: " + e.getMessage());
@@ -86,33 +124,83 @@ public class EmergencyManager {
     }
     
     private void callEmergencyService() {
+        callEmergencyService(null); // 默認撥打999
+    }
+    
+    /**
+     * 撥打緊急電話給指定聯絡人
+     * @param contactsToCall 要撥打的聯絡人列表，如果為null或空則撥打999
+     */
+    private void callEmergencyService(List<String> contactsToCall) {
         try {
-            // 撥打緊急服務電話
-            String emergencyNumber = "tel:999";
-            Intent callIntent = new Intent(Intent.ACTION_CALL);
-            callIntent.setData(Uri.parse(emergencyNumber));
-            callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            String phoneNumber = null;
             
-            // 注意：需要CALL_PHONE權限
-            context.startActivity(callIntent);
-            Log.d(TAG, "緊急電話已撥打");
-            
-        } catch (SecurityException e) {
-            Log.e(TAG, "撥打緊急電話失敗，缺少權限: " + e.getMessage());
-            // 嘗試使用ACTION_DIAL（不需要權限）
-            try {
-                Intent dialIntent = new Intent(Intent.ACTION_DIAL);
-                dialIntent.setData(Uri.parse("tel:999"));
-                dialIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(dialIntent);
-                ttsManager.speak("正在撥打緊急電話，請確認撥號", "Calling emergency service, please confirm dial");
-            } catch (Exception ex) {
-                Log.e(TAG, "撥號也失敗: " + ex.getMessage());
-                ttsManager.speakError("無法撥打緊急電話，請手動撥打999");
+            // 確定要撥打的電話號碼
+            if (contactsToCall != null && !contactsToCall.isEmpty()) {
+                // 優先查找999（緊急服務）
+                for (String contact : contactsToCall) {
+                    String cleanContact = contact.replaceAll("[\\s\\-()]", "");
+                    if (cleanContact.equals("999") || cleanContact.equals("+852999") || cleanContact.equals("852999")) {
+                        phoneNumber = "999";
+                        break;
+                    }
+                }
+                
+                // 如果沒有999，使用第一個有效的電話號碼
+                if (phoneNumber == null) {
+                    for (String contact : contactsToCall) {
+                        String cleanContact = contact.replaceAll("[\\s\\-()]", "");
+                        if (cleanContact.matches("^[+]?\\d+$")) {
+                            phoneNumber = cleanContact;
+                            break;
+                        }
+                    }
+                }
             }
+            
+            // 如果沒有找到有效的電話號碼，使用默認的999
+            if (phoneNumber == null) {
+                phoneNumber = "999";
+            }
+            
+            String phoneUri = "tel:" + phoneNumber;
+            Log.d(TAG, "準備撥打緊急電話: " + phoneNumber);
+            
+            // 嘗試直接撥打（需要CALL_PHONE權限）
+            try {
+                Intent callIntent = new Intent(Intent.ACTION_CALL);
+                callIntent.setData(Uri.parse(phoneUri));
+                callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(callIntent);
+                Log.d(TAG, "緊急電話已撥打: " + phoneNumber);
+                
+                // 播報撥打信息
+                String cantoneseText = "正在撥打緊急電話：" + phoneNumber;
+                String englishText = "Calling emergency number: " + phoneNumber;
+                ttsManager.speak(cantoneseText, englishText, false);
+                
+            } catch (SecurityException e) {
+                Log.e(TAG, "撥打緊急電話失敗，缺少權限: " + e.getMessage());
+                // 嘗試使用ACTION_DIAL（不需要權限，只打開撥號界面）
+                try {
+                    Intent dialIntent = new Intent(Intent.ACTION_DIAL);
+                    dialIntent.setData(Uri.parse(phoneUri));
+                    dialIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(dialIntent);
+                    
+                    String cantoneseText = "正在打開撥號界面，請確認撥打：" + phoneNumber;
+                    String englishText = "Opening dialer, please confirm calling: " + phoneNumber;
+                    ttsManager.speak(cantoneseText, englishText, false);
+                    Log.d(TAG, "已打開撥號界面: " + phoneNumber);
+                } catch (Exception ex) {
+                    Log.e(TAG, "打開撥號界面失敗: " + ex.getMessage());
+                    ttsManager.speakError("無法撥打緊急電話，請手動撥打" + phoneNumber);
+                }
+            }
+            
         } catch (Exception e) {
             Log.e(TAG, "撥打緊急電話失敗: " + e.getMessage());
-            ttsManager.speakError("撥打緊急電話失敗，請手動撥打999");
+            ttsManager.speakError("撥打緊急電話失敗，請手動撥打");
         }
     }
     
