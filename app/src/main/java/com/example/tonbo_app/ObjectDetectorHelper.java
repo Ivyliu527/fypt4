@@ -138,6 +138,24 @@ public class ObjectDetectorHelper {
     private final Map<String, Float> detectionConfidenceSum = new HashMap<>();  // 物體標籤 -> 置信度累加
     private final Map<String, android.graphics.RectF> detectionBoundingBox = new HashMap<>();  // 物體標籤 -> 邊界框
     
+    /**
+     * 物體優先級枚舉 - 用於智能語音播報優先級排序
+     */
+    public enum ObjectPriority {
+        CRITICAL(0),   // 關鍵優先級：人、車、障礙物（安全相關）
+        HIGH(1),       // 高優先級：交通標誌、門、樓梯
+        MEDIUM(2),     // 中等優先級：家具、電子產品
+        LOW(3);        // 低優先級：裝飾品、小物件
+        
+        private final int value;
+        ObjectPriority(int value) {
+            this.value = value;
+        }
+        public int getValue() {
+            return value;
+        }
+    }
+    
     // COCO類別中文映射
     private static final Map<String, String> LABEL_MAP_ZH = new HashMap<>();
     
@@ -408,8 +426,21 @@ public class ObjectDetectorHelper {
         // 應用多幀融合穩定性過濾（提高準確率）
         results = applyStabilityFilter(results);
         
-        // 按置信度排序
-        Collections.sort(results, (a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
+        // 智能排序：先按優先級排序，再按置信度排序
+        // 這樣可以確保安全相關物體（人、車）優先播報
+        Collections.sort(results, (a, b) -> {
+            ObjectPriority priorityA = getObjectPriority(a.getLabel());
+            ObjectPriority priorityB = getObjectPriority(b.getLabel());
+            
+            // 先比較優先級（數值越小優先級越高）
+            int priorityCompare = Integer.compare(priorityA.getValue(), priorityB.getValue());
+            if (priorityCompare != 0) {
+                return priorityCompare;
+            }
+            
+            // 優先級相同時，按置信度排序（置信度高的在前）
+            return Float.compare(b.getConfidence(), a.getConfidence());
+        });
         
         // 限制結果數量
         if (results.size() > AppConstants.MAX_RESULTS) {
@@ -797,33 +828,40 @@ public class ObjectDetectorHelper {
         StringBuilder sb = new StringBuilder();
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
         
+        Log.d(TAG, "🔊 開始格式化語音文本，當前語言: " + currentLang + ", 物體數量: " + results.size());
+        
         // 簡潔的物體描述，最多2個物體
         int maxObjects = Math.min(results.size(), 2);
         
-        Log.d(TAG, "開始格式化語音文本，物體數量: " + results.size() + ", 將播報: " + maxObjects);
+        Log.d(TAG, "🔊 將播報 " + maxObjects + " 個物體");
         
         for (int i = 0; i < maxObjects; i++) {
             DetectionResult result = results.get(i);
             
             // 獲取物體名稱 - 根據當前語言選擇對應的標籤
             String objectLabel = getObjectLabelForCurrentLanguage(result);
+            Log.d(TAG, "🔊 物體 " + (i + 1) + " 原始標籤 - 英文: [" + result.getLabel() + "], 中文: [" + result.getLabelZh() + "]");
+            Log.d(TAG, "🔊 物體 " + (i + 1) + " 當前語言標籤: [" + objectLabel + "]");
+            
+            if (objectLabel == null || objectLabel.trim().isEmpty()) {
+                Log.w(TAG, "⚠️ 物體 " + (i + 1) + " 標籤為空，跳過");
+                continue;
+            }
+            
             sb.append(objectLabel);
-            Log.d(TAG, "物體 " + (i + 1) + ": " + objectLabel);
             
             // 添加位置描述（左/右/中央）
             android.graphics.RectF bbox = result.getBoundingBox();
             if (bbox != null) {
-                Log.d(TAG, "邊界框: left=" + bbox.left + ", top=" + bbox.top + 
-                      ", right=" + bbox.right + ", bottom=" + bbox.bottom);
                 String positionDesc = getPositionDescription(bbox);
                 if (positionDesc != null && !positionDesc.isEmpty()) {
                     sb.append(positionDesc);
-                    Log.d(TAG, "添加位置描述: " + positionDesc);
+                    Log.d(TAG, "🔊 物體 " + (i + 1) + " 添加位置描述: [" + positionDesc + "]");
                 } else {
-                    Log.w(TAG, "位置描述為空或null");
+                    Log.w(TAG, "⚠️ 物體 " + (i + 1) + " 位置描述為空或null");
                 }
             } else {
-                Log.w(TAG, "邊界框為null，無法添加位置描述");
+                Log.w(TAG, "⚠️ 物體 " + (i + 1) + " 邊界框為null，無法添加位置描述");
             }
             
             // 分隔符
@@ -845,8 +883,13 @@ public class ObjectDetectorHelper {
             }
         }
         
-        String finalText = sb.toString();
-        Log.d(TAG, "最終語音文本: " + finalText);
+        String finalText = sb.toString().trim();
+        Log.d(TAG, "🔊 最終語音文本: [" + finalText + "]");
+        
+        if (finalText.isEmpty()) {
+            Log.e(TAG, "❌ 最終語音文本為空！");
+        }
+        
         return finalText;
     }
     
@@ -923,25 +966,50 @@ public class ObjectDetectorHelper {
     private String getObjectLabelForCurrentLanguage(DetectionResult result) {
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
         
+        Log.d(TAG, "🔊 getObjectLabelForCurrentLanguage - 當前語言: " + currentLang);
+        Log.d(TAG, "🔊 檢測結果 - 英文標籤: [" + result.getLabel() + "], 中文標籤: [" + result.getLabelZh() + "]");
+        
         switch (currentLang) {
             case "english":
-                // 英文模式：優先使用英文標籤，如果為空則從中文標籤映射回英文
+                // 英文模式：優先使用英文標籤，如果為空或包含中文字符則從中文標籤映射回英文
                 String englishLabel = result.getLabel();
+                
+                // 檢查英文標籤是否包含中文字符（某些檢測器可能返回中文）
+                boolean containsChinese = false;
                 if (englishLabel != null && !englishLabel.trim().isEmpty()) {
-                    return englishLabel;
-                }
-                // 如果英文標籤為空，嘗試從中文標籤映射回英文
-                String chineseLabel = result.getLabelZh();
-                if (chineseLabel != null && !chineseLabel.trim().isEmpty()) {
-                    // 從中文映射回英文（反向查找）
-                    for (Map.Entry<String, String> entry : LABEL_MAP_ZH.entrySet()) {
-                        if (entry.getValue().equals(chineseLabel)) {
-                            return entry.getKey();
+                    // 檢查是否包含中文字符
+                    for (char c : englishLabel.toCharArray()) {
+                        if (c >= 0x4E00 && c <= 0x9FFF) { // 中文字符範圍
+                            containsChinese = true;
+                            Log.d(TAG, "⚠️ 英文標籤包含中文字符: " + englishLabel);
+                            break;
                         }
                     }
                 }
-                // 如果都找不到，返回英文標籤（即使為空）
-                return englishLabel != null ? englishLabel : "object";
+                
+                // 如果英文標籤有效且不包含中文，直接返回
+                if (englishLabel != null && !englishLabel.trim().isEmpty() && !containsChinese) {
+                    Log.d(TAG, "✅ 使用英文標籤: " + englishLabel);
+                    return englishLabel;
+                }
+                
+                // 如果英文標籤為空或包含中文，嘗試從中文標籤映射回英文
+                String chineseLabel = result.getLabelZh();
+                if (chineseLabel != null && !chineseLabel.trim().isEmpty()) {
+                    Log.d(TAG, "🔍 嘗試從中文標籤映射回英文: " + chineseLabel);
+                    // 從中文映射回英文（反向查找）
+                    for (Map.Entry<String, String> entry : LABEL_MAP_ZH.entrySet()) {
+                        if (entry.getValue().equals(chineseLabel)) {
+                            Log.d(TAG, "✅ 映射成功: " + chineseLabel + " -> " + entry.getKey());
+                            return entry.getKey();
+                        }
+                    }
+                    Log.w(TAG, "⚠️ 無法映射中文標籤到英文: " + chineseLabel);
+                }
+                
+                // 如果都找不到，返回默認值
+                Log.w(TAG, "⚠️ 無法獲取英文標籤，返回默認值 'object'");
+                return "object";
                 
             case "mandarin":
                 // 普通話模式：優先使用中文標籤
@@ -993,6 +1061,62 @@ public class ObjectDetectorHelper {
         }
         
         return horizontalPos;
+    }
+    
+    /**
+     * 獲取物體優先級 - 用於智能語音播報優先級排序
+     * 安全相關物體（人、車）優先播報，靜態物體（家具）降低播報頻率
+     */
+    public ObjectPriority getObjectPriority(String label) {
+        if (label == null) {
+            return ObjectPriority.LOW;
+        }
+        
+        String labelLower = label.toLowerCase();
+        
+        // CRITICAL 優先級：安全相關物體（人、車輛、障礙物）
+        if (labelLower.equals("person") || 
+            labelLower.equals("car") || 
+            labelLower.equals("truck") || 
+            labelLower.equals("bus") || 
+            labelLower.equals("motorcycle") || 
+            labelLower.equals("bicycle")) {
+            return ObjectPriority.CRITICAL;
+        }
+        
+        // HIGH 優先級：交通標誌、門、樓梯、重要設施
+        if (labelLower.equals("traffic light") || 
+            labelLower.equals("stop sign") ||
+            labelLower.equals("toilet") ||
+            labelLower.equals("door")) {
+            return ObjectPriority.HIGH;
+        }
+        
+        // MEDIUM 優先級：家具、電子產品、日常用品
+        if (labelLower.equals("chair") || 
+            labelLower.equals("table") || 
+            labelLower.equals("dining table") ||
+            labelLower.equals("bench") ||
+            labelLower.equals("bed") ||
+            labelLower.equals("couch") ||
+            labelLower.equals("tv") ||
+            labelLower.equals("laptop") ||
+            labelLower.equals("keyboard") ||
+            labelLower.equals("mouse") ||
+            labelLower.equals("cell phone") ||
+            labelLower.equals("microwave") ||
+            labelLower.equals("oven") ||
+            labelLower.equals("refrigerator") ||
+            labelLower.equals("sink") ||
+            labelLower.equals("umbrella") ||
+            labelLower.equals("handbag") ||
+            labelLower.equals("backpack") ||
+            labelLower.equals("suitcase")) {
+            return ObjectPriority.MEDIUM;
+        }
+        
+        // LOW 優先級：裝飾品、小物件、食物
+        return ObjectPriority.LOW;
     }
     
     /**
