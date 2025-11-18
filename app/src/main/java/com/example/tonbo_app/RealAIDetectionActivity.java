@@ -251,6 +251,13 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     
     private void analyzeImage(ImageProxy image) {
         try {
+            // 檢查 Activity 是否正在銷毀或已銷毀
+            if (isFinishing() || isDestroyed()) {
+                Log.d(TAG, "Activity 正在銷毀，跳過圖像分析");
+                image.close();
+                return;
+            }
+            
             if (!isDetecting) {
                 image.close();
                 return;
@@ -539,25 +546,124 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        cameraExecutor = Executors.newSingleThreadExecutor();
+        if (cameraExecutor == null || cameraExecutor.isShutdown()) {
+            cameraExecutor = Executors.newSingleThreadExecutor();
+        }
     }
     
     @Override
     protected void onPause() {
         super.onPause();
+        
+        Log.d(TAG, "onPause: 停止檢測並清理相機資源");
+        
+        // 停止檢測
+        if (isDetecting) {
+            stopDetection();
+        }
+        
+        // 解除相機綁定（防止在 Activity 暫停時繼續寫入 SurfaceView）
+        if (cameraProvider != null) {
+            try {
+                cameraProvider.unbindAll();
+                Log.d(TAG, "onPause: 已解除相機綁定");
+            } catch (Exception e) {
+                Log.e(TAG, "onPause: 解除相機綁定失敗: " + e.getMessage());
+            }
+        }
+        
+        // 清理圖像分析器
+        if (imageAnalysis != null) {
+            try {
+                imageAnalysis.clearAnalyzer();
+                Log.d(TAG, "onPause: 已清理圖像分析器");
+            } catch (Exception e) {
+                Log.e(TAG, "onPause: 清理圖像分析器失敗: " + e.getMessage());
+            }
+        }
+        
+        // 關閉相機執行器
         if (cameraExecutor != null) {
-            cameraExecutor.shutdown();
+            try {
+                cameraExecutor.shutdown();
+                // 等待任務完成，但不強制終止
+                if (!cameraExecutor.awaitTermination(1, java.util.concurrent.TimeUnit.SECONDS)) {
+                    Log.w(TAG, "onPause: 相機執行器未在1秒內關閉，強制關閉");
+                    cameraExecutor.shutdownNow();
+                }
+                Log.d(TAG, "onPause: 已關閉相機執行器");
+            } catch (InterruptedException e) {
+                Log.e(TAG, "onPause: 關閉相機執行器被中斷");
+                cameraExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
     }
     
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (yoloDetector != null) {
-            yoloDetector.close();
+        
+        Log.d(TAG, "onDestroy: 開始清理所有資源");
+        
+        // 停止檢測（如果還在運行）
+        if (isDetecting) {
+            stopDetection();
         }
+        
+        // 確保停止檢測標誌已設置
+        isDetecting = false;
+        
+        // 清理圖像分析器
+        if (imageAnalysis != null) {
+            try {
+                imageAnalysis.clearAnalyzer();
+                imageAnalysis = null;
+                Log.d(TAG, "onDestroy: 已清理圖像分析器");
+            } catch (Exception e) {
+                Log.e(TAG, "onDestroy: 清理圖像分析器失敗: " + e.getMessage());
+            }
+        }
+        
+        // 解除相機綁定
         if (cameraProvider != null) {
-            cameraProvider.unbindAll();
+            try {
+                cameraProvider.unbindAll();
+                cameraProvider = null;
+                Log.d(TAG, "onDestroy: 已解除相機綁定");
+            } catch (Exception e) {
+                Log.e(TAG, "onDestroy: 解除相機綁定失敗: " + e.getMessage());
+            }
         }
+        
+        // 關閉 YOLO 檢測器
+        if (yoloDetector != null) {
+            try {
+                yoloDetector.close();
+                yoloDetector = null;
+                Log.d(TAG, "onDestroy: 已關閉 YOLO 檢測器");
+            } catch (Exception e) {
+                Log.e(TAG, "onDestroy: 關閉 YOLO 檢測器失敗: " + e.getMessage());
+            }
+        }
+        
+        // 關閉相機執行器
+        if (cameraExecutor != null) {
+            try {
+                cameraExecutor.shutdown();
+                if (!cameraExecutor.awaitTermination(2, java.util.concurrent.TimeUnit.SECONDS)) {
+                    Log.w(TAG, "onDestroy: 相機執行器未在2秒內關閉，強制關閉");
+                    cameraExecutor.shutdownNow();
+                }
+                cameraExecutor = null;
+                Log.d(TAG, "onDestroy: 已關閉相機執行器");
+            } catch (InterruptedException e) {
+                Log.e(TAG, "onDestroy: 關閉相機執行器被中斷");
+                cameraExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+        
+        Log.d(TAG, "onDestroy: 資源清理完成");
     }
 }

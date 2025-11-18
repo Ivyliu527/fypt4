@@ -63,7 +63,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     // 語音播報控制
     private long lastSpeechTime = 0;
     private static final long SPEECH_INTERVAL_MS = 1500; // 語音播報間隔1.5秒
-    private static final long SAME_OBJECT_SILENCE_MS = 5000; // 相同物體靜默期5秒（縮短）
+    private static final long SAME_OBJECT_SILENCE_MS = 5000; // 相同物體靜默期5秒（低優先級物體）
+    private static final long CRITICAL_OBJECT_SILENCE_MS = 3000; // 高優先級物體靜默期3秒（即使位置變化也要等待）
     private String lastSpokenObjects = ""; // 上次播報的物體名稱（不含位置）
     
     // 顏色和光線分析
@@ -88,15 +89,12 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
         setContentView(R.layout.activity_environment);
 
         Log.d(TAG, "EnvironmentActivity onCreate開始");
+        Log.d(TAG, "🔊 當前語言設置: " + currentLanguage);
         
-        // 強制初始化TTS，確保語音功能可用
-        Log.d(TAG, "🔊 強制初始化TTS...");
-        if (ttsManager != null) {
-            // 觸發TTS初始化
-            ttsManager.speak("TTS初始化測試", "TTS initialization test", true);
-            Log.d(TAG, "🔊 TTS初始化觸發完成");
-        } else {
-            Log.e(TAG, "❌ TTS管理器為空！");
+        // 確保TTS語言設置正確（在super.onCreate之後，currentLanguage已經從Intent中獲取）
+        if (ttsManager != null && currentLanguage != null) {
+            Log.d(TAG, "🔊 確保TTS語言設置為: " + currentLanguage);
+            ttsManager.setLanguageSilently(currentLanguage);
         }
         
         // 檢查API版本兼容性
@@ -140,7 +138,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             if ("english".equals(currentLanguage)) {
                 ttsManager.speak("", "Current page: Environment Recognition", true);
             } else if ("mandarin".equals(currentLanguage)) {
-                ttsManager.speak("", "當前頁面：環境識別", true);
+                // 普通話：中文文本放在第一個參數（cantoneseText），雖然參數名是cantonese，但TTS會根據語言設置選擇正確的引擎
+                ttsManager.speak("當前頁面：環境識別", "", true);
             } else {
                 // 默認廣東話
                 ttsManager.speak("當前頁面：環境識別", "", true);
@@ -152,7 +151,8 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                 if ("english".equals(currentLanguage)) {
                     ttsManager.speak("", "Camera started, ready for detection", false);
                 } else if ("mandarin".equals(currentLanguage)) {
-                    ttsManager.speak("", "相機已啟動，準備檢測", false);
+                    // 普通話：中文文本放在第一個參數
+                    ttsManager.speak("相機已啟動，準備檢測", "", false);
                 } else {
                     // 默認廣東話
                     ttsManager.speak("相機已啟動，準備檢測", "", false);
@@ -585,40 +585,74 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
                                         (int)detectionTime
                                     ));
                                     
-                                    // 實時語音播報檢測結果（優化版本 - 檢測到什麼就說什麼）
+                                    // 實時語音播報檢測結果（智能優先級版本）
                                     // 提取物體名稱（不含位置描述），用於去重比較
                                     String objectsOnly = extractObjectsOnly(speechText);
+                                    
+                                    // 檢查是否有高優先級物體（安全相關：人、車等）
+                                    boolean hasCriticalObjects = hasCriticalPriorityObjects(results);
                                     
                                     long currentTime = System.currentTimeMillis();
                                     boolean shouldSpeak = false;
                                     
                                     // 檢查是否為新物體或物體組合
                                     if (!objectsOnly.equals(lastSpokenObjects)) {
-                                        // 檢測到新的物體組合 - 立即播報
+                                        // 檢測到新的物體組合（物體類型改變）
                                         Log.d(TAG, "🔊 檢測到新物體組合: " + objectsOnly + " (上次: " + lastSpokenObjects + ")");
                                         
-                                        // 檢查語音播報間隔（避免過於頻繁）
-                                        if (currentTime - lastSpeechTime >= SPEECH_INTERVAL_MS) {
+                                        // 智能播報策略：
+                                        // 1. 如果有高優先級物體（人、車），立即播報（縮短間隔）
+                                        // 2. 如果只有低優先級物體（家具），正常間隔播報
+                                        long requiredInterval = hasCriticalObjects ? SPEECH_INTERVAL_MS / 2 : SPEECH_INTERVAL_MS;
+                                        
+                                        if (currentTime - lastSpeechTime >= requiredInterval) {
                                             shouldSpeak = true;
                                             lastSpokenObjects = objectsOnly;
                                             lastDetectionResult = speechText;
                                             lastSpeechTime = currentTime;
-                                            Log.d(TAG, "🔊 新物體組合，立即播報: " + speechText);
+                                            if (hasCriticalObjects) {
+                                                Log.d(TAG, "🔊 檢測到新高優先級物體，立即播報: " + speechText);
+                                            } else {
+                                                Log.d(TAG, "🔊 新物體組合，正常播報: " + speechText);
+                                            }
                                         } else {
-                                            Log.d(TAG, "🔊 語音播報間隔太短，跳過此次播報 (距離上次: " + (currentTime - lastSpeechTime) + "ms)");
+                                            // 即使間隔短，新物體組合也應該播報（但高優先級物體優先）
+                                            if (hasCriticalObjects) {
+                                                shouldSpeak = true;
+                                                lastSpokenObjects = objectsOnly;
+                                                lastDetectionResult = speechText;
+                                                lastSpeechTime = currentTime;
+                                                Log.d(TAG, "🔊 新高優先級物體，強制播報（安全優先）: " + speechText);
+                                            } else {
+                                                Log.d(TAG, "🔊 語音播報間隔太短，跳過此次播報 (距離上次: " + (currentTime - lastSpeechTime) + "ms)");
+                                            }
                                         }
                                     } else {
-                                        // 相同的物體組合 - 只在靜默期後且位置有明顯變化時才播報
+                                        // 相同的物體組合（物體類型未改變，可能只是位置變化）
                                         long timeSinceLastSpeech = currentTime - lastSpeechTime;
                                         
-                                        // 如果距離上次播報超過靜默期，且檢測結果文本有變化（位置變化），可以再次播報
-                                        if (timeSinceLastSpeech >= SAME_OBJECT_SILENCE_MS && !speechText.equals(lastDetectionResult)) {
-                                            Log.d(TAG, "🔊 相同物體但位置變化，且超過靜默期，準備播報: " + speechText);
-                                            shouldSpeak = true;
-                                            lastDetectionResult = speechText;
-                                            lastSpeechTime = currentTime;
+                                        // 重要：即使是高優先級物體，相同物體也應該有靜默期，避免重複播報
+                                        // 只有在靜默期後且位置有明顯變化時才播報
+                                        if (hasCriticalObjects) {
+                                            // 高優先級物體：靜默期較短（3秒），但位置必須有明顯變化
+                                            if (timeSinceLastSpeech >= CRITICAL_OBJECT_SILENCE_MS && !speechText.equals(lastDetectionResult)) {
+                                                Log.d(TAG, "🔊 高優先級物體位置變化，且超過靜默期，播報: " + speechText);
+                                                shouldSpeak = true;
+                                                lastDetectionResult = speechText;
+                                                lastSpeechTime = currentTime;
+                                            } else {
+                                                Log.d(TAG, "🔊 高優先級物體相同，跳過播報 (距離上次: " + timeSinceLastSpeech + "ms, 靜默期: " + CRITICAL_OBJECT_SILENCE_MS + "ms, 位置變化: " + !speechText.equals(lastDetectionResult) + ")");
+                                            }
                                         } else {
-                                            Log.d(TAG, "🔊 檢測結果與上次相同，跳過語音播報 (距離上次: " + timeSinceLastSpeech + "ms, 靜默期: " + SAME_OBJECT_SILENCE_MS + "ms)");
+                                            // 低優先級物體：靜默期較長（5秒），且位置必須有明顯變化
+                                            if (timeSinceLastSpeech >= SAME_OBJECT_SILENCE_MS && !speechText.equals(lastDetectionResult)) {
+                                                Log.d(TAG, "🔊 相同物體但位置變化，且超過靜默期，準備播報: " + speechText);
+                                                shouldSpeak = true;
+                                                lastDetectionResult = speechText;
+                                                lastSpeechTime = currentTime;
+                                            } else {
+                                                Log.d(TAG, "🔊 檢測結果與上次相同，跳過語音播報 (距離上次: " + timeSinceLastSpeech + "ms, 靜默期: " + SAME_OBJECT_SILENCE_MS + "ms)");
+                                            }
                                         }
                                     }
                                     
@@ -1209,45 +1243,68 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     private void speakDetectionResultsImmediate(String speechText) {
         Log.d(TAG, "🔊 speakDetectionResultsImmediate 被調用，speechText: " + speechText);
         Log.d(TAG, "🔊 當前語言: " + currentLanguage);
+        Log.d(TAG, "🔊 ttsManager 狀態: " + (ttsManager != null ? "已初始化" : "未初始化"));
         
-        if (ttsManager != null && speechText != null && !speechText.isEmpty()) {
-            // 確保TTS語言設置正確
-            ttsManager.setLanguageSilently(currentLanguage);
+        if (ttsManager == null) {
+            Log.e(TAG, "❌ ttsManager 為 null，無法播報");
+            return;
+        }
+        
+        if (speechText == null || speechText.trim().isEmpty()) {
+            Log.e(TAG, "❌ speechText 為空或null，無法播報");
+            return;
+        }
+        
+        // 確保TTS語言設置正確（在播報前設置）
+        Log.d(TAG, "🔊 設置TTS語言為: " + currentLanguage);
+        ttsManager.setLanguageSilently(currentLanguage);
+        
+        // 直接播報檢測結果，不添加前綴，讓語音更簡潔
+        Log.d(TAG, "🔊 立即播報檢測結果: " + speechText);
+        
+        // 根據當前語言選擇對應的語音內容
+        // speechText 已經根據當前語言格式化了，所以不需要再翻譯
+        String cantoneseText;
+        String englishText;
+        
+        if (currentLanguage.equals("english")) {
+            // 英文模式：speechText 應該是英文，直接使用
+            englishText = speechText.trim();
+            cantoneseText = translateToChinese(speechText);
+            Log.d(TAG, "🔊 英文模式 - 英文文本: [" + englishText + "]");
+            Log.d(TAG, "🔊 英文模式 - 粵語文本: [" + cantoneseText + "]");
             
-            // 直接播報檢測結果，不添加前綴，讓語音更簡潔
-            Log.d(TAG, "🔊 立即播報檢測結果: " + speechText);
-            
-            // 根據當前語言選擇對應的語音內容
-            // speechText 已經根據當前語言格式化了，所以不需要再翻譯
-            String cantoneseText;
-            String englishText;
-            
-            if (currentLanguage.equals("english")) {
-                // 英文模式：speechText 應該是英文，直接使用
-                englishText = speechText;
-                cantoneseText = translateToChinese(speechText);
-                Log.d(TAG, "🔊 英文模式 - 英文文本: " + englishText);
-            } else {
-                // 中文模式：speechText 應該是中文，直接使用
-                cantoneseText = speechText;
-                englishText = translateToEnglish(speechText);
-                Log.d(TAG, "🔊 中文模式 - 中文文本: " + cantoneseText);
-            }
-            
-            Log.d(TAG, "🔊 粵語文本: " + cantoneseText);
-            Log.d(TAG, "🔊 英文文本: " + englishText);
-            
-            // 使用優先播放，確保檢測結果語音不被其他語音打斷
-            ttsManager.speak(cantoneseText, englishText, true);
-            
-            // 震動反饋
-            if (vibrationManager != null) {
-                vibrationManager.vibrateClick();
+            // 確保英文文本不為空
+            if (englishText == null || englishText.isEmpty()) {
+                Log.e(TAG, "❌ 英文文本為空，無法播報");
+                return;
             }
         } else {
-            Log.w(TAG, "❌ 立即語音播報條件不滿足 - ttsManager: " + (ttsManager != null) + 
-                  ", speechText: " + speechText);
+            // 中文模式：speechText 應該是中文，直接使用
+            cantoneseText = speechText.trim();
+            englishText = translateToEnglish(speechText);
+            Log.d(TAG, "🔊 中文模式 - 中文文本: [" + cantoneseText + "]");
+            Log.d(TAG, "🔊 中文模式 - 英文文本: [" + englishText + "]");
+            
+            // 確保中文文本不為空
+            if (cantoneseText == null || cantoneseText.isEmpty()) {
+                Log.e(TAG, "❌ 中文文本為空，無法播報");
+                return;
+            }
         }
+        
+        Log.d(TAG, "🔊 準備播報 - 粵語文本: [" + cantoneseText + "], 英文文本: [" + englishText + "]");
+        
+        // 使用優先播放，確保檢測結果語音不被其他語音打斷
+        // 注意：TTSManager.speak() 會根據 currentLanguage 自動選擇對應的文本
+        ttsManager.speak(cantoneseText, englishText, true);
+        
+        // 震動反饋
+        if (vibrationManager != null) {
+            vibrationManager.vibrateClick();
+        }
+        
+        Log.d(TAG, "✅ 語音播報請求已發送");
     }
     
     /**
@@ -1279,13 +1336,35 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
     }
     
     /**
+     * 檢查檢測結果中是否有高優先級物體（安全相關：人、車等）
+     */
+    private boolean hasCriticalPriorityObjects(List<ObjectDetectorHelper.DetectionResult> results) {
+        if (results == null || results.isEmpty()) {
+            return false;
+        }
+        
+        if (objectDetectorHelper == null) {
+            return false;
+        }
+        
+        for (ObjectDetectorHelper.DetectionResult result : results) {
+            ObjectDetectorHelper.ObjectPriority priority = objectDetectorHelper.getObjectPriority(result.getLabel());
+            if (priority == ObjectDetectorHelper.ObjectPriority.CRITICAL) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
      * 從語音文本中提取物體名稱（去除位置描述），用於去重比較
      */
     private String extractObjectsOnly(String speechText) {
         if (speechText == null || speechText.isEmpty()) {
             return "";
         }
-        
+
         // 移除位置描述（中文和英文）
         String objectsOnly = speechText
             .replaceAll("在左側|在右側|在中央", "")
@@ -1294,12 +1373,12 @@ public class EnvironmentActivity extends BaseAccessibleActivity {
             .replaceAll("，", ",")
             .replaceAll("\\s+", " ")
             .trim();
-        
+
         // 移除末尾的"等X個"或"and X more objects"
         objectsOnly = objectsOnly.replaceAll("等\\d+個$", "");
         objectsOnly = objectsOnly.replaceAll(" and \\d+ more objects$", "");
         objectsOnly = objectsOnly.trim();
-        
+
         return objectsOnly;
     }
     

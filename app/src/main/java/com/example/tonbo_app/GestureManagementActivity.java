@@ -175,6 +175,12 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
     private void navigateToFunction(String functionName) {
         Intent intent = null;
         
+        // 獲取當前語言（從Intent或LocaleManager）
+        String language = currentLanguage;
+        if (language == null) {
+            language = LocaleManager.getInstance(this).getCurrentLanguage();
+        }
+        
         switch (functionName) {
             case "尋找物品":
             case "Find Items":
@@ -185,7 +191,8 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
             case "環境識別":
             case "Environment":
             case "EnvironmentActivity":
-                intent = new Intent(this, EnvironmentActivity.class);
+                // 使用與主頁相同的環境識別Activity（RealAIDetectionActivity）
+                intent = new Intent(this, RealAIDetectionActivity.class);
                 break;
                 
             case "文檔助手":
@@ -211,6 +218,8 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
         }
         
         if (intent != null) {
+            // 傳遞語言參數，確保跳轉後的頁面保持相同語言
+            intent.putExtra("language", language);
             startActivity(intent);
         }
     }
