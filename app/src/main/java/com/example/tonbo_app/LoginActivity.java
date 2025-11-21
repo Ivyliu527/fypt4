@@ -23,10 +23,15 @@ public class LoginActivity extends BaseAccessibleActivity {
     private Button loginButton;
     private Button registerButton;
     private Button guestButton;
+    private Button volunteerButton;
+    private Button userButton;
     private TextView statusText;
+    private TextView userTypeLabel;
     private LinearLayout loginForm;
+    private LinearLayout userTypeSelection;
     
     private UserManager userManager;
+    private String selectedUserType = UserManager.USER_TYPE_USER; // 默認為需要幫助人士
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +52,12 @@ public class LoginActivity extends BaseAccessibleActivity {
         loginButton = findViewById(R.id.login_button);
         registerButton = findViewById(R.id.register_button);
         guestButton = findViewById(R.id.guest_button);
+        volunteerButton = findViewById(R.id.volunteer_button);
+        userButton = findViewById(R.id.user_button);
         statusText = findViewById(R.id.status_text);
+        userTypeLabel = findViewById(R.id.user_type_label);
         loginForm = findViewById(R.id.login_form);
+        userTypeSelection = findViewById(R.id.user_type_selection);
         
         // 設置返回按鈕
         android.widget.ImageButton backButton = findViewById(R.id.back_button);
@@ -63,6 +72,9 @@ public class LoginActivity extends BaseAccessibleActivity {
         // 設置無障礙內容描述
         emailEditText.setContentDescription(getString(R.string.email_input_desc));
         passwordEditText.setContentDescription(getString(R.string.password_input_desc));
+        
+        // 初始化用戶類型選擇
+        updateUserTypeSelection();
     }
     
     private void setupButtons() {
@@ -84,6 +96,87 @@ public class LoginActivity extends BaseAccessibleActivity {
             vibrationManager.vibrateClick();
             loginAsGuest();
         });
+        
+        // 志願者按鈕
+        if (volunteerButton != null) {
+            volunteerButton.setOnClickListener(v -> {
+                vibrationManager.vibrateClick();
+                selectUserType(UserManager.USER_TYPE_VOLUNTEER);
+            });
+        }
+        
+        // 需要幫助人士按鈕
+        if (userButton != null) {
+            userButton.setOnClickListener(v -> {
+                vibrationManager.vibrateClick();
+                selectUserType(UserManager.USER_TYPE_USER);
+            });
+        }
+    }
+    
+    private void selectUserType(String userType) {
+        selectedUserType = userType;
+        updateUserTypeSelection();
+        
+        String announcement = userType.equals(UserManager.USER_TYPE_VOLUNTEER) ?
+                getLocalizedString("volunteer_selected") : getLocalizedString("user_selected");
+        announceInfo(announcement);
+    }
+    
+    private void updateUserTypeSelection() {
+        if (volunteerButton == null || userButton == null || userTypeLabel == null) {
+            return;
+        }
+        
+        // 更新按鈕狀態
+        if (selectedUserType.equals(UserManager.USER_TYPE_VOLUNTEER)) {
+            volunteerButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.menu_blue)));
+            userButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.button_green)));
+            userTypeLabel.setText(getLocalizedString("selected_volunteer"));
+        } else {
+            volunteerButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.button_green)));
+            userButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.menu_blue)));
+            userTypeLabel.setText(getLocalizedString("selected_user"));
+        }
+    }
+    
+    private String getLocalizedString(String key) {
+        switch (key) {
+            case "volunteer_selected":
+                if ("english".equals(currentLanguage)) {
+                    return "Volunteer mode selected";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "已选择志愿者模式";
+                } else {
+                    return "已選擇志願者模式";
+                }
+            case "user_selected":
+                if ("english".equals(currentLanguage)) {
+                    return "User mode selected";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "已选择用户模式";
+                } else {
+                    return "已選擇用戶模式";
+                }
+            case "selected_volunteer":
+                if ("english".equals(currentLanguage)) {
+                    return "Selected: Volunteer";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "已选择：志愿者";
+                } else {
+                    return "已選擇：志願者";
+                }
+            case "selected_user":
+                if ("english".equals(currentLanguage)) {
+                    return "Selected: User";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "已选择：用户";
+                } else {
+                    return "已選擇：用戶";
+                }
+            default:
+                return "";
+        }
     }
     
     private void attemptLogin() {
@@ -131,6 +224,7 @@ public class LoginActivity extends BaseAccessibleActivity {
                 // 保存用戶登入狀態
                 userManager.setUserLoggedIn(true);
                 userManager.setCurrentUserEmail(email);
+                userManager.setUserType(selectedUserType);
                 
                 // 登入成功，跳轉到主頁
                 announceSuccess(getString(R.string.login_success));
@@ -152,10 +246,11 @@ public class LoginActivity extends BaseAccessibleActivity {
     private void loginAsGuest() {
         announceInfo(getString(R.string.logging_in_as_guest));
         
-        // 設置為訪客模式
+        // 設置為訪客模式（默認為需要幫助人士）
         userManager.setUserLoggedIn(false);
         userManager.setCurrentUserEmail(null);
         userManager.setGuestMode(true);
+        userManager.setUserType(UserManager.USER_TYPE_USER);
         
         // 跳轉到主頁
         navigateToMainActivity();
