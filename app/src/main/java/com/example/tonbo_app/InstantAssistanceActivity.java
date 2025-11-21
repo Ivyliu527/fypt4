@@ -332,11 +332,20 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
             return;
         }
 
-        // 檢查相機權限
+        // 檢查相機和錄音權限
+        List<String> permissionsNeeded = new ArrayList<>();
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) 
                 != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.CAMERA);
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) 
+                != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.RECORD_AUDIO);
+        }
+        
+        if (!permissionsNeeded.isEmpty()) {
             ActivityCompat.requestPermissions(this, 
-                new String[]{Manifest.permission.CAMERA}, PERMISSION_REQUEST_CAMERA);
+                permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CAMERA);
             return;
         }
 
@@ -344,21 +353,19 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
         updateStatus(getString(R.string.connecting_video));
         announceInfo(getString(R.string.connecting_video));
 
-        // 模擬視訊連線
-        handler.postDelayed(() -> {
-            try {
-                // 這裡可以整合視訊通話SDK，如Zoom、Teams等
-                Intent videoIntent = new Intent(Intent.ACTION_VIEW);
-                videoIntent.setData(Uri.parse("https://meet.google.com/volunteer-assistance"));
-                startActivity(videoIntent);
-                announceSuccess(getString(R.string.connecting_video));
-            } catch (Exception e) {
-                Log.e(TAG, "視訊連線失敗", e);
-                announceError(getString(R.string.video_failed));
-                updateStatus(getString(R.string.video_failed));
-            }
-            isConnecting = false;
-        }, 2500);
+        // 啟動視頻通話 Activity
+        try {
+            Intent videoIntent = new Intent(this, VideoCallActivity.class);
+            videoIntent.putExtra("language", currentLanguage);
+            startActivity(videoIntent);
+            announceSuccess("正在打開視頻通話");
+            vibrationManager.vibrateSuccess();
+        } catch (Exception e) {
+            Log.e(TAG, "視訊連線失敗", e);
+            announceError(getString(R.string.video_failed));
+            updateStatus(getString(R.string.video_failed));
+        }
+        isConnecting = false;
     }
 
     /**
@@ -401,7 +408,14 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
                 break;
                 
             case PERMISSION_REQUEST_CAMERA:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                boolean allGranted = true;
+                for (int result : grantResults) {
+                    if (result != PackageManager.PERMISSION_GRANTED) {
+                        allGranted = false;
+                        break;
+                    }
+                }
+                if (allGranted) {
                     announceInfo(getString(R.string.camera_permission_granted));
                     initiateVideoCall();
                 } else {

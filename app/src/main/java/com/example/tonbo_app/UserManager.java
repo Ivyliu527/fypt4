@@ -17,6 +17,11 @@ public class UserManager {
     private static final String KEY_GUEST_MODE = "guest_mode";
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_USER_NAME = "user_name";
+    private static final String KEY_USER_TYPE = "user_type"; // "volunteer" 或 "user"
+    
+    // 用户类型常量
+    public static final String USER_TYPE_VOLUNTEER = "volunteer";
+    public static final String USER_TYPE_USER = "user";
     
     private static UserManager instance;
     private Context context;
@@ -110,6 +115,35 @@ public class UserManager {
     }
     
     /**
+     * 獲取用戶類型
+     */
+    public String getUserType() {
+        return preferences.getString(KEY_USER_TYPE, USER_TYPE_USER);
+    }
+    
+    /**
+     * 設置用戶類型
+     */
+    public void setUserType(String userType) {
+        preferences.edit().putString(KEY_USER_TYPE, userType).apply();
+        Log.d(TAG, "用戶類型設置為: " + userType);
+    }
+    
+    /**
+     * 檢查是否為志願者
+     */
+    public boolean isVolunteer() {
+        return USER_TYPE_VOLUNTEER.equals(getUserType());
+    }
+    
+    /**
+     * 檢查是否為需要幫助人士
+     */
+    public boolean isUser() {
+        return USER_TYPE_USER.equals(getUserType());
+    }
+    
+    /**
      * 登出用戶
      */
     public void logout() {
@@ -119,6 +153,7 @@ public class UserManager {
                 .putBoolean(KEY_GUEST_MODE, false)
                 .putString(KEY_USER_ID, null)
                 .putString(KEY_USER_NAME, null)
+                .putString(KEY_USER_TYPE, null)
                 .apply();
         Log.d(TAG, "用戶已登出");
     }
@@ -181,14 +216,22 @@ public class UserManager {
      * 保存用戶登入信息（為Firebase準備）
      */
     public void saveUserLoginInfo(String userId, String email, String userName) {
+        saveUserLoginInfo(userId, email, userName, USER_TYPE_USER);
+    }
+    
+    /**
+     * 保存用戶登入信息（包含用戶類型）
+     */
+    public void saveUserLoginInfo(String userId, String email, String userName, String userType) {
         preferences.edit()
                 .putBoolean(KEY_USER_LOGGED_IN, true)
                 .putString(KEY_USER_ID, userId)
                 .putString(KEY_USER_EMAIL, email)
                 .putString(KEY_USER_NAME, userName)
+                .putString(KEY_USER_TYPE, userType)
                 .putBoolean(KEY_GUEST_MODE, false)
                 .apply();
-        Log.d(TAG, "用戶登入信息已保存: " + email);
+        Log.d(TAG, "用戶登入信息已保存: " + email + ", 類型: " + userType);
     }
     
     /**
