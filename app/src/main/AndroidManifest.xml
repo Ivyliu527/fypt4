@@ -118,6 +118,14 @@
             android:name=".GestureManagementActivity"
             android:label="@string/gesture_management"
             android:exported="false" />
+            
+        <!-- Video Call Activity - 視頻通話 -->
+        <activity
+            android:name=".VideoCallActivity"
+            android:label="視訊通話"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
     </application>
 
 </manifest>
