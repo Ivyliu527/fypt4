@@ -177,7 +177,7 @@ public class SpatialDescriptionGenerator {
     /**
      * 獲取本地化字符串
      */
-    private String getLocalizedString(String key) {
+    public String getLocalizedString(String key) {
         switch (key) {
             case "position_unknown":
                 if ("english".equals(currentLanguage)) {
