@@ -69,6 +69,9 @@ dependencies {
     // Google Location Services (僅用於緊急求助時發送位置)
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
+    // Agora RTC SDK for video calling
+    implementation("io.agora.rtc:full-sdk:4.3.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
