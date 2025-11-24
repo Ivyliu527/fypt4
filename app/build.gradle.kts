@@ -65,6 +65,14 @@ dependencies {
     // Google ML Kit for OCR text recognition
     implementation("com.google.mlkit:text-recognition:16.0.0")
     implementation("com.google.mlkit:text-recognition-chinese:16.0.0")
+    
+    // Google ML Kit Object Detection (免費開源，官方維護，長期支持)
+    // 注意：如果網絡無法訪問，可以暫時註釋掉這兩行
+    // implementation("com.google.mlkit:object-detection:17.0.1")
+    // implementation("com.google.mlkit:object-detection-custom:17.0.1")
+    
+    // 暫時使用TensorFlow Lite作為主要檢測器（避免網絡問題）
+    // 網絡恢復後可以取消上面的註釋，啟用ML Kit
 
     // Google Location Services (僅用於緊急求助時發送位置)
     implementation("com.google.android.gms:play-services-location:21.0.1")

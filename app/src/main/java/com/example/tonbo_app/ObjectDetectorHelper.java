@@ -119,10 +119,12 @@ public class ObjectDetectorHelper {
     private static final int MAX_CONSECUTIVE_FAILURES = 5;  // 最大連續失敗次數
     private static final long DETECTION_TIMEOUT_MS = 5000;  // 檢測超時時間
     
-    private ObjectDetector objectDetector;
-    private YoloDetector yoloDetector;
+    private ObjectDetector objectDetector;  // TensorFlow Lite SSD 檢測器
+    private YoloDetector yoloDetector;     // YOLO 檢測器
+    private MLKitObjectDetector mlKitDetector;  // ML Kit 檢測器（暫時禁用）
     private Context context;
     private boolean useYolo = false;  // 是否使用YOLO檢測器
+    private boolean useMLKit = false;  // 是否使用ML Kit檢測器（暫時禁用，避免網絡問題）
     
     // 穩定性監控變量
     private int consecutiveFailures = 0;
@@ -244,8 +246,10 @@ public class ObjectDetectorHelper {
     
     public ObjectDetectorHelper(Context context) {
         this.context = context;
-        setupObjectDetector();
-        setupYoloDetector();
+        // 暫時禁用ML Kit（避免網絡問題），優先使用TensorFlow Lite
+        // setupMLKitDetector();  // 優先初始化 ML Kit（免費開源，官方維護）
+        setupObjectDetector();  // TensorFlow Lite 作為主要檢測器
+        setupYoloDetector();    // YOLO 作為備用
     }
     
     private void setupObjectDetector() {
@@ -268,12 +272,31 @@ public class ObjectDetectorHelper {
         }
     }
     
+    /**
+     * 初始化 ML Kit 檢測器（優先使用）
+     */
+    private void setupMLKitDetector() {
+        try {
+            mlKitDetector = new MLKitObjectDetector(context);
+            if (mlKitDetector.isInitialized()) {
+                useMLKit = true;
+                Log.d(TAG, "✅ ML Kit 檢測器初始化成功（優先使用）！");
+            } else {
+                useMLKit = false;
+                Log.w(TAG, "⚠️ ML Kit 檢測器初始化失敗，將使用備用檢測器");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "❌ 初始化ML Kit檢測器失敗: " + e.getMessage());
+            useMLKit = false;
+        }
+    }
+    
     private void setupYoloDetector() {
         try {
             yoloDetector = new YoloDetector(context);
-            // 環境識別主要使用SSD，YOLO作為備用
+            // 環境識別主要使用ML Kit，YOLO作為最後備用
             useYolo = false; // 默認禁用YOLO，專注於環境識別
-            Log.d(TAG, "✅ YOLO檢測器初始化成功（作為備用）！");
+            Log.d(TAG, "✅ YOLO檢測器初始化成功（作為最後備用）！");
         } catch (Exception e) {
             Log.e(TAG, "❌ 初始化YOLO檢測器失敗: " + e.getMessage());
             useYolo = false;
@@ -370,7 +393,7 @@ public class ObjectDetectorHelper {
         
         for (int attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
             try {
-                // 環境識別優先使用SSD檢測器（更適合環境描述）
+                // 優先使用 TensorFlow Lite SSD檢測器（主要檢測器，避免網絡問題）
                 if (objectDetector != null) {
                     results = detectWithSSD(bitmap);
                     if (!results.isEmpty()) {
@@ -379,6 +402,16 @@ public class ObjectDetectorHelper {
                         break;
                     }
                 }
+                
+                // 可選：ML Kit 檢測器（如果網絡可用，可以啟用）
+                // if (useMLKit && mlKitDetector != null && mlKitDetector.isInitialized()) {
+                //     results = detectWithMLKit(bitmap);
+                //     if (!results.isEmpty()) {
+                //         Log.d(TAG, String.format("ML Kit檢測成功 (嘗試 %d/%d): %d 個物體", 
+                //             attempt + 1, MAX_RETRY_ATTEMPTS, results.size()));
+                //         break;
+                //     }
+                // }
                 
                 // SSD失敗時才嘗試YOLO（作為備用）
                 if (useYolo && yoloDetector != null && results.isEmpty()) {
@@ -652,6 +685,22 @@ public class ObjectDetectorHelper {
         consecutiveFailures = 0;
         useYolo = true; // 重新啟用YOLO
         Log.d(TAG, "檢測器狀態已重置");
+    }
+    
+    /**
+     * 使用 ML Kit 檢測器檢測（優先使用）
+     */
+    private List<DetectionResult> detectWithMLKit(Bitmap bitmap) {
+        if (mlKitDetector == null || !mlKitDetector.isInitialized()) {
+            return new ArrayList<>();
+        }
+        
+        try {
+            return mlKitDetector.detect(bitmap);
+        } catch (Exception e) {
+            Log.e(TAG, "ML Kit檢測失敗: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -1150,6 +1199,10 @@ public class ObjectDetectorHelper {
     }
     
     public void close() {
+        if (mlKitDetector != null) {
+            mlKitDetector.close();
+            Log.d(TAG, "ML Kit檢測器已關閉");
+        }
         if (objectDetector != null) {
             objectDetector.close();
             Log.d(TAG, "SSD物體檢測器已關閉");
