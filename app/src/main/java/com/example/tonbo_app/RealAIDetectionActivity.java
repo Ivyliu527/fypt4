@@ -89,8 +89,8 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             if (isDetecting) {
                 stopDetection();
             }
-            // 返回主頁
-            finish();
+            // 返回主頁（會檢查是否從手勢登入進入）
+            handleBackPressed();
         });
         
         startButton.setOnClickListener(v -> startDetection());

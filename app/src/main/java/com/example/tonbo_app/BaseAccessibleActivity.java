@@ -209,10 +209,56 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
             // 返回按鈕
             announceInfo("返回主頁");
             vibrationManager.vibrateClick();
-            onBackPressed();
+            handleBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+    
+    /**
+     * 處理返回鍵按壓
+     * 如果從手勢登入進入，則返回主頁；否則正常返回
+     */
+    @Override
+    @Deprecated
+    public void onBackPressed() {
+        handleBackPressed();
+    }
+    
+    /**
+     * 處理返回邏輯
+     * 子類的返回按鈕可以調用此方法
+     */
+    protected void handleBackPressed() {
+        // 檢查是否是從手勢登入進入的
+        boolean fromGestureLogin = getIntent().getBooleanExtra("from_gesture_login", false);
+        
+        if (fromGestureLogin && !(this instanceof MainActivity)) {
+            // 從手勢登入進入的，返回主頁
+            String cantoneseText = "正在返回主頁";
+            String englishText = "Returning to home";
+            String mandarinText = "正在返回主页";
+            
+            if ("english".equals(currentLanguage)) {
+                ttsManager.speak(englishText, null, false);
+            } else if ("mandarin".equals(currentLanguage)) {
+                ttsManager.speak(mandarinText, null, false);
+            } else {
+                ttsManager.speak(cantoneseText, englishText, false);
+            }
+            
+            vibrationManager.vibrateClick();
+            goToHome();
+        } else {
+            // 正常返回
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                // Android 13+ 使用新的API
+                finish();
+            } else {
+                // 舊版本使用onBackPressed
+                super.onBackPressed();
+            }
+        }
     }
     
     @Override

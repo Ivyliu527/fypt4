@@ -111,11 +111,12 @@ public class SettingsActivity extends BaseAccessibleActivity {
         // 載入無障礙設定
         boolean vibrationEnabled = preferences.getBoolean("vibration_enabled", true);
         boolean screenReaderEnabled = preferences.getBoolean("screen_reader_enabled", true);
-        boolean gestureEnabled = preferences.getBoolean("gesture_enabled", false);
+        // 從GestureManagementActivity載入手勢登入設定
+        boolean gestureLoginEnabled = GestureManagementActivity.isGestureLoginEnabled(this);
         
         updateToggleButton(vibrationToggleButton, vibrationEnabled, getLocalizedString("vibration_feedback"));
         updateToggleButton(screenReaderToggleButton, screenReaderEnabled, getLocalizedString("screen_reader_support"));
-        updateToggleButton(gestureToggleButton, gestureEnabled, getLocalizedString("gesture_operations"));
+        updateToggleButton(gestureToggleButton, gestureLoginEnabled, getLocalizedString("gesture_login"));
         
         Log.d(TAG, "設定已載入 - 語速:" + speechRate + " 音調:" + speechPitch + " 音量:" + speechVolume);
     }
@@ -387,19 +388,23 @@ public class SettingsActivity extends BaseAccessibleActivity {
     }
     
     private void toggleGesture() {
-        boolean currentState = preferences.getBoolean("gesture_enabled", false);
+        // 使用GestureManagementActivity中的手势登入设置
+        boolean currentState = GestureManagementActivity.isGestureLoginEnabled(this);
         boolean newState = !currentState;
         
-        preferences.edit().putBoolean("gesture_enabled", newState).apply();
-        updateToggleButton(gestureToggleButton, newState, getLocalizedString("gesture_operations"));
+        // 保存到GestureManagementActivity使用的SharedPreferences
+        android.content.SharedPreferences gesturePrefs = getSharedPreferences("GestureSettings", Context.MODE_PRIVATE);
+        gesturePrefs.edit().putBoolean("gesture_login_enabled", newState).apply();
+        
+        updateToggleButton(gestureToggleButton, newState, getLocalizedString("gesture_login"));
         
         String message;
         if ("english".equals(currentLanguage)) {
-            message = newState ? "Gesture operations enabled" : "Gesture operations disabled";
+            message = newState ? "Gesture login enabled" : "Gesture login disabled";
         } else if ("mandarin".equals(currentLanguage)) {
-            message = newState ? "手势操作已开启" : "手势操作已关闭";
+            message = newState ? "手势登录已开启" : "手势登录已关闭";
         } else {
-            message = newState ? "手勢操作已開啟" : "手勢操作已關閉";
+            message = newState ? "手勢登入已開啟" : "手勢登入已關閉";
         }
         announceSettingChange(message);
         
@@ -443,14 +448,14 @@ public class SettingsActivity extends BaseAccessibleActivity {
         
         boolean vibrationEnabled = preferences.getBoolean("vibration_enabled", true);
         boolean screenReaderEnabled = preferences.getBoolean("screen_reader_enabled", true);
-        boolean gestureEnabled = preferences.getBoolean("gesture_enabled", false);
+        boolean gestureLoginEnabled = GestureManagementActivity.isGestureLoginEnabled(this);
         
         currentSettings += String.format(getString(R.string.current_vibration_status), 
             vibrationEnabled ? getString(R.string.status_enabled) : getString(R.string.status_disabled)) + "。";
         currentSettings += String.format(getString(R.string.current_screen_reader_status), 
             screenReaderEnabled ? getString(R.string.status_enabled) : getString(R.string.status_disabled)) + "。";
         currentSettings += String.format(getString(R.string.current_gesture_status), 
-            gestureEnabled ? getString(R.string.status_enabled) : getString(R.string.status_disabled)) + "。";
+            gestureLoginEnabled ? getString(R.string.status_enabled) : getString(R.string.status_disabled)) + "。";
         
         ttsManager.speak(currentSettings, null, true);
     }
@@ -477,8 +482,11 @@ public class SettingsActivity extends BaseAccessibleActivity {
                 .putFloat("speech_volume", 1.0f)
                 .putBoolean("vibration_enabled", true)
                 .putBoolean("screen_reader_enabled", true)
-                .putBoolean("gesture_enabled", false)
                 .apply();
+        
+        // 重置手勢登入設定
+        android.content.SharedPreferences gesturePrefs = getSharedPreferences("GestureSettings", Context.MODE_PRIVATE);
+        gesturePrefs.edit().putBoolean("gesture_login_enabled", false).apply();
         
         // 重置UI
         speechRateSeekBar.setProgress(100);
@@ -488,7 +496,7 @@ public class SettingsActivity extends BaseAccessibleActivity {
         
         updateToggleButton(vibrationToggleButton, true, getLocalizedString("vibration_feedback"));
         updateToggleButton(screenReaderToggleButton, true, getLocalizedString("screen_reader_support"));
-        updateToggleButton(gestureToggleButton, false, getLocalizedString("gesture_operations"));
+        updateToggleButton(gestureToggleButton, false, getLocalizedString("gesture_login"));
         
         // 重置TTS設定
         ttsManager.setSpeechRate(1.0f);
@@ -524,6 +532,14 @@ public class SettingsActivity extends BaseAccessibleActivity {
                     return "屏幕阅读器支持";
                 } else {
                     return "螢幕閱讀器支援";
+                }
+            case "gesture_login":
+                if ("english".equals(currentLanguage)) {
+                    return "Gesture Login";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "手势登录";
+                } else {
+                    return "手勢登入";
                 }
             case "gesture_operations":
                 if ("english".equals(currentLanguage)) {
@@ -750,15 +766,15 @@ public class SettingsActivity extends BaseAccessibleActivity {
             screenReaderLabel.setText(text);
         }
         
-        // 手勢操作標籤
+        // 手勢登入標籤
         if (gestureOperationsLabel != null) {
             String text;
             if ("english".equals(currentLanguage)) {
-                text = "Gesture Operations";
+                text = "Gesture Login";
             } else if ("mandarin".equals(currentLanguage)) {
-                text = "手势操作";
+                text = "手势登录";
             } else {
-                text = "手勢操作";
+                text = "手勢登入";
             }
             gestureOperationsLabel.setText(text);
         }

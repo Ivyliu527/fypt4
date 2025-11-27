@@ -119,6 +119,12 @@
             android:label="@string/gesture_management"
             android:exported="false" />
             
+        <!-- Gesture Input Activity - 手勢輸入 -->
+        <activity
+            android:name=".GestureInputActivity"
+            android:label="手勢登入"
+            android:exported="false" />
+            
         <!-- Video Call Activity - 視頻通話 -->
         <activity
             android:name=".VideoCallActivity"

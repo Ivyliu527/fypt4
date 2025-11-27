@@ -1,11 +1,14 @@
 package com.example.tonbo_app;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +33,9 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
     private GestureRecognitionManager gestureManager;
     private TTSManager ttsManager;
     private VibrationManager vibrationManager;
+    private Switch gestureLoginSwitch;
+    private static final String PREFS_NAME = "GestureSettings";
+    private static final String KEY_GESTURE_LOGIN_ENABLED = "gesture_login_enabled";
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +60,10 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
         backButton = findViewById(R.id.back_button);
         pageTitle = findViewById(R.id.page_title);
         savedGesturesList = findViewById(R.id.saved_gestures_list);
+        gestureLoginSwitch = findViewById(R.id.gesture_login_switch);
+        
+        // 載入開關狀態
+        loadGestureLoginSetting();
     }
     
     private void setupListeners() {
@@ -78,6 +88,15 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
             vibrationManager.vibrateClick();
             gestureDrawView.clear();
             announceInfo("手勢已清除");
+        });
+        
+        // 手勢登入開關
+        gestureLoginSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            vibrationManager.vibrateClick();
+            saveGestureLoginSetting(isChecked);
+            String message = isChecked ? "已啟用手勢登入" : "已關閉手勢登入";
+            String englishMessage = isChecked ? "Gesture login enabled" : "Gesture login disabled";
+            announceInfo(message);
         });
         
         // 手勢繪畫完成檢測（簡化實現）- 使用延遲檢測
@@ -308,6 +327,33 @@ public class GestureManagementActivity extends BaseAccessibleActivity {
             String description = getLocalizedString("gesture_management_title") + "頁面。可以繪製手勢並綁定功能。";
             ttsManager.speak(description, null, true);
         }, 500);
+    }
+    
+    /**
+     * 載入手勢登入設置
+     */
+    private void loadGestureLoginSetting() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        // 默認值為 false，表示首次打開時手勢登入是關閉狀態
+        boolean enabled = prefs.getBoolean(KEY_GESTURE_LOGIN_ENABLED, false);
+        gestureLoginSwitch.setChecked(enabled);
+    }
+    
+    /**
+     * 保存手勢登入設置
+     */
+    private void saveGestureLoginSetting(boolean enabled) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(KEY_GESTURE_LOGIN_ENABLED, enabled).apply();
+        Log.d(TAG, "手勢登入設置已保存: " + enabled);
+    }
+    
+    /**
+     * 檢查手勢登入是否啟用（靜態方法，供其他類使用）
+     */
+    public static boolean isGestureLoginEnabled(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean(KEY_GESTURE_LOGIN_ENABLED, false);
     }
     
     /**
