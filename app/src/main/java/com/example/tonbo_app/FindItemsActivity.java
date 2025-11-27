@@ -100,8 +100,7 @@ public class FindItemsActivity extends BaseAccessibleActivity {
 
         // 設置按鈕點擊事件
         backButton.setOnClickListener(v -> {
-            ttsManager.speak(null, getString(R.string.going_back_to_home), true);
-            finish();
+            handleBackPressed();
         });
 
         captureButton.setOnClickListener(v -> capturePhoto());

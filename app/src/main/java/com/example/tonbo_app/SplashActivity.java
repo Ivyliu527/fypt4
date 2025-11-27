@@ -39,8 +39,18 @@ public class SplashActivity extends AppCompatActivity {
     }
     
     private void checkLoginStatusAndNavigate() {
-        // 取消登入流程，直接進入主頁
-        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+        // 檢查手勢登入是否啟用
+        boolean gestureLoginEnabled = GestureManagementActivity.isGestureLoginEnabled(this);
+        
+        Intent intent;
+        if (gestureLoginEnabled) {
+            // 如果啟用了手勢登入，跳轉到手勢輸入頁面
+            intent = new Intent(SplashActivity.this, GestureInputActivity.class);
+        } else {
+            // 否則直接進入主頁
+            intent = new Intent(SplashActivity.this, MainActivity.class);
+        }
+        
         startActivity(intent);
         finish();
     }

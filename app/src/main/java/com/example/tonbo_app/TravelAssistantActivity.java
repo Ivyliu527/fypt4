@@ -50,9 +50,7 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
         android.widget.ImageButton backButton = findViewById(R.id.back_button);
         if (backButton != null) {
             backButton.setOnClickListener(v -> {
-                vibrationManager.vibrateClick();
-                announceInfo(getLocalizedString("going_back_to_home"));
-                finish();
+                handleBackPressed();
             });
         }
         

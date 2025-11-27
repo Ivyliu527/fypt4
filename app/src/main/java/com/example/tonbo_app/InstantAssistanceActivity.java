@@ -103,9 +103,7 @@ public class InstantAssistanceActivity extends BaseAccessibleActivity {
 
         // 返回按鈕
         backButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            announceNavigation(getString(R.string.go_back_home));
-            finish();
+            handleBackPressed();
         });
 
         // 幫助按鈕

@@ -1,6 +1,10 @@
 package com.example.tonbo_app;
 
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -33,6 +37,14 @@ public class MainActivity extends BaseAccessibleActivity {
     private boolean isEmergencyButtonPressed = false;
     private Handler emergencyButtonHandler = new Handler(Looper.getMainLooper());
     private Runnable emergencyButtonRunnable;
+    
+    // 搖晃檢測
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private ShakeDetector shakeDetector;
+    private static final float SHAKE_THRESHOLD = 12.0f; // 搖晃閾值
+    private static final int SHAKE_SLOP_TIME_MS = 500; // 兩次搖晃之間的最小間隔時間（毫秒）
+    private long lastShakeTime = 0; // 上次搖晃的時間
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +65,7 @@ public class MainActivity extends BaseAccessibleActivity {
         initViews();
         setupFunctionList();
         setupViewPager();
+        setupShakeDetection();
         
         // 設置無障礙內容描述
         setupAccessibilityContent();
@@ -203,6 +216,86 @@ public class MainActivity extends BaseAccessibleActivity {
         // 為所有按鈕提供觸控反饋
         provideTouchFeedback(emergencyButton);
         // 注意：languageButton已經有自己的點擊事件，不需要provideTouchFeedback
+    }
+    
+    /**
+     * 設置搖晃檢測
+     */
+    private void setupShakeDetection() {
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sensorManager != null) {
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            if (accelerometer != null) {
+                shakeDetector = new ShakeDetector();
+                sensorManager.registerListener(shakeDetector, accelerometer, SensorManager.SENSOR_DELAY_UI);
+                Log.d(TAG, "搖晃檢測已啟動");
+            } else {
+                Log.w(TAG, "設備不支持加速度傳感器");
+            }
+        } else {
+            Log.w(TAG, "無法獲取傳感器管理器");
+        }
+    }
+    
+    /**
+     * 處理搖晃手勢 - 啟動語音助手
+     */
+    private void handleShake() {
+        long currentTime = System.currentTimeMillis();
+        
+        // 防止短時間內重複觸發
+        if (currentTime - lastShakeTime < SHAKE_SLOP_TIME_MS) {
+            return;
+        }
+        
+        lastShakeTime = currentTime;
+        
+        // 震動反饋
+        vibrationManager.vibrateClick();
+        
+        // 語音提示
+        String cantoneseText = "正在啟動語音助手";
+        String englishText = "Starting voice assistant";
+        String mandarinText = "正在启动语音助手";
+        
+        if ("english".equals(currentLanguage)) {
+            ttsManager.speak(englishText, null, false);
+        } else if ("mandarin".equals(currentLanguage)) {
+            ttsManager.speak(mandarinText, null, false);
+        } else {
+            ttsManager.speak(cantoneseText, englishText, false);
+        }
+        
+        // 啟動語音助手
+        startVoiceCommandActivity();
+    }
+    
+    /**
+     * 搖晃檢測器
+     */
+    private class ShakeDetector implements SensorEventListener {
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                float x = event.values[0];
+                float y = event.values[1];
+                float z = event.values[2];
+                
+                // 計算加速度的總量（去除重力影響）
+                float acceleration = (float) Math.sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH;
+                
+                // 如果加速度超過閾值，認為是搖晃
+                if (Math.abs(acceleration) > SHAKE_THRESHOLD) {
+                    Log.d(TAG, "檢測到搖晃，加速度: " + acceleration);
+                    handleShake();
+                }
+            }
+        }
+        
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            // 不需要處理精度變化
+        }
     }
 
 
@@ -940,6 +1033,20 @@ public class MainActivity extends BaseAccessibleActivity {
         if (mainHandler != null) {
             mainHandler.removeCallbacksAndMessages(null);
         }
+        
+        // 暫停時註銷傳感器監聽器以節省電量
+        if (sensorManager != null && shakeDetector != null) {
+            sensorManager.unregisterListener(shakeDetector);
+        }
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // 恢復時重新註冊傳感器監聽器
+        if (sensorManager != null && shakeDetector != null && accelerometer != null) {
+            sensorManager.registerListener(shakeDetector, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        }
     }
     
     @Override
@@ -1007,6 +1114,14 @@ public class MainActivity extends BaseAccessibleActivity {
             ttsManager.shutdown();
             ttsManager = null;
         }
+        
+        // 註銷傳感器監聽器
+        if (sensorManager != null && shakeDetector != null) {
+            sensorManager.unregisterListener(shakeDetector);
+            shakeDetector = null;
+        }
+        sensorManager = null;
+        accelerometer = null;
         
         Log.d("MainActivity", "資源清理完成");
     }

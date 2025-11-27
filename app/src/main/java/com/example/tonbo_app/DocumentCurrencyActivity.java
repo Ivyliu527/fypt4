@@ -107,9 +107,7 @@ public class DocumentCurrencyActivity extends BaseAccessibleActivity {
 
         // 返回按鈕
         backButton.setOnClickListener(v -> {
-            vibrationManager.vibrateClick();
-            announceNavigation(getString(R.string.go_back_home));
-            finish();
+            handleBackPressed();
         });
 
         // 閃光燈按鈕
