@@ -62,6 +62,11 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     private ExecutorService cameraExecutor;
     private boolean isDetecting = false;
     
+    // 用於去重，避免重複播報相同的識別結果
+    private String lastAnnouncedObjects = "";
+    private long lastAnnounceTime = 0;
+    private static final long ANNOUNCE_INTERVAL_MS = 2000; // 2秒靜默期
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -230,6 +235,10 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             androidx.camera.core.Preview preview = new androidx.camera.core.Preview.Builder()
                 .build();
             
+            // 設置預覽視圖的縮放模式為 FIT（保持寬高比，居中顯示）
+            // 這與座標轉換邏輯匹配
+            previewView.setScaleType(androidx.camera.view.PreviewView.ScaleType.FIT_CENTER);
+            
             preview.setSurfaceProvider(previewView.getSurfaceProvider());
             
             // 設置圖像分析
@@ -292,6 +301,10 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 }
             }
             
+            // 獲取圖像旋轉角度（考慮相機方向）
+            int rotationDegrees = image.getImageInfo().getRotationDegrees();
+            Log.d(TAG, "圖像旋轉角度: " + rotationDegrees + "度, 圖像尺寸: " + image.getWidth() + "x" + image.getHeight());
+            
             // 在主線程更新UI
             runOnUiThread(() -> {
                 if (results != null && !results.isEmpty()) {
@@ -300,7 +313,14 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     // 更新檢測結果覆蓋層
                     if (detectionOverlay != null) {
                         Log.d(TAG, "更新檢測結果到覆蓋層，數量: " + results.size());
+                        
+                        // 獲取預覽視圖的實際顯示尺寸
+                        int previewWidth = previewView.getWidth();
+                        int previewHeight = previewView.getHeight();
+                        Log.d(TAG, "預覽視圖尺寸: " + previewWidth + "x" + previewHeight);
+                        
                         // 告知覆蓋層來源影像尺寸，確保像素坐標正確映射
+                        // 使用圖像的實際尺寸（YoloDetector 返回的座標基於此尺寸）
                         detectionOverlay.setSourceImageSize(image.getWidth(), image.getHeight());
                         detectionOverlay.updateDetectionResults(results);
                     } else {
@@ -412,61 +432,48 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     private void announceDetectionResults(List<YoloDetector.DetectionResult> results) {
         if (results.isEmpty()) {
             // 空結果不播報，避免信息過載
+            lastAnnouncedObjects = ""; // 清除上次播報記錄
             return;
         }
         
-        // 1. 重要性排序
-        List<YoloDetector.DetectionResult> critical = new ArrayList<>();
-        List<YoloDetector.DetectionResult> important = new ArrayList<>();
-        List<YoloDetector.DetectionResult> optional = new ArrayList<>();
-        
-        for (YoloDetector.DetectionResult result : results) {
-            String category = categorizeImportance(result.getLabel());
-            if ("critical".equals(category)) {
-                critical.add(result);
-            } else if ("important".equals(category)) {
-                important.add(result);
-            } else {
-                optional.add(result);
-            }
-        }
-        
-        // 2. 只播報重要的結果
-        List<YoloDetector.DetectionResult> toAnnounce = new ArrayList<>();
-        if (!critical.isEmpty()) {
-            toAnnounce = critical;  // 只播報關鍵物體
-        } else if (!important.isEmpty()) {
-            toAnnounce = important;  // 或播報重要物體
-        } else if (optional.size() <= 3) {
-            toAnnounce = optional;  // 只播報少量裝飾品
-        }
-        
-        if (toAnnounce.isEmpty()) {
-            return;
-        }
-        
-        // 3. 優化語音播報 - 只播報物體名稱，不包含距離和位置信息
+        // 直接使用檢測結果（YoloDetector 已按置信度排序）
+        // 確保播報的物體與屏幕上顯示的檢測框一致
         StringBuilder announcement = new StringBuilder();
         
-        // 直接列舉物體名稱，最多2個
-        int maxObjects = Math.min(toAnnounce.size(), 2);
+        // 播報前2個檢測結果（與屏幕上顯示的前2個檢測框一致）
+        int maxObjects = Math.min(results.size(), 2);
         for (int i = 0; i < maxObjects; i++) {
-            announcement.append(toAnnounce.get(i).getLabelZh());
+            YoloDetector.DetectionResult result = results.get(i);
+            announcement.append(result.getLabelZh());
             if (i < maxObjects - 1) {
                 announcement.append("、");
             }
         }
         
-        // 如果物體超過2個，添加總數
-        if (toAnnounce.size() > 2) {
-            announcement.append("等").append(toAnnounce.size()).append("個");
+        String currentObjects = announcement.toString();
+        long currentTime = System.currentTimeMillis();
+        
+        // 檢查是否需要播報：
+        // 1. 檢測到的物體與上次不同
+        // 2. 或者距離上次播報已超過靜默期
+        boolean shouldAnnounce = !currentObjects.equals(lastAnnouncedObjects) || 
+                                 (currentTime - lastAnnounceTime >= ANNOUNCE_INTERVAL_MS);
+        
+        if (shouldAnnounce) {
+            // 根據語言播報
+            String cantoneseText = currentLanguage.equals("english") ? translateToEnglish(currentObjects) : currentObjects;
+            String englishText = currentLanguage.equals("english") ? currentObjects : translateToEnglish(currentObjects);
+            
+            ttsManager.speak(cantoneseText, englishText, false);
+            
+            // 更新記錄
+            lastAnnouncedObjects = currentObjects;
+            lastAnnounceTime = currentTime;
+            
+            Log.d(TAG, "播報檢測結果: " + currentObjects);
+        } else {
+            Log.d(TAG, "跳過重複播報: " + currentObjects + " (上次: " + lastAnnouncedObjects + ")");
         }
-        
-        // 4. 根據語言播報
-        String cantoneseText = currentLanguage.equals("english") ? translateToEnglish(announcement.toString()) : announcement.toString();
-        String englishText = currentLanguage.equals("english") ? announcement.toString() : translateToEnglish(announcement.toString());
-        
-        ttsManager.speak(cantoneseText, englishText, false);
     }
     
     private String categorizeImportance(String label) {
@@ -486,6 +493,84 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         
         // 可選物體：裝飾品
         return "optional";
+    }
+    
+    /**
+     * 根據圖像旋轉角度調整檢測結果的座標
+     */
+    private List<YoloDetector.DetectionResult> adjustResultsForRotation(
+            List<YoloDetector.DetectionResult> results, 
+            int imageWidth, int imageHeight, 
+            int rotationDegrees) {
+        
+        if (results == null || results.isEmpty() || rotationDegrees == 0) {
+            return results;
+        }
+        
+        List<YoloDetector.DetectionResult> adjustedResults = new ArrayList<>();
+        
+        for (YoloDetector.DetectionResult result : results) {
+            Rect bbox = result.getBoundingBox();
+            if (bbox == null) {
+                adjustedResults.add(result);
+                continue;
+            }
+            
+            Rect adjustedBbox = rotateBoundingBox(bbox, imageWidth, imageHeight, rotationDegrees);
+            
+            // 創建新的檢測結果，使用調整後的邊界框
+            YoloDetector.DetectionResult adjustedResult = new YoloDetector.DetectionResult(
+                result.getLabel(), 
+                result.getLabelZh(), 
+                result.getConfidence(), 
+                adjustedBbox
+            );
+            adjustedResults.add(adjustedResult);
+        }
+        
+        return adjustedResults;
+    }
+    
+    /**
+     * 旋轉邊界框座標
+     */
+    private Rect rotateBoundingBox(Rect bbox, int imageWidth, int imageHeight, int rotationDegrees) {
+        int left = bbox.left;
+        int top = bbox.top;
+        int right = bbox.right;
+        int bottom = bbox.bottom;
+        
+        int newLeft, newTop, newRight, newBottom;
+        
+        switch (rotationDegrees) {
+            case 90:
+                // 順時針旋轉90度：左上角變為右上角
+                newLeft = imageHeight - bottom;
+                newTop = left;
+                newRight = imageHeight - top;
+                newBottom = right;
+                return new Rect(newLeft, newTop, newRight, newBottom);
+                
+            case 180:
+                // 旋轉180度：上下左右都翻轉
+                newLeft = imageWidth - right;
+                newTop = imageHeight - bottom;
+                newRight = imageWidth - left;
+                newBottom = imageHeight - top;
+                return new Rect(newLeft, newTop, newRight, newBottom);
+                
+            case 270:
+                // 順時針旋轉270度（或逆時針90度）：左上角變為左下角
+                newLeft = top;
+                newTop = imageWidth - right;
+                newRight = bottom;
+                newBottom = imageWidth - left;
+                return new Rect(newLeft, newTop, newRight, newBottom);
+                
+            default:
+                // 0度或其他，不需要調整
+                return bbox;
+        }
     }
     
     private String estimateDistance(Rect boundingBox) {

@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -219,16 +220,55 @@ public class OptimizedDetectionOverlayView extends View {
         this.sourceImageHeight = height;
     }
     
+    /**
+     * 將來源圖像座標映射到視圖座標
+     * 考慮相機預覽的實際顯示區域和縮放模式
+     */
     private float[] mapSourceToView(float x, float y) {
         if (sourceImageWidth <= 0 || sourceImageHeight <= 0 || viewWidth <= 0 || viewHeight <= 0) {
+            Log.w(TAG, "mapSourceToView: 尺寸無效，返回原始座標");
             return new float[]{x, y};
         }
-        float scale = Math.max((float) viewWidth / sourceImageWidth, (float) viewHeight / sourceImageHeight);
-        float scaledW = sourceImageWidth * scale;
-        float scaledH = sourceImageHeight * scale;
-        float dx = (viewWidth - scaledW) * 0.5f;
-        float dy = (viewHeight - scaledH) * 0.5f;
-        return new float[]{x * scale + dx, y * scale + dy};
+        
+        // 計算來源圖像和視圖的寬高比
+        float sourceAspect = (float) sourceImageWidth / sourceImageHeight;
+        float viewAspect = (float) viewWidth / viewHeight;
+        
+        float scaleX, scaleY;
+        float offsetX = 0, offsetY = 0;
+        
+        // PreviewView 默認使用 FILL_CENTER 模式（類似 FIT_CENTER）
+        // 圖像會按比例縮放以適應視圖，保持寬高比
+        if (sourceAspect > viewAspect) {
+            // 來源圖像更寬，以寬度為準縮放
+            scaleX = (float) viewWidth / sourceImageWidth;
+            scaleY = scaleX; // 保持寬高比
+            // 垂直居中
+            float scaledHeight = sourceImageHeight * scaleY;
+            offsetY = (viewHeight - scaledHeight) * 0.5f;
+        } else {
+            // 來源圖像更高，以高度為準縮放
+            scaleY = (float) viewHeight / sourceImageHeight;
+            scaleX = scaleY; // 保持寬高比
+            // 水平居中
+            float scaledWidth = sourceImageWidth * scaleX;
+            offsetX = (viewWidth - scaledWidth) * 0.5f;
+        }
+        
+        // 應用轉換
+        float mappedX = x * scaleX + offsetX;
+        float mappedY = y * scaleY + offsetY;
+        
+        // 確保座標在視圖範圍內
+        mappedX = Math.max(0, Math.min(viewWidth - 1, mappedX));
+        mappedY = Math.max(0, Math.min(viewHeight - 1, mappedY));
+        
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, String.format("座標轉換: [%.1f,%.1f] -> [%.1f,%.1f] (來源: %dx%d, 視圖: %dx%d, 縮放: %.3f,%.3f, 偏移: %.1f,%.1f)",
+                x, y, mappedX, mappedY, sourceImageWidth, sourceImageHeight, viewWidth, viewHeight, scaleX, scaleY, offsetX, offsetY));
+        }
+        
+        return new float[]{mappedX, mappedY};
     }
     
     private int getColorForConfidence(float confidence) {
@@ -243,13 +283,20 @@ public class OptimizedDetectionOverlayView extends View {
     
     /**
      * 更新檢測結果
+     * 只顯示前2個檢測結果，與語音播報保持一致
      */
     public void updateDetectionResults(List<YoloDetector.DetectionResult> results) {
         Log.d(TAG, "updateDetectionResults 被調用，結果數量: " + (results != null ? results.size() : 0));
         Log.d(TAG, "當前視圖尺寸: " + viewWidth + "x" + viewHeight);
         Log.d(TAG, "當前視圖可見性: " + getVisibility() + ", Alpha: " + getAlpha());
         
-        this.detectionResults = results;
+        // 只保留前2個檢測結果，與語音播報保持一致
+        if (results != null && results.size() > 2) {
+            this.detectionResults = new ArrayList<>(results.subList(0, 2));
+            Log.d(TAG, "限制顯示為前2個檢測結果");
+        } else {
+            this.detectionResults = results;
+        }
         
         if (results != null && !results.isEmpty()) {
             Log.d(TAG, "檢測結果詳情:");
