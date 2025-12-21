@@ -59,7 +59,7 @@
         android:textSize="72sp"
         android:background="@drawable/voice_button_background"
         android:backgroundTint="@null"
-        android:contentDescription="開始監聽按鈕"
+        android:contentDescription="@string/start_listening_button"
         android:layout_marginBottom="32dp"
         android:elevation="8dp" />
 
@@ -76,7 +76,7 @@
         android:background="@drawable/settings_section_background"
         android:padding="16dp"
         android:layout_marginBottom="24dp"
-        android:contentDescription="識別結果文字" />
+        android:contentDescription="@string/recognition_result_text" />
 
     <!-- 提示文字 -->
     <ScrollView

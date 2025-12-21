@@ -44,10 +44,12 @@
     <string name="voice_command_not_recognized">Command not recognized, please say a valid command</string>
     
     <!-- Voice Command Page -->
-    <string name="voice_command_title">語音命令</string>
-    <string name="listening_status">點擊開始</string>
-    <string name="listening_active">正在監聽...</string>
-    <string name="available_commands">可用指令</string>
+    <string name="voice_command_title">Voice Command</string>
+    <string name="listening_status">Click to Start</string>
+    <string name="listening_active">Listening...</string>
+    <string name="available_commands">Available Commands</string>
+    <string name="start_listening_button">Start listening button</string>
+    <string name="recognition_result_text">Recognition result text</string>
     <string name="commands_list">• 環境識別：睇下周圍、環境識別\n• 閱讀助手：讀文件、掃描文件\n• 尋找物品：搵嘢、尋找物品\n• 緊急求助：救命、緊急求助\n• 系統設定：設定、打開設定\n• 語言切換：轉語言、切換語言\n• 返回主頁：主頁、返回主頁\n• 時間查詢：幾點、現在幾點\n• 停止監聽：收聲、停止</string>
     
     <!-- Find Items Page -->

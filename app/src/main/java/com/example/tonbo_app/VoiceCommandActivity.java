@@ -208,7 +208,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                         return;
                     }
                     vibrationManager.vibrateSuccess();
-                    commandText.setText("識別到: " + originalText);
+                    String recognizedText = "english".equals(currentLanguage) ? 
+                        "Recognized: " + originalText : 
+                        ("mandarin".equals(currentLanguage) ? "识别到: " : "識別到: ") + originalText;
+                    commandText.setText(recognizedText);
                     executeCommand(command, originalText);
                 });
             }
@@ -217,7 +220,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
             public void onContinuousCommandsRecognized(List<VoiceCommandManager.CommandPair> commands, String originalText) {
                 runOnUiThread(() -> {
                     vibrationManager.vibrateSuccess();
-                    commandText.setText("識別到連續命令: " + originalText);
+                    String recognizedText = "english".equals(currentLanguage) ? 
+                        "Recognized continuous commands: " + originalText :
+                        ("mandarin".equals(currentLanguage) ? "识别到连续命令: " : "識別到連續命令: ") + originalText;
+                    commandText.setText(recognizedText);
                     executeContinuousCommands(commands, originalText);
                 });
             }
@@ -226,8 +232,11 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
             public void onListeningStarted() {
                 runOnUiThread(() -> {
                     updateUI(true);
-                    statusText.setText("正在監聽...");
-                    announceInfo("開始監聽，請說出指令");
+                    statusText.setText(getLocalizedString("listening_active"));
+                    String announceText = "english".equals(currentLanguage) ? 
+                        "Start listening, please speak your command" :
+                        ("mandarin".equals(currentLanguage) ? "开始监听，请说出指令" : "開始監聽，請說出指令");
+                    announceInfo(announceText);
                 });
             }
             
@@ -235,7 +244,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
             public void onListeningStopped() {
                 runOnUiThread(() -> {
                     updateUI(false);
-                    statusText.setText("點擊開始");
+                    statusText.setText(getLocalizedString("listening_status"));
                 });
             }
             
@@ -253,7 +262,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
             @Override
             public void onPartialResult(String partialText) {
                 runOnUiThread(() -> {
-                    commandText.setText("識別中: " + partialText);
+                    String recognizingText = "english".equals(currentLanguage) ? 
+                        "Recognizing: " + partialText :
+                        ("mandarin".equals(currentLanguage) ? "识别中: " : "識別中: ") + partialText;
+                    commandText.setText(recognizingText);
                 });
             }
         });
@@ -273,9 +285,15 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_RECORD_AUDIO) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                announceInfo("錄音權限已授予");
+                String message = "english".equals(currentLanguage) ? 
+                    "Microphone permission granted" :
+                    ("mandarin".equals(currentLanguage) ? "录音权限已授予" : "錄音權限已授予");
+                announceInfo(message);
             } else {
-                announceError("需要錄音權限才能使用語音命令");
+                String message = "english".equals(currentLanguage) ? 
+                    "Microphone permission needed to use voice commands" :
+                    ("mandarin".equals(currentLanguage) ? "需要录音权限才能使用语音命令" : "需要錄音權限才能使用語音命令");
+                announceError(message);
             }
         }
     }
@@ -291,7 +309,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     private void startListening() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
-            announceError("請先授予錄音權限");
+            String message = "english".equals(currentLanguage) ? 
+                "Please grant microphone permission first" :
+                ("mandarin".equals(currentLanguage) ? "请先授予录音权限" : "請先授予錄音權限");
+            announceError(message);
             checkPermissions();
             return;
         }
@@ -330,7 +351,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
      */
     private void executeContinuousCommands(List<VoiceCommandManager.CommandPair> commands, String originalText) {
         if (commands == null || commands.isEmpty()) {
-            announceError("沒有可執行的命令");
+            String message = "english".equals(currentLanguage) ? 
+                "No commands to execute" :
+                ("mandarin".equals(currentLanguage) ? "没有可执行的命令" : "沒有可執行的命令");
+            announceError(message);
             return;
         }
         
@@ -480,28 +504,43 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     private void performCommand(String command, String originalText) {
         switch (command) {
             case "open_environment":
-                announceNavigation("正在打開環境識別");
+                String envNav = "english".equals(currentLanguage) ? 
+                    "Opening environment recognition" :
+                    ("mandarin".equals(currentLanguage) ? "正在打开环境识别" : "正在打開環境識別");
+                announceNavigation(envNav);
                 // 使用與主頁面相同的 RealAIDetectionActivity
                 startActivity(new Intent(this, RealAIDetectionActivity.class).putExtra("language", currentLanguage));
                 break;
                 
             case "open_document":
-                announceNavigation("正在打開閱讀助手");
+                String docNav = "english".equals(currentLanguage) ? 
+                    "Opening document assistant" :
+                    ("mandarin".equals(currentLanguage) ? "正在打开阅读助手" : "正在打開閱讀助手");
+                announceNavigation(docNav);
                 startActivity(new Intent(this, DocumentCurrencyActivity.class).putExtra("language", currentLanguage));
                 break;
                 
             case "open_find":
-                announceNavigation("正在打開尋找物品");
+                String findNav = "english".equals(currentLanguage) ? 
+                    "Opening find items" :
+                    ("mandarin".equals(currentLanguage) ? "正在打开寻找物品" : "正在打開尋找物品");
+                announceNavigation(findNav);
                 startActivity(new Intent(this, FindItemsActivity.class).putExtra("language", currentLanguage));
                 break;
                 
             case "open_assistance":
-                announceNavigation("正在打開即時協助");
+                String assistNav = "english".equals(currentLanguage) ? 
+                    "Opening live assistance" :
+                    ("mandarin".equals(currentLanguage) ? "正在打开即时协助" : "正在打開即時協助");
+                announceNavigation(assistNav);
                 startActivity(new Intent(this, InstantAssistanceActivity.class).putExtra("language", currentLanguage));
                 break;
                 
             case "emergency":
-                announceInfo("觸發緊急求助");
+                String emergencyText = "english".equals(currentLanguage) ? 
+                    "Triggering emergency alert" :
+                    ("mandarin".equals(currentLanguage) ? "触发紧急求助" : "觸發緊急求助");
+                announceInfo(emergencyText);
                 // 直接撥打999，不顯示選擇對話框
                 List<String> emergency999 = new java.util.ArrayList<>();
                 emergency999.add("999");
@@ -509,7 +548,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 break;
                 
             case "go_home":
-                announceNavigation("返回主頁");
+                String homeNav = "english".equals(currentLanguage) ? 
+                    "Returning to home" :
+                    ("mandarin".equals(currentLanguage) ? "返回主页" : "返回主頁");
+                announceNavigation(homeNav);
                 Intent homeIntent = new Intent(this, MainActivity.class);
                 homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(homeIntent);
@@ -517,7 +559,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 break;
                 
             case "go_back":
-                announceInfo("返回上一頁");
+                String backText = "english".equals(currentLanguage) ? 
+                    "Going back" :
+                    ("mandarin".equals(currentLanguage) ? "返回上一页" : "返回上一頁");
+                announceInfo(backText);
                 finish();
                 break;
                 
@@ -526,7 +571,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 break;
                 
             case "open_settings":
-                announceNavigation("正在打開系統設定");
+                String settingsNav = "english".equals(currentLanguage) ? 
+                    "Opening system settings" :
+                    ("mandarin".equals(currentLanguage) ? "正在打开系统设置" : "正在打開系統設定");
+                announceNavigation(settingsNav);
                 startActivity(new Intent(this, SettingsActivity.class).putExtra("language", currentLanguage));
                 break;
                 
@@ -535,7 +583,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 break;
                 
             case "stop_listening":
-                announceInfo("停止監聽");
+                String stopText = "english".equals(currentLanguage) ? 
+                    "Stopped listening" :
+                    ("mandarin".equals(currentLanguage) ? "停止监听" : "停止監聽");
+                announceInfo(stopText);
                 stopListening();
                 break;
                 
@@ -543,37 +594,61 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
             case "start_detection":
                 if (isInEnvironmentActivity()) {
                     sendBroadcastToEnvironment("start_detection");
-                    announceInfo("開始環境檢測");
+                    String startText = "english".equals(currentLanguage) ? 
+                        "Starting environment detection" :
+                        ("mandarin".equals(currentLanguage) ? "开始环境检测" : "開始環境檢測");
+                    announceInfo(startText);
                 } else {
-                    announceInfo("請先打開環境識別功能");
+                    String needOpenText = "english".equals(currentLanguage) ? 
+                        "Please open environment recognition first" :
+                        ("mandarin".equals(currentLanguage) ? "请先打开环境识别功能" : "請先打開環境識別功能");
+                    announceInfo(needOpenText);
                 }
                 break;
                 
             case "stop_detection":
                 if (isInEnvironmentActivity()) {
                     sendBroadcastToEnvironment("stop_detection");
-                    announceInfo("停止環境檢測");
+                    String stopDetText = "english".equals(currentLanguage) ? 
+                        "Stopped environment detection" :
+                        ("mandarin".equals(currentLanguage) ? "停止环境检测" : "停止環境檢測");
+                    announceInfo(stopDetText);
                 } else {
-                    announceInfo("請先打開環境識別功能");
+                    String needOpenText2 = "english".equals(currentLanguage) ? 
+                        "Please open environment recognition first" :
+                        ("mandarin".equals(currentLanguage) ? "请先打开环境识别功能" : "請先打開環境識別功能");
+                    announceInfo(needOpenText2);
                 }
                 break;
                 
             case "describe_environment":
                 if (isInEnvironmentActivity()) {
                     sendBroadcastToEnvironment("describe_environment");
-                    announceInfo("正在描述環境");
+                    String describeText = "english".equals(currentLanguage) ? 
+                        "Describing environment" :
+                        ("mandarin".equals(currentLanguage) ? "正在描述环境" : "正在描述環境");
+                    announceInfo(describeText);
                 } else {
-                    announceInfo("請先打開環境識別功能");
+                    String needOpenText3 = "english".equals(currentLanguage) ? 
+                        "Please open environment recognition first" :
+                        ("mandarin".equals(currentLanguage) ? "请先打开环境识别功能" : "請先打開環境識別功能");
+                    announceInfo(needOpenText3);
                 }
                 break;
                 
             // 控制命令
             case "repeat":
                 if (lastCommand != null) {
-                    announceInfo("重複執行: " + lastCommandText);
+                    String repeatText = "english".equals(currentLanguage) ? 
+                        "Repeat: " + lastCommandText :
+                        ("mandarin".equals(currentLanguage) ? "重复执行: " : "重複執行: ") + lastCommandText;
+                    announceInfo(repeatText);
                     performCommand(lastCommand, lastCommandText);
                 } else {
-                    announceInfo("沒有可重複的命令");
+                    String noRepeatText = "english".equals(currentLanguage) ? 
+                        "No command to repeat" :
+                        ("mandarin".equals(currentLanguage) ? "没有可重复的命令" : "沒有可重複的命令");
+                    announceInfo(noRepeatText);
                 }
                 break;
                 
@@ -615,8 +690,14 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     private void adjustVolume(boolean increase) {
         // 這裡可以調用TTSManager調整音量
         if (ttsManager != null) {
-            // 假設TTSManager有調整音量的方法
-            String message = increase ? "音量已增大" : "音量已減小";
+            String message;
+            if ("english".equals(currentLanguage)) {
+                message = increase ? "Volume increased" : "Volume decreased";
+            } else if ("mandarin".equals(currentLanguage)) {
+                message = increase ? "音量已增大" : "音量已減小";
+            } else {
+                message = increase ? "音量已增大" : "音量已減小";
+            }
             announceInfo(message);
         }
     }
