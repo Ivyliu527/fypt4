@@ -54,7 +54,7 @@
         <!-- 語言切換按鈕 - 現代化設計 -->
         <Button
             android:id="@+id/languageButton"
-            android:layout_width="72dp"
+            android:layout_width="80dp"
             android:layout_height="72dp"
             android:text="廣"
             android:textSize="22sp"
@@ -63,9 +63,17 @@
             android:backgroundTint="@null"
             android:contentDescription="@string/language_button_desc_prefix"
             android:minHeight="72dp"
-            android:minWidth="72dp"
+            android:minWidth="80dp"
             android:elevation="4dp"
-            android:stateListAnimator="@null" />
+            android:stateListAnimator="@null"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:ellipsize="none"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp"
+            android:gravity="center" />
 
     </LinearLayout>
 

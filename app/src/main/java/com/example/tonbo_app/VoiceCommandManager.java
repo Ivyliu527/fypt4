@@ -34,6 +34,10 @@ public class VoiceCommandManager {
     private Intent recognizerIntent;
     private boolean isListening = false;
     
+    // ASR管理器（可選，用於支持多種ASR引擎）
+    private ASRManager asrManager;
+    private boolean useASRManager = false; // 是否使用ASRManager（默認false，使用原生）
+    
     // 命令映射表 - 廣東話
     private Map<String, String> cantoneseCommands = new HashMap<>();
     // 命令映射表 - 英文
@@ -61,6 +65,15 @@ public class VoiceCommandManager {
         this.context = context.getApplicationContext();
         initializeCommands();
         initializeSpeechRecognizer();
+        // 初始化ASRManager（可選）
+        try {
+            asrManager = new ASRManager(context);
+            // 默認使用Android Native引擎（與當前行為一致）
+            asrManager.setASREngine(ASRManager.ASREngine.ANDROID_NATIVE);
+            Log.d(TAG, "ASRManager初始化成功");
+        } catch (Exception e) {
+            Log.w(TAG, "ASRManager初始化失敗，將使用原生SpeechRecognizer: " + e.getMessage());
+        }
     }
     
     public static synchronized VoiceCommandManager getInstance(Context context) {
@@ -191,18 +204,7 @@ public class VoiceCommandManager {
      * 開始監聽語音命令
      */
     public void startListening() {
-        if (speechRecognizer == null) {
-            initializeSpeechRecognizer();
-        }
-        
-        if (speechRecognizer == null) {
-            Log.e(TAG, "語音識別器初始化失敗");
-            if (commandListener != null) {
-                commandListener.onError("語音識別器初始化失敗");
-            }
-            return;
-        }
-        
+        // 檢查權限
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) 
                 != PackageManager.PERMISSION_GRANTED) {
             Log.w(TAG, "錄音權限未授予");
@@ -214,6 +216,79 @@ public class VoiceCommandManager {
         
         if (isListening) {
             Log.w(TAG, "已經在監聽中");
+            return;
+        }
+        
+        // 如果使用ASRManager且已初始化
+        if (useASRManager && asrManager != null) {
+            startListeningWithASRManager();
+            return;
+        }
+        
+        // 否則使用原生SpeechRecognizer（默認行為）
+        startListeningWithNative();
+    }
+    
+    /**
+     * 使用ASRManager開始監聽
+     */
+    private void startListeningWithASRManager() {
+        Log.d(TAG, "使用ASRManager開始監聽 - 引擎: " + asrManager.getCurrentEngineInfo());
+        
+        asrManager.startRecognition(new ASRManager.ASRCallback() {
+            @Override
+            public void onResult(String text, float confidence) {
+                Log.d(TAG, "ASR識別結果: " + text + " (置信度: " + confidence + ")");
+                isListening = false;
+                
+                if (commandListener != null) {
+                    commandListener.onListeningStopped();
+                }
+                
+                // 處理識別結果
+                processCommand(text);
+            }
+            
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "ASR錯誤: " + error);
+                isListening = false;
+                
+                if (commandListener != null) {
+                    commandListener.onError(error);
+                    commandListener.onListeningStopped();
+                }
+            }
+            
+            @Override
+            public void onPartialResult(String partialText) {
+                Log.d(TAG, "ASR部分結果: " + partialText);
+                
+                if (commandListener != null) {
+                    commandListener.onPartialResult(partialText);
+                }
+            }
+        });
+        
+        isListening = true;
+        if (commandListener != null) {
+            commandListener.onListeningStarted();
+        }
+    }
+    
+    /**
+     * 使用原生SpeechRecognizer開始監聽（默認行為）
+     */
+    private void startListeningWithNative() {
+        if (speechRecognizer == null) {
+            initializeSpeechRecognizer();
+        }
+        
+        if (speechRecognizer == null) {
+            Log.e(TAG, "語音識別器初始化失敗");
+            if (commandListener != null) {
+                commandListener.onError("語音識別器初始化失敗");
+            }
             return;
         }
         
@@ -242,17 +317,34 @@ public class VoiceCommandManager {
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
         
         speechRecognizer.startListening(recognizerIntent);
-        Log.d(TAG, "開始監聽語音命令 - 語言: " + currentLanguage);
+        Log.d(TAG, "開始監聽語音命令（原生） - 語言: " + currentLanguage);
     }
     
     /**
      * 停止監聽
      */
     public void stopListening() {
-        if (speechRecognizer != null && isListening) {
+        if (!isListening) {
+            return;
+        }
+        
+        // 如果使用ASRManager
+        if (useASRManager && asrManager != null) {
+            asrManager.stopRecognition();
+            isListening = false;
+            Log.d(TAG, "停止監聽（ASRManager）");
+            
+            if (commandListener != null) {
+                commandListener.onListeningStopped();
+            }
+            return;
+        }
+        
+        // 使用原生SpeechRecognizer
+        if (speechRecognizer != null) {
             speechRecognizer.stopListening();
             isListening = false;
-            Log.d(TAG, "停止監聽");
+            Log.d(TAG, "停止監聽（原生）");
         }
     }
     
@@ -739,6 +831,38 @@ public class VoiceCommandManager {
      */
     public void setCommandListener(VoiceCommandListener listener) {
         this.commandListener = listener;
+    }
+    
+    /**
+     * 設置是否使用ASRManager（支持多種ASR引擎）
+     * @param useASRManager true=使用ASRManager, false=使用原生SpeechRecognizer（默認）
+     */
+    public void setUseASRManager(boolean useASRManager) {
+        this.useASRManager = useASRManager;
+        Log.d(TAG, "設置使用ASRManager: " + useASRManager);
+    }
+    
+    /**
+     * 設置ASR引擎（僅在使用ASRManager時有效）
+     * @param engine ASR引擎類型
+     */
+    public void setASREngine(ASRManager.ASREngine engine) {
+        if (asrManager != null) {
+            asrManager.setASREngine(engine);
+            Log.d(TAG, "設置ASR引擎: " + engine);
+        } else {
+            Log.w(TAG, "ASRManager未初始化，無法設置引擎");
+        }
+    }
+    
+    /**
+     * 獲取可用的ASR引擎列表
+     */
+    public List<ASRManager.ASREngine> getAvailableASREngines() {
+        if (asrManager != null) {
+            return asrManager.getAvailableEngines();
+        }
+        return new ArrayList<>();
     }
     
     /**
