@@ -147,12 +147,12 @@ public class MainActivity extends BaseAccessibleActivity {
                     String englishHint = "Emergency button pressed, please continue holding for 3 seconds";
                     ttsManager.speak(cantoneseHint, englishHint, false);
                     
-                    // 設置3秒後顯示聯絡人選擇對話框
+                    // 設置3秒後直接撥打999
                     emergencyButtonRunnable = () -> {
                         if (isEmergencyButtonPressed) {
-                            // 3秒已到，顯示聯絡人選擇對話框
-                            Log.d(TAG, "緊急按鈕長按3秒，顯示聯絡人選擇");
-                            showEmergencyContactSelectionDialog();
+                            // 3秒已到，直接撥打999
+                            Log.d(TAG, "緊急按鈕長按3秒，直接撥打999");
+                            triggerEmergencyCall();
                             isEmergencyButtonPressed = false;
                         }
                     };
@@ -931,99 +931,21 @@ public class MainActivity extends BaseAccessibleActivity {
     }
     
     /**
-     * 顯示緊急聯絡人選擇對話框
+     * 直接觸發緊急求助，撥打999（適合視障用戶，無需選擇）
      */
-    private void showEmergencyContactSelectionDialog() {
-        List<String> contacts = emergencyManager.getEmergencyContacts();
+    private void triggerEmergencyCall() {
+        // 直接撥打999，不顯示選擇對話框
+        Log.d(TAG, "直接觸發緊急求助，撥打999");
         
-        if (contacts == null || contacts.isEmpty()) {
-            // 沒有聯絡人，直接發送給所有（默認999）
-            String cantoneseText = "沒有設置緊急聯絡人，將撥打緊急服務電話";
-            String englishText = "No emergency contacts set, will call emergency service";
-            ttsManager.speak(cantoneseText, englishText, true);
-            emergencyManager.triggerEmergencyAlert(null);
-            return;
-        }
-        
-        // 創建多選對話框
-        boolean[] checkedItems = new boolean[contacts.size()];
-        String[] contactArray = contacts.toArray(new String[0]);
-        
-        // 默認選中所有聯絡人
-        for (int i = 0; i < checkedItems.length; i++) {
-            checkedItems[i] = true;
-        }
-        
-        // 根據當前語言設置對話框標題和按鈕文字
-        String dialogTitle;
-        String positiveButton;
-        String negativeButton;
-        
-        if ("english".equals(currentLanguage)) {
-            dialogTitle = "Select Emergency Contacts";
-            positiveButton = "Send";
-            negativeButton = "Cancel";
-        } else if ("mandarin".equals(currentLanguage)) {
-            dialogTitle = "選擇緊急聯絡人";
-            positiveButton = "發送";
-            negativeButton = "取消";
-        } else {
-            dialogTitle = "選擇緊急聯絡人";
-            positiveButton = "發送";
-            negativeButton = "取消";
-        }
-        
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle(dialogTitle);
-        
-        // 播報可選聯絡人
-        String cantoneseText = "請選擇要聯繫的緊急聯絡人，當前有" + contacts.size() + "個聯絡人";
-        String englishText = "Please select emergency contacts to notify, you have " + contacts.size() + " contacts";
+        // 播報提示
+        String cantoneseText = "正在撥打緊急服務電話999";
+        String englishText = "Calling emergency service 999";
         ttsManager.speak(cantoneseText, englishText, true);
         
-        builder.setMultiChoiceItems(contactArray, checkedItems, (dialog, which, isChecked) -> {
-            checkedItems[which] = isChecked;
-        });
-        
-        builder.setPositiveButton(positiveButton, (dialog, which) -> {
-            // 收集選中的聯絡人
-            List<String> selectedContacts = new java.util.ArrayList<>();
-            for (int i = 0; i < checkedItems.length; i++) {
-                if (checkedItems[i]) {
-                    selectedContacts.add(contacts.get(i));
-                }
-            }
-            
-            if (selectedContacts.isEmpty()) {
-                // 沒有選擇任何聯絡人，提示用戶
-                String cantoneseText2 = "未選擇任何聯絡人，將撥打緊急服務電話";
-                String englishText2 = "No contacts selected, will call emergency service";
-                ttsManager.speak(cantoneseText2, englishText2, true);
-                emergencyManager.triggerEmergencyAlert(null);
-            } else {
-                // 發送給選中的聯絡人
-                vibrationManager.vibrateClick();
-                emergencyManager.triggerEmergencyAlert(selectedContacts);
-            }
-        });
-        
-        builder.setNegativeButton(negativeButton, (dialog, which) -> {
-            // 取消操作
-            vibrationManager.vibrateClick();
-            String cantoneseText2 = "已取消緊急求助";
-            String englishText2 = "Emergency request cancelled";
-            ttsManager.speak(cantoneseText2, englishText2, false);
-        });
-        
-        builder.setCancelable(true);
-        builder.setOnCancelListener(dialog -> {
-            String cantoneseText2 = "已取消緊急求助";
-            String englishText2 = "Emergency request cancelled";
-            ttsManager.speak(cantoneseText2, englishText2, false);
-        });
-        
-        android.app.AlertDialog dialog = builder.create();
-        dialog.show();
+        // 直接調用緊急管理器，傳入只包含999的列表
+        List<String> emergency999 = new java.util.ArrayList<>();
+        emergency999.add("999");
+        emergencyManager.triggerEmergencyAlert(emergency999);
     }
     
     @Override

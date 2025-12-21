@@ -341,7 +341,7 @@
     <string name="speech_volume_display">Volume: %d%%</string>
     
     <!-- Emergency Settings Additional Strings -->
-    <string name="phone_examples">e.g.: 999, +852-999, +86-138-0000-0000</string>
+    <string name="phone_examples">e.g.: 999, +86-138-0000-0000</string>
     <string name="default_message_label">Default Message:</string>
     <string name="test_emergency_assistance">Test Emergency Assistance</string>
     <string name="test_mode_warning">Note: Test mode will not send actual assistance messages, only tests voice and vibration functions</string>

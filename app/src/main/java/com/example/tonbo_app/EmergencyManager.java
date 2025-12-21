@@ -2,9 +2,11 @@ package com.example.tonbo_app;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.telephony.SmsManager;
 import android.util.Log;
+import androidx.core.content.ContextCompat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +42,6 @@ public class EmergencyManager {
     private void initializeEmergencyContacts() {
         // 添加默認緊急聯絡人（實際應用中應該從用戶設置中讀取）
         emergencyContacts.add("999"); // 香港緊急服務
-        emergencyContacts.add("+852-999"); // 帶國際區號
         // 可以添加更多聯絡人
     }
     
@@ -164,38 +165,68 @@ public class EmergencyManager {
             }
             
             String phoneUri = "tel:" + phoneNumber;
-            Log.d(TAG, "準備撥打緊急電話: " + phoneNumber);
+            Log.d(TAG, "準備直接撥打緊急電話: " + phoneNumber);
             
-            // 嘗試直接撥打（需要CALL_PHONE權限）
+            // 檢查是否有撥打電話的權限
+            boolean hasCallPermission = ContextCompat.checkSelfPermission(context, 
+                android.Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED;
+            
+            // 優先直接撥打（適合視障用戶，無需確認）
+            if (hasCallPermission) {
+                try {
+                    Intent callIntent = new Intent(Intent.ACTION_CALL);
+                    callIntent.setData(Uri.parse(phoneUri));
+                    callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(callIntent);
+                    Log.d(TAG, "緊急電話已直接撥打: " + phoneNumber);
+                    
+                    // 播報撥打信息
+                    String cantoneseText = "正在撥打緊急電話：" + phoneNumber;
+                    String englishText = "Calling emergency number: " + phoneNumber;
+                    ttsManager.speak(cantoneseText, englishText, false);
+                    return; // 成功撥打，直接返回
+                    
+                } catch (SecurityException e) {
+                    Log.e(TAG, "直接撥打失敗（權限問題）: " + e.getMessage());
+                } catch (Exception e) {
+                    Log.e(TAG, "直接撥打失敗: " + e.getMessage());
+                }
+            }
+            
+            // 如果沒有權限或直接撥打失敗，嘗試使用 ACTION_DIAL（後備方案）
+            // 注意：對於緊急號碼999，某些系統可能允許直接撥打
             try {
+                // 即使沒有權限，也嘗試直接撥打（緊急號碼可能被允許）
                 Intent callIntent = new Intent(Intent.ACTION_CALL);
                 callIntent.setData(Uri.parse(phoneUri));
                 callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(callIntent);
-                Log.d(TAG, "緊急電話已撥打: " + phoneNumber);
+                Log.d(TAG, "緊急電話已撥打（無權限但系統允許）: " + phoneNumber);
                 
-                // 播報撥打信息
                 String cantoneseText = "正在撥打緊急電話：" + phoneNumber;
                 String englishText = "Calling emergency number: " + phoneNumber;
                 ttsManager.speak(cantoneseText, englishText, false);
                 
             } catch (SecurityException e) {
-                Log.e(TAG, "撥打緊急電話失敗，缺少權限: " + e.getMessage());
-                // 嘗試使用ACTION_DIAL（不需要權限，只打開撥號界面）
+                Log.e(TAG, "無法直接撥打，使用撥號界面: " + e.getMessage());
+                // 最後的後備方案：打開撥號界面
                 try {
                     Intent dialIntent = new Intent(Intent.ACTION_DIAL);
                     dialIntent.setData(Uri.parse(phoneUri));
                     dialIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(dialIntent);
                     
-                    String cantoneseText = "正在打開撥號界面，請確認撥打：" + phoneNumber;
-                    String englishText = "Opening dialer, please confirm calling: " + phoneNumber;
+                    String cantoneseText = "已打開撥號界面，號碼已填入：" + phoneNumber + "，請按撥打按鈕";
+                    String englishText = "Dialer opened, number " + phoneNumber + " is ready, please press call button";
                     ttsManager.speak(cantoneseText, englishText, false);
                     Log.d(TAG, "已打開撥號界面: " + phoneNumber);
                 } catch (Exception ex) {
                     Log.e(TAG, "打開撥號界面失敗: " + ex.getMessage());
                     ttsManager.speakError("無法撥打緊急電話，請手動撥打" + phoneNumber);
                 }
+            } catch (Exception e) {
+                Log.e(TAG, "撥打緊急電話失敗: " + e.getMessage());
+                ttsManager.speakError("撥打緊急電話失敗，請手動撥打" + phoneNumber);
             }
             
         } catch (Exception e) {

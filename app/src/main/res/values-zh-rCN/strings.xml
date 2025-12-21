@@ -82,7 +82,7 @@
     <string name="add_emergency_contact_title">添加紧急联系人</string>
     <string name="enter_phone_number">输入电话号码</string>
     <string name="add_button">添加</string>
-    <string name="phone_examples">例如：999、+852-999、+86-138-0000-0000</string>
+    <string name="phone_examples">例如：999、+86-138-0000-0000</string>
     <string name="emergency_contacts_list_title">紧急联系人</string>
     <string name="emergency_message_preview">紧急消息预览</string>
     <string name="emergency_message_content">紧急求助！我正在使用Tonbo应用，需要立即协助，请尽快联系我。</string>
