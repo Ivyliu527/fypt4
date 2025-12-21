@@ -12,7 +12,9 @@ import android.widget.TextView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -413,7 +415,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 
             case "emergency":
                 announceInfo("觸發緊急求助");
-                EmergencyManager.getInstance(this).triggerEmergencyAlert();
+                // 直接撥打999，不顯示選擇對話框
+                List<String> emergency999 = new java.util.ArrayList<>();
+                emergency999.add("999");
+                EmergencyManager.getInstance(this).triggerEmergencyAlert(emergency999);
                 break;
                 
             case "go_home":

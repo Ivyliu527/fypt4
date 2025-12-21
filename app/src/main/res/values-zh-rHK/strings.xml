@@ -269,7 +269,7 @@
     <string name="speech_rate_display">語速: %d%%</string>
     <string name="speech_pitch_display">音調: %d%%</string>
     <string name="speech_volume_display">音量: %d%%</string>
-    <string name="phone_examples">例如：999、+852-999、+86-138-0000-0000</string>
+    <string name="phone_examples">例如：999、+86-138-0000-0000</string>
     <string name="default_message_label">預設訊息:</string>
     <string name="test_emergency_assistance">測試緊急求助</string>
     <string name="test_mode_warning">注意：測試模式不會發送實際的求助信息，只會測試語音和震動功能</string>

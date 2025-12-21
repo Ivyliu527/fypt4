@@ -134,7 +134,6 @@ public class EmergencySettingsActivity extends BaseAccessibleActivity {
         // 如果沒有聯絡人，添加默認的
         if (emergencyContacts.isEmpty()) {
             emergencyContacts.add("999"); // 香港緊急服務
-            emergencyContacts.add("+852-999");
         }
         
         // 設置適配器
