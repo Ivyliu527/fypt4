@@ -64,7 +64,7 @@ public abstract class BaseAccessibleActivity extends AppCompatActivity {
     
     // 默認的Activity啟動方法，子類可以重寫
     protected void startEnvironmentActivity() {
-        Intent intent = new Intent(this, EnvironmentActivity.class);
+        Intent intent = new Intent(this, RealAIDetectionActivity.class);
         intent.putExtra("language", currentLanguage);
         startActivity(intent);
     }

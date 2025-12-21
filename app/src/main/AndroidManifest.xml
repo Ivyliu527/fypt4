@@ -53,12 +53,6 @@
             android:name=".MainActivity"
             android:exported="false" />
             
-        <!-- Environment Activity - 環境識別 -->
-        <activity
-            android:name=".EnvironmentActivity"
-            android:label="@string/environment_title"
-            android:exported="false" />
-            
         <!-- Document Currency Activity - 閱讀助手 -->
         <activity
             android:name=".DocumentCurrencyActivity"
