@@ -164,7 +164,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                            "• Language Switch: Switch language, Change language\n" +
                            "• Return Home: Go home, Home\n" +
                            "• Control: Start detection, Stop detection, Describe environment\n" +
-                           "• Utilities: What time is it, Repeat, Volume up/down";
+                           "• Utilities: What time is it, Repeat, Volume up/down\n" +
+                           "• Continuous Commands: Say multiple commands, e.g. \"Open environment then start detection\"";
                 } else if ("mandarin".equals(currentLang)) {
                     return "• 环境识别：打开环境识别、看看周围\n" +
                            "• 阅读助手：读文件、扫描文件\n" +
@@ -175,7 +176,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                            "• 语言切换：切换语言、转换语言\n" +
                            "• 返回主页：返回主页、主页\n" +
                            "• 控制命令：开始检测、停止检测、描述环境\n" +
-                           "• 实用功能：现在几点、重复、增大/减小音量";
+                           "• 实用功能：现在几点、重复、增大/减小音量\n" +
+                           "• 连续命令：一次说多个命令，例如「打开环境识别然后开始检测」";
                 } else {
                     return "• 環境識別：打開環境識別、睇下周圍\n" +
                            "• 閱讀助手：讀文件、掃描文件\n" +
@@ -186,7 +188,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                            "• 語言切換：轉語言、切換語言\n" +
                            "• 返回主頁：返回主頁、主頁\n" +
                            "• 控制命令：開始檢測、停止檢測、描述環境\n" +
-                           "• 實用功能：現在幾點、重複、增大/減小音量";
+                           "• 實用功能：現在幾點、重複、增大/減小音量\n" +
+                           "• 連續命令：一次說多個命令，例如「打開環境識別然後開始檢測」";
                 }
             default:
                 return getString(R.string.app_name);
@@ -196,13 +199,26 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     private void initVoiceCommandManager() {
         voiceCommandManager = VoiceCommandManager.getInstance(this);
         voiceCommandManager.setLanguage(currentLanguage);
-        voiceCommandManager.setCommandListener(new VoiceCommandManager.VoiceCommandListener() {
+        voiceCommandManager.setCommandListener(new VoiceCommandManager.ExtendedVoiceCommandListener() {
             @Override
             public void onCommandRecognized(String command, String originalText) {
                 runOnUiThread(() -> {
+                    if ("continuous_commands".equals(command)) {
+                        // 連續命令將通過 onContinuousCommandsRecognized 處理
+                        return;
+                    }
                     vibrationManager.vibrateSuccess();
                     commandText.setText("識別到: " + originalText);
                     executeCommand(command, originalText);
+                });
+            }
+            
+            @Override
+            public void onContinuousCommandsRecognized(List<VoiceCommandManager.CommandPair> commands, String originalText) {
+                runOnUiThread(() -> {
+                    vibrationManager.vibrateSuccess();
+                    commandText.setText("識別到連續命令: " + originalText);
+                    executeContinuousCommands(commands, originalText);
                 });
             }
             
@@ -307,6 +323,76 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     
     private String lastCommand = null;
     private String lastCommandText = null;
+    private Handler commandHandler = new Handler(Looper.getMainLooper());
+    
+    /**
+     * 執行連續命令
+     */
+    private void executeContinuousCommands(List<VoiceCommandManager.CommandPair> commands, String originalText) {
+        if (commands == null || commands.isEmpty()) {
+            announceError("沒有可執行的命令");
+            return;
+        }
+        
+        // 播報識別到的連續命令數量
+        String cantoneseText = "識別到 " + commands.size() + " 個命令，將按順序執行";
+        String englishText = "Recognized " + commands.size() + " commands, will execute in order";
+        ttsManager.speak(cantoneseText, englishText, true);
+        
+        // 延遲執行，讓用戶聽到提示
+        commandHandler.postDelayed(() -> {
+            executeCommandSequence(commands, 0);
+        }, 1500);
+    }
+    
+    /**
+     * 按順序執行命令序列
+     */
+    private void executeCommandSequence(List<VoiceCommandManager.CommandPair> commands, int index) {
+        if (index >= commands.size()) {
+            // 所有命令執行完成
+            String cantoneseText = "所有命令已執行完成";
+            String englishText = "All commands executed";
+            ttsManager.speak(cantoneseText, englishText, false);
+            return;
+        }
+        
+        VoiceCommandManager.CommandPair commandPair = commands.get(index);
+        String command = commandPair.command;
+        String originalText = commandPair.originalText;
+        
+        // 播報當前執行的命令（最後一個命令不播報，直接執行）
+        if (index < commands.size() - 1) {
+            String cantoneseText = "執行第 " + (index + 1) + " 個命令：" + originalText;
+            String englishText = "Executing command " + (index + 1) + ": " + originalText;
+            ttsManager.speak(cantoneseText, englishText, false);
+        }
+        
+        // 執行命令
+        performCommand(command, originalText);
+        
+        // 延遲執行下一個命令（給前一個命令時間完成）
+        int delay = getCommandDelay(command);
+        commandHandler.postDelayed(() -> {
+            executeCommandSequence(commands, index + 1);
+        }, delay);
+    }
+    
+    /**
+     * 根據命令類型獲取執行延遲時間（毫秒）
+     */
+    private int getCommandDelay(String command) {
+        // 導航類命令需要更多時間（Activity切換）
+        if (command.startsWith("open_") || "go_home".equals(command) || "go_back".equals(command)) {
+            return 2000; // 2秒
+        }
+        // 緊急命令需要立即執行
+        if ("emergency".equals(command)) {
+            return 1000; // 1秒
+        }
+        // 其他命令
+        return 1500; // 1.5秒
+    }
     
     private void executeCommand(String command, String originalText) {
         Log.d(TAG, "執行命令: " + command);
@@ -395,7 +481,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         switch (command) {
             case "open_environment":
                 announceNavigation("正在打開環境識別");
-                startActivity(new Intent(this, EnvironmentActivity.class).putExtra("language", currentLanguage));
+                // 使用與主頁面相同的 RealAIDetectionActivity
+                startActivity(new Intent(this, RealAIDetectionActivity.class).putExtra("language", currentLanguage));
                 break;
                 
             case "open_document":
@@ -509,9 +596,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
      * 檢查是否在環境識別頁面
      */
     private boolean isInEnvironmentActivity() {
-        // 簡單檢查：可以通過廣播或Activity狀態來判斷
-        // 這裡簡化處理，實際可以通過ActivityManager檢查
-        return false; // 暫時返回false，需要時可以改進
+        // 使用 RealAIDetectionActivity 的靜態方法檢查
+        return RealAIDetectionActivity.isActive();
     }
     
     /**

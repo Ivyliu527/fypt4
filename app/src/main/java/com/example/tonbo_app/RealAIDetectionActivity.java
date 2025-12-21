@@ -35,6 +35,16 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     private static final String TAG = "RealAIDetection";
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 1001;
     
+    // 靜態標誌，用於追蹤是否在環境識別頁面（供語音命令使用）
+    private static boolean isEnvironmentActivityActive = false;
+    
+    /**
+     * 檢查是否在環境識別頁面（供其他 Activity 調用）
+     */
+    public static boolean isActive() {
+        return isEnvironmentActivityActive;
+    }
+    
     private PreviewView previewView;
     private View statusIndicator;
     private android.widget.ImageButton backButton;
@@ -546,6 +556,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        isEnvironmentActivityActive = true;
         if (cameraExecutor == null || cameraExecutor.isShutdown()) {
             cameraExecutor = Executors.newSingleThreadExecutor();
         }
@@ -554,6 +565,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        isEnvironmentActivityActive = false;
         
         Log.d(TAG, "onPause: 停止檢測並清理相機資源");
         

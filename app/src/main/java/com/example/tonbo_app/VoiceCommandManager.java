@@ -292,22 +292,200 @@ public class VoiceCommandManager {
     }
     
     /**
-     * 處理命令
+     * 處理命令 - 支持連續命令
      */
     private void processCommand(String recognizedText) {
-        String command = matchCommand(recognizedText.toLowerCase());
+        // 檢查是否包含連續命令（連接詞）
+        List<String> commands = splitContinuousCommands(recognizedText);
         
-        if (command != null) {
-            Log.d(TAG, "匹配到命令: " + command + " (原始文本: " + recognizedText + ")");
-            if (commandListener != null) {
-                commandListener.onCommandRecognized(command, recognizedText);
+        if (commands.size() > 1) {
+            // 多個命令，按順序執行
+            Log.d(TAG, "檢測到連續命令，共 " + commands.size() + " 個: " + commands);
+            executeContinuousCommands(commands, recognizedText);
+        } else if (commands.size() == 1) {
+            // 單個命令
+            String command = matchCommand(commands.get(0).toLowerCase());
+            
+            if (command != null) {
+                Log.d(TAG, "匹配到命令: " + command + " (原始文本: " + recognizedText + ")");
+                if (commandListener != null) {
+                    commandListener.onCommandRecognized(command, recognizedText);
+                }
+            } else {
+                Log.d(TAG, "未匹配到命令: " + recognizedText);
+                if (commandListener != null) {
+                    commandListener.onError("未識別的命令: " + recognizedText);
+                }
             }
         } else {
-            Log.d(TAG, "未匹配到命令: " + recognizedText);
-            if (commandListener != null) {
-                commandListener.onError("未識別的命令: " + recognizedText);
+            // 無法分割，嘗試整體匹配
+            String command = matchCommand(recognizedText.toLowerCase());
+            
+            if (command != null) {
+                Log.d(TAG, "匹配到命令: " + command + " (原始文本: " + recognizedText + ")");
+                if (commandListener != null) {
+                    commandListener.onCommandRecognized(command, recognizedText);
+                }
+            } else {
+                Log.d(TAG, "未匹配到命令: " + recognizedText);
+                if (commandListener != null) {
+                    commandListener.onError("未識別的命令: " + recognizedText);
+                }
             }
         }
+    }
+    
+    /**
+     * 分割連續命令（識別連接詞）
+     */
+    private List<String> splitContinuousCommands(String text) {
+        List<String> commands = new ArrayList<>();
+        
+        if (text == null || text.trim().isEmpty()) {
+            return commands;
+        }
+        
+        // 獲取當前語言的連接詞列表
+        List<String> connectors = getConnectorsForLanguage(currentLanguage);
+        
+        // 轉換為小寫進行匹配
+        String lowerText = text.toLowerCase();
+        
+        // 嘗試用連接詞分割
+        String[] parts = null;
+        String usedConnector = null;
+        
+        for (String connector : connectors) {
+            if (lowerText.contains(connector)) {
+                // 找到連接詞，按連接詞分割
+                parts = lowerText.split(connector, -1);
+                usedConnector = connector;
+                break;
+            }
+        }
+        
+        if (parts != null && parts.length > 1) {
+            // 成功分割，清理每個部分
+            for (String part : parts) {
+                String cleaned = part.trim();
+                // 移除連接詞殘留和標點
+                cleaned = cleaned.replaceAll("^[，,。.、\\s]+|[，,。.、\\s]+$", "");
+                if (!cleaned.isEmpty()) {
+                    commands.add(cleaned);
+                }
+            }
+            Log.d(TAG, "使用連接詞 '" + usedConnector + "' 分割命令: " + commands);
+        } else {
+            // 沒有找到連接詞，檢查是否有逗號、頓號等標點
+            if (text.contains("，") || text.contains(",") || text.contains("、")) {
+                parts = text.split("[，,、]", -1);
+                for (String part : parts) {
+                    String cleaned = part.trim();
+                    if (!cleaned.isEmpty()) {
+                        commands.add(cleaned);
+                    }
+                }
+                Log.d(TAG, "使用標點符號分割命令: " + commands);
+            }
+        }
+        
+        return commands;
+    }
+    
+    /**
+     * 獲取當前語言的連接詞列表
+     */
+    private List<String> getConnectorsForLanguage(String language) {
+        List<String> connectors = new ArrayList<>();
+        
+        switch (language) {
+            case "english":
+                connectors.add(" then ");
+                connectors.add(" and then ");
+                connectors.add(" after that ");
+                connectors.add(" next ");
+                connectors.add(" followed by ");
+                connectors.add(" then");
+                connectors.add(" and then");
+                break;
+            case "mandarin":
+                connectors.add("然後");
+                connectors.add("接著");
+                connectors.add("接下來");
+                connectors.add("之後");
+                connectors.add("再");
+                connectors.add("跟著");
+                break;
+            case "cantonese":
+            default:
+                connectors.add("然後");
+                connectors.add("接著");
+                connectors.add("跟住");
+                connectors.add("之後");
+                connectors.add("再");
+                connectors.add("跟住");
+                connectors.add("跟住再");
+                break;
+        }
+        
+        return connectors;
+    }
+    
+    /**
+     * 執行連續命令
+     */
+    private void executeContinuousCommands(List<String> commandTexts, String originalText) {
+        List<CommandPair> commandPairs = new ArrayList<>();
+        
+        // 匹配每個命令文本
+        for (String cmdText : commandTexts) {
+            String command = matchCommand(cmdText.toLowerCase());
+            if (command != null) {
+                commandPairs.add(new CommandPair(command, cmdText));
+                Log.d(TAG, "連續命令匹配: '" + cmdText + "' -> " + command);
+            } else {
+                Log.w(TAG, "連續命令中無法匹配: '" + cmdText + "'");
+            }
+        }
+        
+        if (commandPairs.isEmpty()) {
+            // 沒有匹配到任何命令
+            if (commandListener != null) {
+                commandListener.onError("無法識別連續命令中的任何指令");
+            }
+            return;
+        }
+        
+        // 通知監聽器有連續命令
+        if (commandListener != null) {
+            // 使用第一個命令作為主命令，但傳遞完整信息
+            commandListener.onCommandRecognized("continuous_commands", originalText);
+            
+            // 通過回調傳遞所有命令（需要擴展接口）
+            if (commandListener instanceof ExtendedVoiceCommandListener) {
+                ((ExtendedVoiceCommandListener) commandListener).onContinuousCommandsRecognized(commandPairs, originalText);
+            }
+        }
+    }
+    
+    /**
+     * 命令對（命令ID和原始文本）
+     */
+    public static class CommandPair {
+        public final String command;
+        public final String originalText;
+        
+        public CommandPair(String command, String originalText) {
+            this.command = command;
+            this.originalText = originalText;
+        }
+    }
+    
+    /**
+     * 擴展的命令監聽器接口（支持連續命令）
+     */
+    public interface ExtendedVoiceCommandListener extends VoiceCommandListener {
+        void onContinuousCommandsRecognized(List<CommandPair> commands, String originalText);
     }
     
     /**
