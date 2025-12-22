@@ -212,9 +212,17 @@ public class TTSManager {
         ensureTTSInitialized();
         
         // 根據當前語言選擇對應的文本
-        String textToSpeak = currentLanguage.equals("english") ?
-                (englishText != null ? englishText : cantoneseText) :
-                (cantoneseText != null ? cantoneseText : englishText);
+        String textToSpeak;
+        if ("english".equals(currentLanguage)) {
+            // 英文模式：使用英文文本
+            textToSpeak = englishText != null ? englishText : cantoneseText;
+        } else if ("mandarin".equals(currentLanguage)) {
+            // 普通話模式：使用中文文本（cantoneseText 參數在普通話模式下包含中文標籤）
+            textToSpeak = cantoneseText != null ? cantoneseText : englishText;
+        } else {
+            // 廣東話模式：使用中文文本
+            textToSpeak = cantoneseText != null ? cantoneseText : englishText;
+        }
         
         Log.d(TAG, "🔊 選擇的語音文本: " + textToSpeak);
         
