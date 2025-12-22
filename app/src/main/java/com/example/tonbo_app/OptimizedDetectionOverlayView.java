@@ -169,6 +169,13 @@ public class OptimizedDetectionOverlayView extends View {
         } else {
             label = result.getLabelZh(); // 廣東話模式使用中文標籤
         }
+        
+        // 記錄標籤選擇（用於驗證與語音播報的一致性）
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, String.format("顯示標籤[%d]: %s (當前語言: %s, 英文: %s, 中文: %s, 置信度: %.2f)", 
+                index, label, currentLanguage, result.getLabel(), result.getLabelZh(), result.getConfidence()));
+        }
+        
         String confidence = String.format("%.1f%%", result.getConfidence() * 100);
         String displayText = label + " " + confidence;
         
