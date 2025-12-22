@@ -25,7 +25,9 @@ import androidx.core.content.ContextCompat;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -330,14 +332,19 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     // 調整結果座標以適應圖像旋轉
                     List<YoloDetector.DetectionResult> adjustedResults = adjustResultsForRotation(
                         results, image.getWidth(), image.getHeight(), rotationDegrees);
+                    Log.d(TAG, "座標調整後結果數量: " + adjustedResults.size());
+                    
+                    // 過濾掉室內不合理的檢測結果（如滑浪板、雪櫃等）
+                    List<YoloDetector.DetectionResult> filteredResults = filterUnreasonableDetections(adjustedResults);
+                    Log.d(TAG, "過濾後結果數量: " + filteredResults.size());
                     
                     // 統一限制為前2個結果，確保顯示和語音播報完全同步
                     List<YoloDetector.DetectionResult> displayResults;
-                    if (adjustedResults.size() > 2) {
-                        displayResults = new ArrayList<>(adjustedResults.subList(0, 2));
+                    if (filteredResults.size() > 2) {
+                        displayResults = new ArrayList<>(filteredResults.subList(0, 2));
                         Log.d(TAG, "限制顯示和播報為前2個檢測結果");
                     } else {
-                        displayResults = adjustedResults;
+                        displayResults = filteredResults;
                     }
                     
                     // 更新檢測結果覆蓋層
@@ -400,12 +407,18 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             return;
         }
         
+        // 立即停止所有正在進行的語音播報
+        if (ttsManager != null) {
+            ttsManager.stopSpeaking();
+            Log.d(TAG, "已停止當前語音播報");
+        }
+        
         isDetecting = true;
         startButton.setEnabled(false);
         stopButton.setEnabled(true);
         updateStatusIndicator("scanning");
         
-        // 設置真正的圖像分析器
+        // 設置真正的圖像分析器，立即開始識別（不等待語音播報）
         if (imageAnalysis != null) {
             imageAnalysis.setAnalyzer(cameraExecutor, new ImageAnalysis.Analyzer() {
                 @Override
@@ -419,12 +432,13 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             });
         }
         
+        // 播報"環境識別已開始"（但不會阻塞識別功能的啟動）
         String announcement = (currentLanguage.equals("english")) 
             ? "Environment recognition started" 
             : (currentLanguage.equals("mandarin") ? "環境識別已開始" : "環境識別已開始");
-        
         ttsManager.speak(announcement, announcement, true);
         
+        Log.d(TAG, "環境識別已立即開始，語音播報在後台進行");
         Toast.makeText(this, "環境識別已開始", Toast.LENGTH_SHORT).show();
     }
     
@@ -574,6 +588,56 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         
         // 可選物體：裝飾品
         return "optional";
+    }
+    
+    /**
+     * 過濾掉室內不合理的檢測結果
+     * 移除一些在室內環境中不應該出現的物品（如滑浪板、雪櫃等）
+     */
+    private List<YoloDetector.DetectionResult> filterUnreasonableDetections(
+            List<YoloDetector.DetectionResult> results) {
+        if (results == null || results.isEmpty()) {
+            return results;
+        }
+        
+        // 定義室內不應該出現的物品列表（英文標籤）
+        Set<String> unreasonableItems = new HashSet<>();
+        unreasonableItems.add("surfboard");        // 滑浪板
+        unreasonableItems.add("refrigerator");     // 雪櫃/冰箱（通常不會在一般室內環境中被檢測到）
+        unreasonableItems.add("kite");            // 風箏
+        unreasonableItems.add("skateboard");      // 滑板
+        unreasonableItems.add("snowboard");       // 滑雪板
+        unreasonableItems.add("sports ball");     // 運動球（如果置信度低可能是誤檢）
+        
+        List<YoloDetector.DetectionResult> filteredResults = new ArrayList<>();
+        int filteredCount = 0;
+        
+        for (YoloDetector.DetectionResult result : results) {
+            String label = result.getLabel().toLowerCase();
+            float confidence = result.getConfidence();
+            
+            Log.d(TAG, "檢查檢測結果: " + label + " (置信度: " + confidence + ")");
+            
+            // 檢查是否為不合理的物品
+            if (unreasonableItems.contains(label)) {
+                // 對於這些物品，需要更高的置信度才接受（0.7以上）
+                if (confidence < 0.7f) {
+                    Log.d(TAG, "過濾掉低置信度的不合理檢測: " + label + " (置信度: " + confidence + ", 需要 >= 0.7)");
+                    filteredCount++;
+                    continue;
+                } else {
+                    Log.d(TAG, "保留高置信度的不合理物品: " + label + " (置信度: " + confidence + ")");
+                }
+            }
+            
+            filteredResults.add(result);
+        }
+        
+        if (filteredCount > 0) {
+            Log.d(TAG, "過濾統計: 過濾了 " + filteredCount + " 個不合理檢測，保留 " + filteredResults.size() + " 個結果 (原始: " + results.size() + ")");
+        }
+        
+        return filteredResults;
     }
     
     /**
