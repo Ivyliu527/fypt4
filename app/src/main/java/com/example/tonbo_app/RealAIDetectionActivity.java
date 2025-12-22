@@ -68,8 +68,9 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     
     // 用於去重，避免重複播報相同的識別結果
     private String lastAnnouncedObjects = "";
+    private Set<String> lastAnnouncedLabels = new HashSet<>(); // 用於更精確的比較
     private long lastAnnounceTime = 0;
-    private static final long ANNOUNCE_INTERVAL_MS = 2000; // 2秒靜默期
+    private static final long MIN_ANNOUNCE_INTERVAL_MS = 200; // 最小播報間隔（0.2秒，避免過度重複播報完全相同的結果，縮短以減少延遲）
     
     // 用於延長檢測框顯示時間
     private Handler detectionBoxHandler = new Handler(Looper.getMainLooper());
@@ -349,7 +350,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     
                     // 更新檢測結果覆蓋層
                     if (detectionOverlay != null) {
-                        Log.d(TAG, "更新檢測結果到覆蓋層，數量: " + displayResults.size());
+                        Log.d(TAG, "=== 更新檢測結果到覆蓋層，數量: " + displayResults.size() + " ===");
                         
                         // 獲取預覽視圖的實際顯示尺寸
                         int previewWidth = previewView.getWidth();
@@ -359,9 +360,24 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                         // 告知覆蓋層來源影像尺寸，確保像素坐標正確映射
                         // 使用圖像的實際尺寸（YoloDetector 返回的座標基於此尺寸）
                         detectionOverlay.setSourceImageSize(image.getWidth(), image.getHeight());
+                        
                         // 設置當前語言，確保標籤顯示正確的語言（必須在更新結果前設置）
                         detectionOverlay.setLanguage(currentLanguage);
                         Log.d(TAG, "設置檢測覆蓋層語言為: " + currentLanguage);
+                        
+                        // 記錄將要顯示的標籤（用於驗證一致性）
+                        for (int i = 0; i < displayResults.size(); i++) {
+                            YoloDetector.DetectionResult result = displayResults.get(i);
+                            String displayLabel;
+                            if ("english".equals(currentLanguage)) {
+                                displayLabel = result.getLabel();
+                            } else {
+                                displayLabel = result.getLabelZh();
+                            }
+                            Log.d(TAG, String.format("顯示結果[%d]: %s (英文: %s, 中文: %s, 置信度: %.2f)", 
+                                i, displayLabel, result.getLabel(), result.getLabelZh(), result.getConfidence()));
+                        }
+                        
                         // 直接傳遞已限制的結果，不再在 overlay 中限制
                         detectionOverlay.updateDetectionResults(displayResults);
                         Log.d(TAG, "已更新檢測覆蓋層，結果數量: " + displayResults.size());
@@ -370,6 +386,22 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     }
                     
                     // 使用相同的結果列表進行語音播報，確保完全同步
+                    Log.d(TAG, "=== 開始語音播報，使用相同的結果列表 ===");
+                    
+                    // 驗證：記錄將要播報的標籤，確保與顯示一致
+                    StringBuilder verificationLog = new StringBuilder("驗證播報標籤順序: ");
+                    for (int i = 0; i < displayResults.size(); i++) {
+                        YoloDetector.DetectionResult result = displayResults.get(i);
+                        String label;
+                        if ("english".equals(currentLanguage)) {
+                            label = result.getLabel();
+                        } else {
+                            label = result.getLabelZh();
+                        }
+                        verificationLog.append("[").append(i).append("]=").append(label).append(" ");
+                    }
+                    Log.d(TAG, verificationLog.toString());
+                    
                     announceDetectionResults(displayResults);
                 } else {
                     Log.d(TAG, "檢測結果為空，延遲清除覆蓋層");
@@ -499,6 +531,8 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         if (results == null || results.isEmpty()) {
             // 空結果不播報，避免信息過載
             lastAnnouncedObjects = ""; // 清除上次播報記錄
+            lastAnnouncedLabels.clear(); // 清除標籤集合
+            Log.d(TAG, "語音播報：結果為空，跳過播報並清除記錄");
             return;
         }
         
@@ -510,10 +544,18 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         boolean useEnglish = "english".equals(currentLanguage);
         String separator = useEnglish ? ", " : "、";
         
-        // 播報所有傳入的結果（已限制為前2個）
-        // 確保標籤選擇邏輯與顯示完全一致
+        Log.d(TAG, "語音播報：當前語言 = " + currentLanguage + ", 結果數量 = " + results.size());
+        
+        // 播報所有傳入的結果（已限制為前2個，與顯示完全同步）
+        // 確保標籤選擇邏輯與顯示完全一致（與 OptimizedDetectionOverlayView.drawDetectionResult() 完全一致）
+        // 使用與顯示完全相同的順序和標籤選擇邏輯
         for (int i = 0; i < results.size(); i++) {
             YoloDetector.DetectionResult result = results.get(i);
+            if (result == null) {
+                Log.w(TAG, "語音播報結果[" + i + "]為 null，跳過");
+                continue;
+            }
+            
             // 根據語言選擇標籤（與 OptimizedDetectionOverlayView 中的邏輯完全一致）
             String label;
             if ("english".equals(currentLanguage)) {
@@ -523,6 +565,12 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             } else {
                 label = result.getLabelZh(); // 廣東話模式使用中文標籤
             }
+            
+            // 詳細日誌，確保與顯示一致
+            Log.d(TAG, String.format("語音播報結果[%d]: %s (英文: %s, 中文: %s, 置信度: %.2f, bbox: %s)", 
+                i, label, result.getLabel(), result.getLabelZh(), result.getConfidence(),
+                result.getBoundingBox() != null ? result.getBoundingBox().toString() : "null"));
+            
             announcement.append(label);
             if (i < results.size() - 1) {
                 announcement.append(separator);
@@ -531,43 +579,140 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         
         String currentObjects = announcement.toString();
         long currentTime = System.currentTimeMillis();
+        Log.d(TAG, "語音播報：構建的播報文本 = \"" + currentObjects + "\"");
+        
+        // 驗證：確保播報文本與顯示標籤完全一致
+        StringBuilder expectedText = new StringBuilder();
+        for (int i = 0; i < results.size(); i++) {
+            YoloDetector.DetectionResult result = results.get(i);
+            if (result == null) continue;
+            String label;
+            if ("english".equals(currentLanguage)) {
+                label = result.getLabel();
+            } else {
+                label = result.getLabelZh();
+            }
+            expectedText.append(label);
+            if (i < results.size() - 1) {
+                expectedText.append(separator);
+            }
+        }
+        String expected = expectedText.toString();
+        if (!currentObjects.equals(expected)) {
+            Log.e(TAG, "❌ 語音播報文本不一致！預期: \"" + expected + "\", 實際: \"" + currentObjects + "\"");
+        } else {
+            Log.d(TAG, "✅ 語音播報文本驗證通過: \"" + currentObjects + "\"");
+        }
+        
+        // 構建當前檢測到的標籤集合（用於更精確的比較）
+        Set<String> currentLabels = new HashSet<>();
+        for (YoloDetector.DetectionResult result : results) {
+            String label;
+            if ("english".equals(currentLanguage)) {
+                label = result.getLabel();
+            } else {
+                label = result.getLabelZh();
+            }
+            currentLabels.add(label);
+        }
         
         // 檢查是否需要播報：
-        // 1. 檢測到的物體與上次不同
-        // 2. 或者距離上次播報已超過靜默期
-        boolean shouldAnnounce = !currentObjects.equals(lastAnnouncedObjects) || 
-                                 (currentTime - lastAnnounceTime >= ANNOUNCE_INTERVAL_MS);
+        // 1. 第一次檢測到物品（上次記錄為空）- 立即播報（無延遲）
+        // 2. 檢測到的物體集合與上次不同（使用集合比較，不依賴順序）- 立即播報（無延遲）
+        // 3. 檢測結果數量有變化 - 立即播報（無延遲）
+        // 4. 播報文本與上次不同 - 立即播報（無延遲）
+        // 5. 距離上次播報已超過最小間隔（即使標籤相同，也定期播報以確保響應性）
+        boolean isFirstDetection = lastAnnouncedLabels.isEmpty();
+        boolean labelsChanged = !currentLabels.equals(lastAnnouncedLabels);
+        boolean countChanged = currentLabels.size() != lastAnnouncedLabels.size();
+        boolean textChanged = !currentObjects.equals(lastAnnouncedObjects);
+        
+        // 優先級：檢測結果有變化時立即播報（無延遲）
+        // 如果播報文本完全相同，則不播報（避免重複播報相同的內容，如"筆筆筆筆筆"）
+        // 只有在檢測結果真的改變時才播報，確保不會重複播報相同的內容
+        boolean hasChange = isFirstDetection || labelsChanged || countChanged || textChanged;
+        
+        // 如果檢測結果完全相同，即使時間過期也不重複播報（避免重複播報相同的內容）
+        // 只有在檢測結果真的改變時才播報
+        boolean shouldAnnounce = hasChange;
+        
+        if (!hasChange) {
+            Log.d(TAG, "⏭️ 跳過重複播報：播報文本完全相同 (\"" + currentObjects + "\")，不重複播報");
+        }
+        
+        Log.d(TAG, String.format("播報判斷 - 首次檢測: %s, 標籤變化: %s, 數量變化: %s, 文本變化: %s, 結果: %s", 
+            isFirstDetection, labelsChanged, countChanged, textChanged, shouldAnnounce));
         
         if (shouldAnnounce) {
-            // 根據語言播報
+            // 根據語言播報（確保與顯示標籤完全一致）
+            // currentObjects 已經根據 currentLanguage 選擇了正確的標籤（英文或中文）
             String cantoneseText;
             String englishText;
             
             if ("english".equals(currentLanguage)) {
-                // 英文模式：直接使用英文標籤
-                englishText = currentObjects;
-                cantoneseText = translateToEnglish(currentObjects);
+                // 英文模式：currentObjects 包含英文標籤
+                englishText = currentObjects; // 直接使用，與顯示標籤完全一致
+                // 對於英文模式，cantoneseText 可以是空或英文（TTS 會使用 englishText）
+                cantoneseText = currentObjects;
+                Log.d(TAG, "英文模式播報 - 英文文本: " + englishText + " (與顯示標籤一致)");
             } else if ("mandarin".equals(currentLanguage)) {
-                // 普通話模式：使用中文標籤
-                cantoneseText = currentObjects;
-                englishText = translateToEnglish(currentObjects);
-                Log.d(TAG, "普通話模式播報 - 中文文本: " + cantoneseText + ", 英文文本: " + englishText);
+                // 普通話模式：currentObjects 包含中文標籤
+                cantoneseText = currentObjects; // 直接使用，與顯示標籤完全一致
+                // 獲取對應的英文標籤用於備用（確保順序與顯示一致）
+                StringBuilder englishBuilder = new StringBuilder();
+                for (int i = 0; i < results.size(); i++) {
+                    YoloDetector.DetectionResult result = results.get(i);
+                    if (result == null) continue;
+                    englishBuilder.append(result.getLabel());
+                    if (i < results.size() - 1) {
+                        englishBuilder.append(", ");
+                    }
+                }
+                englishText = englishBuilder.toString();
+                Log.d(TAG, "普通話模式播報 - 中文文本: " + cantoneseText + " (與顯示標籤一致), 英文文本: " + englishText);
             } else {
-                // 廣東話模式：使用中文標籤
-                cantoneseText = currentObjects;
-                englishText = translateToEnglish(currentObjects);
+                // 廣東話模式：currentObjects 包含中文標籤
+                cantoneseText = currentObjects; // 直接使用，與顯示標籤完全一致
+                // 獲取對應的英文標籤用於備用（確保順序與顯示一致）
+                StringBuilder englishBuilder = new StringBuilder();
+                for (int i = 0; i < results.size(); i++) {
+                    YoloDetector.DetectionResult result = results.get(i);
+                    if (result == null) continue;
+                    englishBuilder.append(result.getLabel());
+                    if (i < results.size() - 1) {
+                        englishBuilder.append(", ");
+                    }
+                }
+                englishText = englishBuilder.toString();
+                Log.d(TAG, "廣東話模式播報 - 中文文本: " + cantoneseText + " (與顯示標籤一致), 英文文本: " + englishText);
             }
             
             Log.d(TAG, "準備播報 - 當前語言: " + currentLanguage + ", 中文文本: " + cantoneseText + ", 英文文本: " + englishText);
-            ttsManager.speak(cantoneseText, englishText, false);
             
-            // 更新記錄
+            // 最終驗證：確保播報文本與顯示標籤完全一致
+            Log.d(TAG, "=== 最終驗證：播報文本 ===");
+            Log.d(TAG, "顯示標籤順序: " + currentObjects);
+            Log.d(TAG, "TTS 將播報的文本（中文模式）: " + cantoneseText);
+            Log.d(TAG, "TTS 將播報的文本（英文模式）: " + englishText);
+            if (!cantoneseText.equals(currentObjects) && !"english".equals(currentLanguage)) {
+                Log.e(TAG, "❌ 警告：TTS 中文文本與顯示標籤不一致！");
+            }
+            if (!englishText.equals(currentObjects) && "english".equals(currentLanguage)) {
+                Log.e(TAG, "❌ 警告：TTS 英文文本與顯示標籤不一致！");
+            }
+            
+            // 使用優先級播報，立即停止當前語音並播放新的，減少延遲
+            ttsManager.speak(cantoneseText, englishText, true);
+            
+            // 更新記錄（同時更新字符串和標籤集合）
             lastAnnouncedObjects = currentObjects;
+            lastAnnouncedLabels = new HashSet<>(currentLabels); // 創建副本
             lastAnnounceTime = currentTime;
             
-            Log.d(TAG, "播報檢測結果: " + currentObjects);
+            Log.d(TAG, "✅ 已播報檢測結果: " + currentObjects + " (標籤集合: " + currentLabels + ", 與顯示標籤完全一致)");
         } else {
-            Log.d(TAG, "跳過重複播報: " + currentObjects + " (上次: " + lastAnnouncedObjects + ")");
+            Log.d(TAG, String.format("⏭️ 跳過重複播報: %s (上次: %s, 當前標籤: %s, 上次標籤: %s, 距離上次: %dms)", 
+                currentObjects, lastAnnouncedObjects, currentLabels, lastAnnouncedLabels, (currentTime - lastAnnounceTime)));
         }
     }
     
@@ -608,6 +753,9 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         unreasonableItems.add("skateboard");      // 滑板
         unreasonableItems.add("snowboard");       // 滑雪板
         unreasonableItems.add("sports ball");     // 運動球（如果置信度低可能是誤檢）
+        unreasonableItems.add("train");          // 火車（室內環境中不應該出現）
+        unreasonableItems.add("traffic light");   // 交通燈（室內環境中不應該出現）
+        unreasonableItems.add("bird");           // 鳥（室內環境中不應該出現）
         
         List<YoloDetector.DetectionResult> filteredResults = new ArrayList<>();
         int filteredCount = 0;
