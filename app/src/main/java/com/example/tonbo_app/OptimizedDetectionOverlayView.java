@@ -27,6 +27,7 @@ public class OptimizedDetectionOverlayView extends View {
     private int viewHeight;
     private int sourceImageWidth = -1;
     private int sourceImageHeight = -1;
+    private String currentLanguage = "cantonese"; // 當前語言設置
     
     public OptimizedDetectionOverlayView(Context context) {
         super(context);
@@ -159,8 +160,15 @@ public class OptimizedDetectionOverlayView extends View {
         boxPaint.setColor(objectColor);
         canvas.drawRect(mapped, boxPaint);
         
-        // 準備標籤文本
-        String label = result.getLabelZh();
+        // 準備標籤文本（根據當前語言選擇，與語音播報保持一致）
+        String label;
+        if ("english".equals(currentLanguage)) {
+            label = result.getLabel(); // 英文模式使用英文標籤
+        } else if ("mandarin".equals(currentLanguage)) {
+            label = result.getLabelZh(); // 普通話模式使用中文標籤
+        } else {
+            label = result.getLabelZh(); // 廣東話模式使用中文標籤
+        }
         String confidence = String.format("%.1f%%", result.getConfidence() * 100);
         String displayText = label + " " + confidence;
         
@@ -218,6 +226,15 @@ public class OptimizedDetectionOverlayView extends View {
     public void setSourceImageSize(int width, int height) {
         this.sourceImageWidth = width;
         this.sourceImageHeight = height;
+    }
+    
+    /**
+     * 設定當前語言，用於選擇顯示英文或中文標籤
+     */
+    public void setLanguage(String language) {
+        Log.d(TAG, "設置語言為: " + language + " (之前: " + currentLanguage + ")");
+        this.currentLanguage = language;
+        invalidate(); // Redraw with new language
     }
     
     /**
@@ -290,13 +307,8 @@ public class OptimizedDetectionOverlayView extends View {
         Log.d(TAG, "當前視圖尺寸: " + viewWidth + "x" + viewHeight);
         Log.d(TAG, "當前視圖可見性: " + getVisibility() + ", Alpha: " + getAlpha());
         
-        // 只保留前2個檢測結果，與語音播報保持一致
-        if (results != null && results.size() > 2) {
-            this.detectionResults = new ArrayList<>(results.subList(0, 2));
-            Log.d(TAG, "限制顯示為前2個檢測結果");
-        } else {
-            this.detectionResults = results;
-        }
+        // 直接使用傳入的結果（已在 RealAIDetectionActivity 中限制為前2個，確保與語音播報同步）
+        this.detectionResults = results != null ? new ArrayList<>(results) : null;
         
         if (results != null && !results.isEmpty()) {
             Log.d(TAG, "檢測結果詳情:");
