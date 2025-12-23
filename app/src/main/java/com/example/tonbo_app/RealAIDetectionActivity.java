@@ -358,18 +358,8 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                         Log.d(TAG, "預覽視圖尺寸: " + previewWidth + "x" + previewHeight);
                         
                         // 告知覆蓋層來源影像尺寸，確保像素坐標正確映射
-                        // 注意：如果圖像旋轉了90度或270度，寬高需要互換
-                        // 因為旋轉後的座標系統已經改變，但圖像的寬高值沒有自動互換
-                        int sourceWidth = image.getWidth();
-                        int sourceHeight = image.getHeight();
-                        if (rotationDegrees == 90 || rotationDegrees == 270) {
-                            // 旋轉90度或270度時，寬高互換
-                            int temp = sourceWidth;
-                            sourceWidth = sourceHeight;
-                            sourceHeight = temp;
-                            Log.d(TAG, "圖像旋轉 " + rotationDegrees + " 度，寬高互換: " + sourceWidth + "x" + sourceHeight);
-                        }
-                        detectionOverlay.setSourceImageSize(sourceWidth, sourceHeight);
+                        // 使用圖像的實際尺寸（YoloDetector 返回的座標基於此尺寸）
+                        detectionOverlay.setSourceImageSize(image.getWidth(), image.getHeight());
                         
                         // 設置當前語言，確保標籤顯示正確的語言（必須在更新結果前設置）
                         detectionOverlay.setLanguage(currentLanguage);
@@ -759,35 +749,36 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         Set<String> unreasonableItems = new HashSet<>();
         
         // 交通工具
-        unreasonableItems.add("car");            // 汽車
-        unreasonableItems.add("bus");            // 公車
-        unreasonableItems.add("train");          // 火車
-        unreasonableItems.add("truck");          // 卡車
-        unreasonableItems.add("boat");           // 船
-        unreasonableItems.add("airplane");       // 飛機
-        unreasonableItems.add("aeroplane");       // 飛機（另一種拼寫）
-        unreasonableItems.add("bicycle");        // 腳踏車
-        unreasonableItems.add("motorcycle");     // 摩托車
-        unreasonableItems.add("motorbike");      // 摩托車（另一種拼寫）
+        unreasonableItems.add("car");             // 汽車
+        unreasonableItems.add("bus");             // 公車
+        unreasonableItems.add("train");           // 火車
+        unreasonableItems.add("truck");           // 卡車
+        unreasonableItems.add("boat");            // 船
+        unreasonableItems.add("airplane");        // 飛機
+        unreasonableItems.add("aeroplane");       // 飛機（另一種寫法）
+        unreasonableItems.add("bicycle");         // 腳踏車
+        unreasonableItems.add("motorcycle");      // 摩托車
+        unreasonableItems.add("motorbike");       // 摩托車（另一種寫法）
+        unreasonableItems.add("traffic light");   // 交通燈
         
         // 運動用品
-        unreasonableItems.add("frisbee");        // 飛盤
+        unreasonableItems.add("frisbee");         // 飛盤
         unreasonableItems.add("skis");           // 滑雪板
         unreasonableItems.add("snowboard");      // 滑雪板
         unreasonableItems.add("sports ball");    // 運動球
         unreasonableItems.add("kite");           // 風箏
-        unreasonableItems.add("baseball bat");   // 棒球棒
+        unreasonableItems.add("baseball bat");    // 棒球棒
         unreasonableItems.add("baseball glove");  // 棒球手套
-        unreasonableItems.add("skateboard");     // 滑板
-        unreasonableItems.add("surfboard");      // 衝浪板
-        unreasonableItems.add("tennis racket");  // 網球拍
+        unreasonableItems.add("skateboard");      // 滑板
+        unreasonableItems.add("surfboard");       // 衝浪板
+        unreasonableItems.add("tennis racket");   // 網球拍
         
         // 廚房用品
         unreasonableItems.add("bottle");         // 瓶子
         unreasonableItems.add("wine glass");     // 酒杯
         unreasonableItems.add("cup");            // 杯子
         unreasonableItems.add("fork");           // 叉子
-        unreasonableItems.add("knife");         // 刀
+        unreasonableItems.add("knife");          // 刀
         unreasonableItems.add("spoon");          // 湯匙
         unreasonableItems.add("bowl");           // 碗
         unreasonableItems.add("microwave");      // 微波爐
@@ -810,17 +801,9 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         
         // 其他
         unreasonableItems.add("toilet");         // 馬桶
-        unreasonableItems.add("traffic light");  // 交通燈
         
         List<YoloDetector.DetectionResult> filteredResults = new ArrayList<>();
         int filteredCount = 0;
-        
-        // 容易混淆的類別需要更高的置信度閾值
-        // 電視和筆記本電腦容易混淆，需要更高的置信度
-        Set<String> ambiguousClasses = new HashSet<>();
-        ambiguousClasses.add("tv");              // 電視（容易與筆記本電腦混淆）
-        ambiguousClasses.add("tvmonitor");       // 電視（另一種拼寫）
-        float ambiguousConfidenceThreshold = 0.6f;  // 容易混淆的類別需要至少60%置信度
         
         for (YoloDetector.DetectionResult result : results) {
             String label = result.getLabel().toLowerCase();
@@ -828,16 +811,9 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             
             Log.d(TAG, "檢查檢測結果: " + label + " (置信度: " + confidence + ")");
             
-            // 檢查是否為不合理的物品，直接過濾掉
+            // 檢查是否為不合理的物品（室內環境中不應該出現的物品，直接過濾）
             if (unreasonableItems.contains(label)) {
-                Log.d(TAG, "過濾掉室內不合理的檢測: " + label);
-                filteredCount++;
-                continue;
-            }
-            
-            // 對於容易混淆的類別（如電視），需要更高的置信度
-            if (ambiguousClasses.contains(label) && confidence < ambiguousConfidenceThreshold) {
-                Log.d(TAG, "過濾掉低置信度的容易混淆檢測: " + label + " (置信度: " + confidence + ", 需要 >= " + ambiguousConfidenceThreshold + ")");
+                Log.d(TAG, "過濾掉室內不合理的檢測: " + label + " (置信度: " + confidence + ")");
                 filteredCount++;
                 continue;
             }
@@ -890,7 +866,6 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     
     /**
      * 旋轉邊界框座標
-     * 注意：旋轉後的座標系統寬高會互換
      */
     private Rect rotateBoundingBox(Rect bbox, int imageWidth, int imageHeight, int rotationDegrees) {
         int left = bbox.left;
@@ -902,24 +877,11 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         
         switch (rotationDegrees) {
             case 90:
-                // 順時針旋轉90度：
-                // 原圖像 (W x H) -> 旋轉後 (H x W)
-                // 原座標 (x, y) -> 新座標 (y, W - x)
-                newLeft = top;
-                newTop = imageWidth - right;
-                newRight = bottom;
-                newBottom = imageWidth - left;
-                // 確保 left < right 和 top < bottom
-                if (newLeft > newRight) {
-                    int temp = newLeft;
-                    newLeft = newRight;
-                    newRight = temp;
-                }
-                if (newTop > newBottom) {
-                    int temp = newTop;
-                    newTop = newBottom;
-                    newBottom = temp;
-                }
+                // 順時針旋轉90度：左上角變為右上角
+                newLeft = imageHeight - bottom;
+                newTop = left;
+                newRight = imageHeight - top;
+                newBottom = right;
                 return new Rect(newLeft, newTop, newRight, newBottom);
                 
             case 180:
@@ -931,24 +893,11 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 return new Rect(newLeft, newTop, newRight, newBottom);
                 
             case 270:
-                // 順時針旋轉270度（或逆時針90度）：
-                // 原圖像 (W x H) -> 旋轉後 (H x W)
-                // 原座標 (x, y) -> 新座標 (H - y, x)
-                newLeft = imageHeight - bottom;
-                newTop = left;
-                newRight = imageHeight - top;
-                newBottom = right;
-                // 確保 left < right 和 top < bottom
-                if (newLeft > newRight) {
-                    int temp = newLeft;
-                    newLeft = newRight;
-                    newRight = temp;
-                }
-                if (newTop > newBottom) {
-                    int temp = newTop;
-                    newTop = newBottom;
-                    newBottom = temp;
-                }
+                // 順時針旋轉270度（或逆時針90度）：左上角變為左下角
+                newLeft = top;
+                newTop = imageWidth - right;
+                newRight = bottom;
+                newBottom = imageWidth - left;
                 return new Rect(newLeft, newTop, newRight, newBottom);
                 
             default:
