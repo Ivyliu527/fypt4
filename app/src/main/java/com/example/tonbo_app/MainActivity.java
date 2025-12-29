@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -81,20 +82,20 @@ public class MainActivity extends BaseAccessibleActivity {
     protected void announcePageTitle() {
         // 播報頁面標題和功能列表
         String cantoneseText = "瞳伴主頁。歡迎使用智能視覺助手。" +
-                "當前有七個主要功能：環境識別、閱讀助手、語音命令、尋找物品、即時協助、出行協助、手勢管理。" +
+                "當前有七個主要功能：環境識別、閱讀助手、語音助手、尋找物品、即時協助、出行協助、手勢管理。" +
                 "右上角有兩個按鈕：系統設定、語言切換。" +
                 "底部有緊急求助按鈕，長按三秒發送求助信息。" +
-                "請點擊選擇功能或使用語音命令控制。";
+                "請點擊選擇功能或使用語音助手。";
         String englishText = "Tonbo Home. Welcome to the smart visual assistant. " +
-                "Seven main functions available: Environment Recognition, Document Assistant, Voice Command, Find Items, Live Assistance, Travel Assistant, Gesture Management. " +
+                "Seven main functions available: Environment Recognition, Document Assistant, Voice Assistant, Find Items, Live Assistance, Travel Assistant, Gesture Management. " +
                 "Two buttons on top right: System Settings, Language Switch. " +
                 "Emergency button at bottom, long press for 3 seconds to send help request. " +
-                "Please tap to select function or use voice command control.";
+                "Please tap to select function or use the Voice Assistant.";
         String mandarinText = "瞳伴主页。欢迎使用智能视觉助手。" +
-                "当前有七个主要功能：环境识别、阅读助手、语音命令、寻找物品、即时协助、出行协助、手势管理。" +
+                "当前有七个主要功能：环境识别、阅读助手、语音助手、寻找物品、即时协助、出行协助、手势管理。" +
                 "右上角有两个按钮：系统设定、语言切换。" +
                 "底部有紧急求助按钮，长按三秒发送求助信息。" +
-                "请点击选择功能或使用语音命令控制。";
+                "请点击选择功能或使用语音助手。";
         
         String[] texts = {cantoneseText, englishText, mandarinText};
         if ("english".equals(currentLanguage)) {
@@ -130,7 +131,7 @@ public class MainActivity extends BaseAccessibleActivity {
         viewPager = findViewById(R.id.viewPager);
         pageIndicator = findViewById(R.id.pageIndicator);
         emergencyButton = findViewById(R.id.emergencyButton);
-
+        
         // 設置緊急按鈕 - 實現真正的3秒長按檢測
         emergencyButton.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
@@ -635,8 +636,8 @@ public class MainActivity extends BaseAccessibleActivity {
             envDesc = "Describe surroundings and objects";
             docTitle = "Document Assistant";
             docDesc = "Scan documents and recognize currency";
-            voiceTitle = "Voice Command";
-            voiceDesc = "Control app with voice commands";
+            voiceTitle = "Voice Assistant";
+            voiceDesc = "Chat with AI assistant and control app with voice commands";
             findTitle = "Find Items";
             findDesc = "Find marked personal items";
             liveTitle = "Live Assistance";
@@ -651,8 +652,8 @@ public class MainActivity extends BaseAccessibleActivity {
             envDesc = "描述周围环境和物体";
             docTitle = "阅读助手";
             docDesc = "扫描文档和识别货币";
-            voiceTitle = "语音命令";
-            voiceDesc = "使用语音命令控制应用";
+            voiceTitle = "语音助手";
+            voiceDesc = "与AI助手聊天并使用语音命令控制应用";
             findTitle = "查找物品";
             findDesc = "查找标记的个人物品";
             liveTitle = "即时协助";
@@ -667,8 +668,8 @@ public class MainActivity extends BaseAccessibleActivity {
             envDesc = "描述周圍環境和物體";
             docTitle = "閱讀助手";
             docDesc = "掃描文檔和識別貨幣";
-            voiceTitle = "語音命令";
-            voiceDesc = "使用語音命令控制應用";
+            voiceTitle = "語音助手";
+            voiceDesc = "與AI助手聊天並使用語音命令控制應用";
             findTitle = "尋找物品";
             findDesc = "尋找標記的個人物品";
             liveTitle = "即時協助";
@@ -852,10 +853,11 @@ public class MainActivity extends BaseAccessibleActivity {
         try {
             Intent intent = new Intent(MainActivity.this, VoiceCommandActivity.class);
             intent.putExtra("language", currentLanguage);
-            announceNavigation("正在進入語音命令頁面");
             startActivity(intent);
+            announceNavigation("正在進入語音助手頁面");
         } catch (Exception e) {
-            announceError("語音命令功能暫不可用");
+            Log.e(TAG, "啟動語音助手頁面失敗: " + e.getMessage(), e);
+            announceError("語音助手功能暫不可用");
         }
     }
 
@@ -898,7 +900,7 @@ public class MainActivity extends BaseAccessibleActivity {
         switch (chineseName) {
             case "環境識別": return "Environment Recognition";
             case "閱讀助手": return "Document Assistant";
-            case "語音命令": return "Voice Command";
+            case "語音助手": return "Voice Assistant";
             case "尋找物品": return "Find Items";
             case "即時協助": return "Live Assistance";
             case "出行協助": return "Travel Assistant";
@@ -940,7 +942,7 @@ public class MainActivity extends BaseAccessibleActivity {
         // 播報提示
         String cantoneseText = "正在撥打緊急服務電話999";
         String englishText = "Calling emergency service 999";
-        ttsManager.speak(cantoneseText, englishText, true);
+            ttsManager.speak(cantoneseText, englishText, true);
         
         // 直接調用緊急管理器，傳入只包含999的列表
         List<String> emergency999 = new java.util.ArrayList<>();
