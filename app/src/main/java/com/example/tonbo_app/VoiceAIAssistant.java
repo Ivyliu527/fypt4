@@ -1,0 +1,344 @@
+package com.example.tonbo_app;
+
+import android.util.Log;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
+/**
+ * 語音AI助手
+ * 整合對話管理、回應生成和命令識別
+ */
+public class VoiceAIAssistant {
+    private static final String TAG = "VoiceAIAssistant";
+    
+    private ConversationManager conversationManager;
+    private ConversationResponseGenerator responseGenerator;
+    private String currentLanguage = "cantonese";
+    private Random random = new Random();
+    
+    // 意圖識別關鍵詞
+    private Map<String, String[]> greetingKeywords;
+    private Map<String, String[]> questionKeywords;
+    private Map<String, String[]> farewellKeywords;
+    
+    public VoiceAIAssistant() {
+        conversationManager = new ConversationManager();
+        responseGenerator = new ConversationResponseGenerator();
+        initializeIntentKeywords();
+    }
+    
+    /**
+     * 初始化意圖關鍵詞
+     */
+    private void initializeIntentKeywords() {
+        greetingKeywords = new HashMap<>();
+        questionKeywords = new HashMap<>();
+        farewellKeywords = new HashMap<>();
+        
+        // 問候語
+        greetingKeywords.put("cantonese", new String[]{"你好", "早晨", "午安", "晚安", "嗨", "哈囉"});
+        greetingKeywords.put("mandarin", new String[]{"你好", "早上好", "中午好", "晚上好", "嗨", "哈囉"});
+        greetingKeywords.put("english", new String[]{"hello", "hi", "good morning", "good afternoon", "good evening", "hey"});
+        
+        // 問題關鍵詞
+        questionKeywords.put("cantonese", new String[]{"點解", "點樣", "點", "為什麼", "什麼", "幾時", "邊個", "邊度"});
+        questionKeywords.put("mandarin", new String[]{"為什麼", "怎麼", "什麼", "什麼時候", "誰", "哪裡", "如何"});
+        questionKeywords.put("english", new String[]{"why", "how", "what", "when", "who", "where", "which"});
+        
+        // 告別語
+        farewellKeywords.put("cantonese", new String[]{"再見", "拜拜", "下次見", "再會"});
+        farewellKeywords.put("mandarin", new String[]{"再見", "拜拜", "下次見", "再會"});
+        farewellKeywords.put("english", new String[]{"goodbye", "bye", "see you", "farewell"});
+    }
+    
+    /**
+     * 設置語言
+     */
+    public void setLanguage(String language) {
+        this.currentLanguage = language;
+        responseGenerator.setLanguage(language);
+    }
+    
+    /**
+     * 處理用戶輸入
+     * @param userInput 用戶輸入的文本
+     * @return 處理結果
+     */
+    public AssistantResponse processInput(String userInput) {
+        if (userInput == null || userInput.trim().isEmpty()) {
+            return new AssistantResponse("", false, null, "empty");
+        }
+        
+        conversationManager.setCurrentState(ConversationManager.ConversationState.PROCESSING);
+        
+        // 1. 檢查是否為命令
+        String command = checkForCommand(userInput);
+        if (command != null) {
+            // 是命令
+            String response = generateCommandResponse(command, userInput);
+            conversationManager.addTurn(userInput, response, true, command);
+            conversationManager.setCurrentState(ConversationManager.ConversationState.IDLE);
+            return new AssistantResponse(response, true, command, "command");
+        }
+        
+        // 2. 識別意圖
+        String intent = identifyIntent(userInput);
+        
+        // 3. 生成回應
+        String response = generateChatResponse(userInput, intent);
+        
+        // 4. 記錄對話
+        conversationManager.addTurn(userInput, response, false, intent);
+        conversationManager.setCurrentState(ConversationManager.ConversationState.IDLE);
+        
+        return new AssistantResponse(response, false, null, intent);
+    }
+    
+    /**
+     * 檢查是否為命令
+     */
+    private String checkForCommand(String userInput) {
+        // 這裡可以調用 VoiceCommandManager 的 matchCommand 方法
+        // 暫時返回 null，由外部處理命令識別
+        return null;
+    }
+    
+    /**
+     * 識別用戶意圖
+     */
+    private String identifyIntent(String userInput) {
+        String lowerInput = userInput.toLowerCase();
+        
+        // 檢查問候
+        String[] greetings = greetingKeywords.get(currentLanguage);
+        if (greetings != null) {
+            for (String greeting : greetings) {
+                if (lowerInput.contains(greeting.toLowerCase())) {
+                    return "greeting";
+                }
+            }
+        }
+        
+        // 檢查問題
+        String[] questions = questionKeywords.get(currentLanguage);
+        if (questions != null) {
+            for (String question : questions) {
+                if (lowerInput.contains(question.toLowerCase())) {
+                    return "question";
+                }
+            }
+        }
+        
+        // 檢查告別
+        String[] farewells = farewellKeywords.get(currentLanguage);
+        if (farewells != null) {
+            for (String farewell : farewells) {
+                if (lowerInput.contains(farewell.toLowerCase())) {
+                    return "farewell";
+                }
+            }
+        }
+        
+        // 檢查是否在討論某個話題
+        if (conversationManager.isDiscussingTopic("天氣")) {
+            return "weather_topic";
+        }
+        
+        return "chat";
+    }
+    
+    /**
+     * 生成聊天回應
+     */
+    private String generateChatResponse(String userInput, String intent) {
+        // 使用回應生成器
+        String response = responseGenerator.generateResponse(userInput);
+        
+        // 如果回應生成器沒有生成回應，根據意圖生成
+        if (response == null || response.isEmpty()) {
+            response = generateResponseByIntent(userInput, intent);
+        }
+        
+        // 增強回應（添加上下文）
+        response = enhanceResponseWithContext(response, userInput);
+        
+        return response;
+    }
+    
+    /**
+     * 根據意圖生成回應
+     */
+    private String generateResponseByIntent(String userInput, String intent) {
+        switch (intent) {
+            case "greeting":
+                return generateGreetingResponse();
+            case "question":
+                return generateQuestionResponse(userInput);
+            case "farewell":
+                return generateFarewellResponse();
+            case "weather_topic":
+                return generateWeatherResponse(userInput);
+            default:
+                return generateGenericResponse(userInput);
+        }
+    }
+    
+    /**
+     * 生成問候回應
+     */
+    private String generateGreetingResponse() {
+        String userName = conversationManager.getUserName();
+        
+        if (currentLanguage.equals("cantonese")) {
+            String[] greetings = {
+                "你好，" + userName + "，有咩可以幫到你？",
+                "你好，" + userName + "，很高興為你服務",
+                "你好，" + userName + "，我係你的語音助手"
+            };
+            return greetings[random.nextInt(greetings.length)];
+        } else if (currentLanguage.equals("mandarin")) {
+            String[] greetings = {
+                "你好，" + userName + "，有什麼可以幫你的？",
+                "你好，" + userName + "，很高興為你服務",
+                "你好，" + userName + "，我是你的語音助手"
+            };
+            return greetings[random.nextInt(greetings.length)];
+        } else {
+            String[] greetings = {
+                "Hello " + userName + ", how can I help you?",
+                "Hi " + userName + ", nice to serve you",
+                "Hello " + userName + ", I'm your voice assistant"
+            };
+            return greetings[random.nextInt(greetings.length)];
+        }
+    }
+    
+    /**
+     * 生成問題回應
+     */
+    private String generateQuestionResponse(String userInput) {
+        if (currentLanguage.equals("cantonese")) {
+            return "呢個問題幾有趣，讓我諗下點答你";
+        } else if (currentLanguage.equals("mandarin")) {
+            return "這個問題很有趣，讓我想想怎麼回答你";
+        } else {
+            return "That's an interesting question, let me think about it";
+        }
+    }
+    
+    /**
+     * 生成告別回應
+     */
+    private String generateFarewellResponse() {
+        if (currentLanguage.equals("cantonese")) {
+            String[] farewells = {
+                "再見，有需要隨時叫我",
+                "再見，保重",
+                "再見，祝你一切順利"
+            };
+            return farewells[random.nextInt(farewells.length)];
+        } else if (currentLanguage.equals("mandarin")) {
+            String[] farewells = {
+                "再見，有需要隨時叫我",
+                "再見，保重",
+                "再見，祝你一切順利"
+            };
+            return farewells[random.nextInt(farewells.length)];
+        } else {
+            String[] farewells = {
+                "Goodbye, call me anytime you need",
+                "Goodbye, take care",
+                "Goodbye, all the best"
+            };
+            return farewells[random.nextInt(farewells.length)];
+        }
+    }
+    
+    /**
+     * 生成天氣相關回應
+     */
+    private String generateWeatherResponse(String userInput) {
+        // 使用回應生成器
+        return responseGenerator.generateResponse(userInput);
+    }
+    
+    /**
+     * 生成通用回應
+     */
+    private String generateGenericResponse(String userInput) {
+        // 使用回應生成器
+        String response = responseGenerator.generateResponse(userInput);
+        if (response == null || response.isEmpty()) {
+            // 如果回應生成器無法生成，使用上下文增強
+            response = enhanceResponseWithContext("", userInput);
+        }
+        return response;
+    }
+    
+    /**
+     * 生成命令回應
+     */
+    private String generateCommandResponse(String command, String userInput) {
+        if (currentLanguage.equals("cantonese")) {
+            return "好的，我立即為你執行";
+        } else if (currentLanguage.equals("mandarin")) {
+            return "好的，我立即為你執行";
+        } else {
+            return "Okay, I'll do that for you";
+        }
+    }
+    
+    /**
+     * 使用上下文增強回應
+     */
+    private String enhanceResponseWithContext(String baseResponse, String userInput) {
+        // 獲取上下文
+        String context = conversationManager.getContextSummary();
+        
+        // 如果沒有基礎回應，嘗試從用戶輸入生成
+        if (baseResponse == null || baseResponse.isEmpty()) {
+            // 簡單的回應增強：在用戶話語基礎上添加肯定
+            if (currentLanguage.equals("cantonese")) {
+                if (userInput.contains("好") || userInput.contains("不錯")) {
+                    return "係啊，" + userInput;
+                }
+                return "我明白，" + userInput;
+            } else if (currentLanguage.equals("mandarin")) {
+                if (userInput.contains("好") || userInput.contains("不錯")) {
+                    return "是啊，" + userInput;
+                }
+                return "我明白，" + userInput;
+            } else {
+                return "I understand, " + userInput;
+            }
+        }
+        
+        return baseResponse;
+    }
+    
+    /**
+     * 獲取對話管理器
+     */
+    public ConversationManager getConversationManager() {
+        return conversationManager;
+    }
+    
+    /**
+     * 助手回應結果
+     */
+    public static class AssistantResponse {
+        public String response;        // 回應文本
+        public boolean isCommand;      // 是否為命令
+        public String commandType;     // 命令類型
+        public String intent;          // 識別的意圖
+        
+        public AssistantResponse(String response, boolean isCommand, String commandType, String intent) {
+            this.response = response;
+            this.isCommand = isCommand;
+            this.commandType = commandType;
+            this.intent = intent;
+        }
+    }
+}
+

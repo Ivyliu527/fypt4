@@ -26,6 +26,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     private static final int PERMISSION_REQUEST_RECORD_AUDIO = 200;
     
     private VoiceCommandManager voiceCommandManager;
+    private VoiceAIAssistant aiAssistant;
     private Button listenButton;
     private TextView statusText;
     private TextView commandText;
@@ -57,10 +58,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     @Override
     protected void announcePageTitle() {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            String cantoneseText = "語音命令頁面。你可以說出指令控制應用，例如：打開環境識別、讀文件、緊急求助等。" +
-                    "點擊中間的按鈕開始監聽。";
-            String englishText = "Voice Command page. You can speak commands to control the app, such as: open environment, read document, emergency help. " +
-                    "Tap the center button to start listening.";
+            String cantoneseText = "語音AI助手頁面。你可以同我聊天，或者說出指令控制應用，例如：打開環境識別、讀文件、緊急求助等。" +
+                    "點擊中間的按鈕開始對話。";
+            String englishText = "Voice AI Assistant page. You can chat with me or speak commands to control the app, such as: open environment, read document, emergency help. " +
+                    "Tap the center button to start conversation.";
             ttsManager.speak(cantoneseText, englishText, true);
         }, 500);
     }
@@ -199,6 +200,14 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     private void initVoiceCommandManager() {
         voiceCommandManager = VoiceCommandManager.getInstance(this);
         voiceCommandManager.setLanguage(currentLanguage);
+        
+        // 初始化AI助手
+        aiAssistant = new VoiceAIAssistant();
+        aiAssistant.setLanguage(currentLanguage);
+        
+        // 啟用 ASRManager 並設置引擎
+        setupASRManager();
+        
         voiceCommandManager.setCommandListener(new VoiceCommandManager.ExtendedVoiceCommandListener() {
             @Override
             public void onCommandRecognized(String command, String originalText) {
@@ -268,7 +277,95 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                     commandText.setText(recognizingText);
                 });
             }
+            
+            @Override
+            public void onTextRecognized(String text) {
+                runOnUiThread(() -> {
+                    // 識別到非命令的語音，使用AI助手處理
+                    vibrationManager.vibrateSuccess();
+                    
+                    // 更新AI助手的語言
+                    aiAssistant.setLanguage(currentLanguage);
+                    
+                    // 檢查是否為命令（雙重檢查）
+                    String command = voiceCommandManager.checkIfCommand(text);
+                    if (command != null) {
+                        // 實際上是命令，執行命令
+                        executeCommand(command, text);
+                        return;
+                    }
+                    
+                    // 使用AI助手處理對話
+                    VoiceAIAssistant.AssistantResponse response = aiAssistant.processInput(text);
+                    
+                    // 顯示用戶說的話
+                    String recognizedText = "english".equals(currentLanguage) ? 
+                        "You: " + text :
+                        ("mandarin".equals(currentLanguage) ? "您: " : "您: ") + text;
+                    commandText.setText(recognizedText);
+                    
+                    // 播報AI助手回應
+                    if (response != null && response.response != null && !response.response.isEmpty()) {
+                        // 延遲一點再播報回應，讓用戶聽到識別結果
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            announceInfo(response.response);
+                        }, 500);
+                    } else {
+                        // 如果無法生成回應，播報識別到的文本
+                        String announceText = "english".equals(currentLanguage) ? 
+                            "You said: " + text :
+                            ("mandarin".equals(currentLanguage) ? "您說: " : "您說: ") + text;
+                        announceInfo(announceText);
+                    }
+                });
+            }
         });
+    }
+    
+    /**
+     * 設置 ASRManager
+     * 檢查可用的 ASR 引擎並啟用最合適的引擎
+     */
+    private void setupASRManager() {
+        // 獲取可用的 ASR 引擎列表
+        List<ASRManager.ASREngine> availableEngines = voiceCommandManager.getAvailableASREngines();
+        
+        if (availableEngines == null || availableEngines.isEmpty()) {
+            Log.w(TAG, "沒有可用的 ASR 引擎，將使用原生 SpeechRecognizer");
+            return;
+        }
+        
+        Log.d(TAG, "可用的 ASR 引擎: " + availableEngines);
+        
+        // 優先選擇順序：SHERPA_ONNX > FUNASR > ANDROID_NATIVE
+        ASRManager.ASREngine selectedEngine = null;
+        
+        if (availableEngines.contains(ASRManager.ASREngine.SHERPA_ONNX)) {
+            selectedEngine = ASRManager.ASREngine.SHERPA_ONNX;
+            Log.d(TAG, "選擇 sherpa-onnx 引擎");
+        } else if (availableEngines.contains(ASRManager.ASREngine.FUNASR)) {
+            selectedEngine = ASRManager.ASREngine.FUNASR;
+            Log.d(TAG, "選擇 FunASR 引擎");
+        } else if (availableEngines.contains(ASRManager.ASREngine.ANDROID_NATIVE)) {
+            // 注意：AndroidNativeASR 目前返回錯誤，所以跳過
+            // selectedEngine = ASRManager.ASREngine.ANDROID_NATIVE;
+            Log.w(TAG, "Android Native ASR 目前不可用，跳過");
+        }
+        
+        if (selectedEngine != null) {
+            // 設置 ASR 引擎
+            voiceCommandManager.setASREngine(selectedEngine);
+            
+            // 啟用 ASRManager
+            voiceCommandManager.setUseASRManager(true);
+            
+            String engineName = selectedEngine == ASRManager.ASREngine.SHERPA_ONNX ? "sherpa-onnx" :
+                               selectedEngine == ASRManager.ASREngine.FUNASR ? "FunASR" : "未知";
+            
+            Log.d(TAG, "已啟用 ASRManager，使用引擎: " + engineName);
+        } else {
+            Log.w(TAG, "沒有可用的 ASR 引擎，將使用原生 SpeechRecognizer");
+        }
     }
     
     private void checkPermissions() {
@@ -769,12 +866,18 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 currentLanguage = "english";
                 ttsManager.changeLanguage("english");
                 voiceCommandManager.setLanguage("english");
+                if (aiAssistant != null) {
+                    aiAssistant.setLanguage("english");
+                }
                 announceInfo("Switched to English");
                 break;
             case "english":
                 currentLanguage = "mandarin";
                 ttsManager.changeLanguage("mandarin");
                 voiceCommandManager.setLanguage("mandarin");
+                if (aiAssistant != null) {
+                    aiAssistant.setLanguage("mandarin");
+                }
                 announceInfo("已切換到普通話");
                 break;
             case "mandarin":
@@ -782,6 +885,9 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 currentLanguage = "cantonese";
                 ttsManager.changeLanguage("cantonese");
                 voiceCommandManager.setLanguage("cantonese");
+                if (aiAssistant != null) {
+                    aiAssistant.setLanguage("cantonese");
+                }
                 announceInfo("已切換到廣東話");
                 break;
         }

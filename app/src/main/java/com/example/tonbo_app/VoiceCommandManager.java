@@ -57,6 +57,11 @@ public class VoiceCommandManager {
         void onListeningStopped();
         void onError(String error);
         void onPartialResult(String partialText);
+        /**
+         * 當識別到非命令的語音時調用
+         * @param text 識別到的文本
+         */
+        void onTextRecognized(String text);
     }
     
     private VoiceCommandListener commandListener;
@@ -384,7 +389,7 @@ public class VoiceCommandManager {
     }
     
     /**
-     * 處理命令 - 支持連續命令
+     * 處理命令 - 支持連續命令和AI助手模式
      */
     private void processCommand(String recognizedText) {
         // 檢查是否包含連續命令（連接詞）
@@ -404,9 +409,10 @@ public class VoiceCommandManager {
                     commandListener.onCommandRecognized(command, recognizedText);
                 }
             } else {
-                Log.d(TAG, "未匹配到命令: " + recognizedText);
+                // 未匹配到命令，但識別到了文本，作為普通語音處理（AI助手模式）
+                Log.d(TAG, "未匹配到命令，但識別到文本: " + recognizedText);
                 if (commandListener != null) {
-                    commandListener.onError("未識別的命令: " + recognizedText);
+                    commandListener.onTextRecognized(recognizedText);
                 }
             }
         } else {
@@ -419,12 +425,20 @@ public class VoiceCommandManager {
                     commandListener.onCommandRecognized(command, recognizedText);
                 }
             } else {
-                Log.d(TAG, "未匹配到命令: " + recognizedText);
+                // 未匹配到命令，但識別到了文本，作為普通語音處理（AI助手模式）
+                Log.d(TAG, "未匹配到命令，但識別到文本: " + recognizedText);
                 if (commandListener != null) {
-                    commandListener.onError("未識別的命令: " + recognizedText);
+                    commandListener.onTextRecognized(recognizedText);
                 }
             }
         }
+    }
+    
+    /**
+     * 檢查是否為命令（供外部調用，如AI助手）
+     */
+    public String checkIfCommand(String text) {
+        return matchCommand(text.toLowerCase());
     }
     
     /**
