@@ -173,14 +173,14 @@ public class EmergencyManager {
             
             // 優先直接撥打（適合視障用戶，無需確認）
             if (hasCallPermission) {
-                try {
-                    Intent callIntent = new Intent(Intent.ACTION_CALL);
-                    callIntent.setData(Uri.parse(phoneUri));
-                    callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(callIntent);
+            try {
+                Intent callIntent = new Intent(Intent.ACTION_CALL);
+                callIntent.setData(Uri.parse(phoneUri));
+                callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(callIntent);
                     Log.d(TAG, "緊急電話已直接撥打: " + phoneNumber);
-                    
-                    // 播報撥打信息
+                
+                // 播報撥打信息
                     String cantoneseText = "正在撥打緊急電話：" + phoneNumber;
                     String englishText = "Calling emergency number: " + phoneNumber;
                     ttsManager.speak(cantoneseText, englishText, false);

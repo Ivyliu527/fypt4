@@ -79,6 +79,13 @@ dependencies {
 
     // Agora RTC SDK for video calling
     implementation("io.agora.rtc:full-sdk:4.3.0")
+    
+    // OkHttp for HTTP requests (Ollama API)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    
+    // Gson for JSON parsing
+    implementation("com.google.code.gson:gson:2.10.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
