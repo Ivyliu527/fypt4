@@ -124,11 +124,11 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         switch (key) {
             case "voice_command_title":
                 if ("english".equals(currentLang)) {
-                    return "Voice Command";
+                    return "Voice Assistant";
                 } else if ("mandarin".equals(currentLang)) {
-                    return "语音命令";
+                    return "语音助手";
                 } else {
-                    return "語音命令";
+                    return "語音助手";
                 }
             case "listening_status":
                 if ("english".equals(currentLang)) {
