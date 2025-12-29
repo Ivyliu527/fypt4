@@ -36,6 +36,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     
     private boolean isListening = false;
     
+    // 聊天記錄導航
+    private int currentHistoryIndex = -1; // 當前查看的記錄索引（-1表示未在查看記錄）
+    private List<ConversationManager.ConversationTurn> chatHistory = new ArrayList<>();
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,8 +63,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     protected void announcePageTitle() {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             String cantoneseText = "語音AI助手頁面。你可以同我聊天，或者說出指令控制應用，例如：打開環境識別、讀文件、緊急求助等。" +
+                    "你可以說「查看聊天記錄」來回顧之前的對話，說「上一句」或「下一句」來瀏覽記錄。" +
                     "點擊中間的按鈕開始對話。";
             String englishText = "Voice AI Assistant page. You can chat with me or speak commands to control the app, such as: open environment, read document, emergency help. " +
+                    "You can say 'view chat history' to review previous conversations, say 'previous message' or 'next message' to navigate. " +
                     "Tap the center button to start conversation.";
             ttsManager.speak(cantoneseText, englishText, true);
         }, 500);
@@ -166,6 +172,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                            "• Return Home: Go home, Home\n" +
                            "• Control: Start detection, Stop detection, Describe environment\n" +
                            "• Utilities: What time is it, Repeat, Volume up/down\n" +
+                           "• Chat History: View chat history, Previous message, Next message, Repeat last message, Clear history\n" +
                            "• Continuous Commands: Say multiple commands, e.g. \"Open environment then start detection\"";
                 } else if ("mandarin".equals(currentLang)) {
                     return "• 环境识别：打开环境识别、看看周围\n" +
@@ -178,6 +185,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                            "• 返回主页：返回主页、主页\n" +
                            "• 控制命令：开始检测、停止检测、描述环境\n" +
                            "• 实用功能：现在几点、重复、增大/减小音量\n" +
+                           "• 聊天记录：查看聊天记录、上一句、下一句、重复上一句、清除记录\n" +
                            "• 连续命令：一次说多个命令，例如「打开环境识别然后开始检测」";
                 } else {
                     return "• 環境識別：打開環境識別、睇下周圍\n" +
@@ -190,6 +198,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                            "• 返回主頁：返回主頁、主頁\n" +
                            "• 控制命令：開始檢測、停止檢測、描述環境\n" +
                            "• 實用功能：現在幾點、重複、增大/減小音量\n" +
+                           "• 聊天記錄：查看聊天記錄、上一句、下一句、重複上一句、清除記錄\n" +
                            "• 連續命令：一次說多個命令，例如「打開環境識別然後開始檢測」";
                 }
             default:
@@ -201,8 +210,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         voiceCommandManager = VoiceCommandManager.getInstance(this);
         voiceCommandManager.setLanguage(currentLanguage);
         
-        // 初始化AI助手
-        aiAssistant = new VoiceAIAssistant();
+        // 初始化AI助手（傳入 Context 以支持 Ollama API）
+        aiAssistant = new VoiceAIAssistant(this);
         aiAssistant.setLanguage(currentLanguage);
         
         // 啟用 ASRManager 並設置引擎
@@ -295,28 +304,33 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                         return;
                     }
                     
-                    // 使用AI助手處理對話
-                    VoiceAIAssistant.AssistantResponse response = aiAssistant.processInput(text);
-                    
                     // 顯示用戶說的話
                     String recognizedText = "english".equals(currentLanguage) ? 
                         "You: " + text :
                         ("mandarin".equals(currentLanguage) ? "您: " : "您: ") + text;
                     commandText.setText(recognizedText);
                     
-                    // 播報AI助手回應
-                    if (response != null && response.response != null && !response.response.isEmpty()) {
-                        // 延遲一點再播報回應，讓用戶聽到識別結果
-                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                            announceInfo(response.response);
-                        }, 500);
-                    } else {
-                        // 如果無法生成回應，播報識別到的文本
-                        String announceText = "english".equals(currentLanguage) ? 
-                            "You said: " + text :
-                            ("mandarin".equals(currentLanguage) ? "您說: " : "您說: ") + text;
-                        announceInfo(announceText);
-                    }
+                    // 使用AI助手處理對話（異步版本，支持 Ollama API）
+                    aiAssistant.processInputAsync(text, new VoiceAIAssistant.AssistantResponseCallback() {
+                        @Override
+                        public void onResponse(VoiceAIAssistant.AssistantResponse response) {
+                            runOnUiThread(() -> {
+                                // 播報AI助手回應
+                                if (response != null && response.response != null && !response.response.isEmpty()) {
+                                    // 延遲一點再播報回應，讓用戶聽到識別結果
+                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                        announceInfo(response.response);
+                                    }, 500);
+                                } else {
+                                    // 如果無法生成回應，播報識別到的文本
+                                    String announceText = "english".equals(currentLanguage) ? 
+                                        "You said: " + text :
+                                        ("mandarin".equals(currentLanguage) ? "您說: " : "您說: ") + text;
+                                    announceInfo(announceText);
+                                }
+                            });
+                        }
+                    });
                 });
             }
         });
@@ -757,10 +771,207 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 adjustVolume(false);
                 break;
                 
+            // 聊天記錄命令
+            case "view_chat_history":
+                viewChatHistory();
+                break;
+                
+            case "previous_message":
+                navigateToPreviousMessage();
+                break;
+                
+            case "next_message":
+                navigateToNextMessage();
+                break;
+                
+            case "repeat_last_message":
+                repeatLastMessage();
+                break;
+                
+            case "clear_chat_history":
+                clearChatHistory();
+                break;
+                
             default:
                 announceError("未知命令: " + command);
                 suggestSimilarCommands(originalText);
                 break;
+        }
+    }
+    
+    /**
+     * 查看聊天記錄（語音播報）
+     */
+    private void viewChatHistory() {
+        // 獲取聊天記錄
+        if (aiAssistant != null) {
+            chatHistory = aiAssistant.getConversationManager().getAllHistory();
+        }
+        
+        if (chatHistory == null || chatHistory.isEmpty()) {
+            String noHistoryText = "english".equals(currentLanguage) ? 
+                "No chat history yet" :
+                ("mandarin".equals(currentLanguage) ? "还没有聊天记录" : "還沒有聊天記錄");
+            announceInfo(noHistoryText);
+            currentHistoryIndex = -1;
+            return;
+        }
+        
+        // 設置索引到最後一條記錄
+        currentHistoryIndex = chatHistory.size() - 1;
+        
+        // 播報記錄總數和當前位置
+        String summaryText;
+        if ("english".equals(currentLanguage)) {
+            summaryText = "Chat history: " + chatHistory.size() + " messages. " +
+                         "Currently viewing message " + (currentHistoryIndex + 1) + " of " + chatHistory.size() + ". " +
+                         "Say 'previous message' or 'next message' to navigate.";
+        } else if ("mandarin".equals(currentLanguage)) {
+            summaryText = "聊天記錄共有 " + chatHistory.size() + " 條消息。 " +
+                         "當前查看第 " + (currentHistoryIndex + 1) + " 條，共 " + chatHistory.size() + " 條。 " +
+                         "說「上一句」或「下一句」來瀏覽。";
+        } else {
+            summaryText = "聊天記錄共有 " + chatHistory.size() + " 條消息。 " +
+                         "當前查看第 " + (currentHistoryIndex + 1) + " 條，共 " + chatHistory.size() + " 條。 " +
+                         "說「上一句」或「下一句」來瀏覽。";
+        }
+        
+        announceInfo(summaryText);
+        
+        // 延遲播報當前記錄
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            announceCurrentMessage();
+        }, 2000);
+    }
+    
+    /**
+     * 播報當前查看的消息
+     */
+    private void announceCurrentMessage() {
+        if (currentHistoryIndex < 0 || currentHistoryIndex >= chatHistory.size()) {
+            return;
+        }
+        
+        ConversationManager.ConversationTurn turn = chatHistory.get(currentHistoryIndex);
+        
+        // 構建播報文本
+        String messageText;
+        if ("english".equals(currentLanguage)) {
+            messageText = "Message " + (currentHistoryIndex + 1) + ". " +
+                         "You said: " + turn.userInput + ". " +
+                         "Assistant replied: " + (turn.assistantResponse != null ? turn.assistantResponse : "No response");
+        } else if ("mandarin".equals(currentLanguage)) {
+            messageText = "第 " + (currentHistoryIndex + 1) + " 條消息。 " +
+                         "您說：" + turn.userInput + "。 " +
+                         "助手回復：" + (turn.assistantResponse != null ? turn.assistantResponse : "無回應");
+        } else {
+            messageText = "第 " + (currentHistoryIndex + 1) + " 條消息。 " +
+                         "您說：" + turn.userInput + "。 " +
+                         "助手回復：" + (turn.assistantResponse != null ? turn.assistantResponse : "無回應");
+        }
+        
+        announceInfo(messageText);
+    }
+    
+    /**
+     * 導航到上一條消息
+     */
+    private void navigateToPreviousMessage() {
+        if (chatHistory == null || chatHistory.isEmpty()) {
+            viewChatHistory(); // 如果沒有加載記錄，先加載
+            return;
+        }
+        
+        if (currentHistoryIndex < 0) {
+            // 如果還沒開始查看，從最後一條開始
+            currentHistoryIndex = chatHistory.size() - 1;
+        } else if (currentHistoryIndex > 0) {
+            currentHistoryIndex--;
+        } else {
+            // 已經是第一條
+            String firstMessageText = "english".equals(currentLanguage) ? 
+                "This is the first message" :
+                ("mandarin".equals(currentLanguage) ? "这是第一条消息" : "這是第一條消息");
+            announceInfo(firstMessageText);
+            return;
+        }
+        
+        announceCurrentMessage();
+    }
+    
+    /**
+     * 導航到下一條消息
+     */
+    private void navigateToNextMessage() {
+        if (chatHistory == null || chatHistory.isEmpty()) {
+            viewChatHistory(); // 如果沒有加載記錄，先加載
+            return;
+        }
+        
+        if (currentHistoryIndex < 0) {
+            // 如果還沒開始查看，從第一條開始
+            currentHistoryIndex = 0;
+        } else if (currentHistoryIndex < chatHistory.size() - 1) {
+            currentHistoryIndex++;
+        } else {
+            // 已經是最後一條
+            String lastMessageText = "english".equals(currentLanguage) ? 
+                "This is the last message" :
+                ("mandarin".equals(currentLanguage) ? "这是最后一条消息" : "這是最後一條消息");
+            announceInfo(lastMessageText);
+            return;
+        }
+        
+        announceCurrentMessage();
+    }
+    
+    /**
+     * 重複上一條消息
+     */
+    private void repeatLastMessage() {
+        if (aiAssistant != null) {
+            List<ConversationManager.ConversationTurn> history = 
+                aiAssistant.getConversationManager().getAllHistory();
+            
+            if (history == null || history.isEmpty()) {
+                String noHistoryText = "english".equals(currentLanguage) ? 
+                    "No previous message" :
+                    ("mandarin".equals(currentLanguage) ? "没有上一条消息" : "沒有上一條消息");
+                announceInfo(noHistoryText);
+                return;
+            }
+            
+            ConversationManager.ConversationTurn lastTurn = history.get(history.size() - 1);
+            
+            String repeatText;
+            if ("english".equals(currentLanguage)) {
+                repeatText = "Last message. You said: " + lastTurn.userInput + ". " +
+                           "Assistant replied: " + (lastTurn.assistantResponse != null ? lastTurn.assistantResponse : "No response");
+            } else if ("mandarin".equals(currentLanguage)) {
+                repeatText = "上一條消息。您說：" + lastTurn.userInput + "。 " +
+                           "助手回復：" + (lastTurn.assistantResponse != null ? lastTurn.assistantResponse : "無回應");
+            } else {
+                repeatText = "上一條消息。您說：" + lastTurn.userInput + "。 " +
+                           "助手回復：" + (lastTurn.assistantResponse != null ? lastTurn.assistantResponse : "無回應");
+            }
+            
+            announceInfo(repeatText);
+        }
+    }
+    
+    /**
+     * 清除聊天記錄
+     */
+    private void clearChatHistory() {
+        if (aiAssistant != null) {
+            aiAssistant.getConversationManager().clearHistory();
+            chatHistory.clear();
+            currentHistoryIndex = -1;
+            
+            String clearedText = "english".equals(currentLanguage) ? 
+                "Chat history cleared" :
+                ("mandarin".equals(currentLanguage) ? "聊天记录已清除" : "聊天記錄已清除");
+            announceInfo(clearedText);
         }
     }
     

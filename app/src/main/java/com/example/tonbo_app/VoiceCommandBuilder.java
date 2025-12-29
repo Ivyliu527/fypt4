@@ -69,6 +69,12 @@ public class VoiceCommandBuilder {
             .addCommands("repeat", "重複", "再說一次", "重複剛才", "再說一遍")
             .addCommands("volume_up", "增大音量", "音量增大", "大聲啲", "提高音量")
             .addCommands("volume_down", "減小音量", "音量減小", "細聲啲", "降低音量")
+            // 聊天記錄命令
+            .addCommands("view_chat_history", "查看聊天記錄", "聊天記錄", "對話記錄", "查看記錄", "歷史記錄")
+            .addCommands("previous_message", "上一句", "上一條", "上一條消息", "前一句")
+            .addCommands("next_message", "下一句", "下一條", "下一條消息", "後一句")
+            .addCommands("repeat_last_message", "重複上一句", "再說上一句", "重複剛才的話")
+            .addCommands("clear_chat_history", "清除聊天記錄", "清空記錄", "清除記錄")
             .build();
     }
     
@@ -105,6 +111,12 @@ public class VoiceCommandBuilder {
             .addCommands("repeat", "repeat", "say again", "repeat that", "say it again")
             .addCommands("volume_up", "volume up", "increase volume", "louder", "turn up volume")
             .addCommands("volume_down", "volume down", "decrease volume", "quieter", "turn down volume")
+            // 聊天記錄命令
+            .addCommands("view_chat_history", "view chat history", "chat history", "conversation history", "show history", "history")
+            .addCommands("previous_message", "previous message", "last message", "previous", "go back")
+            .addCommands("next_message", "next message", "next", "go forward")
+            .addCommands("repeat_last_message", "repeat last message", "say last message again", "repeat previous")
+            .addCommands("clear_chat_history", "clear chat history", "clear history", "delete history")
             .build();
     }
     
@@ -141,6 +153,12 @@ public class VoiceCommandBuilder {
             .addCommands("repeat", "重複", "再說一次", "重複剛才", "再說一遍")
             .addCommands("volume_up", "增大音量", "音量增大", "大聲點", "提高音量")
             .addCommands("volume_down", "減小音量", "音量減小", "小聲點", "降低音量")
+            // 聊天記錄命令
+            .addCommands("view_chat_history", "查看聊天記錄", "聊天記錄", "對話記錄", "查看記錄", "歷史記錄")
+            .addCommands("previous_message", "上一句", "上一條", "上一條消息", "前一句")
+            .addCommands("next_message", "下一句", "下一條", "下一條消息", "後一句")
+            .addCommands("repeat_last_message", "重複上一句", "再說上一句", "重複剛才的話")
+            .addCommands("clear_chat_history", "清除聊天記錄", "清空記錄", "清除記錄")
             .build();
     }
 }

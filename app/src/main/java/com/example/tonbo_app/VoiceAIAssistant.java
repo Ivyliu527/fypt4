@@ -1,5 +1,6 @@
 package com.example.tonbo_app;
 
+import android.content.Context;
 import android.util.Log;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ public class VoiceAIAssistant {
     private ConversationResponseGenerator responseGenerator;
     private String currentLanguage = "cantonese";
     private Random random = new Random();
+    private Context context;
     
     // 意圖識別關鍵詞
     private Map<String, String[]> greetingKeywords;
@@ -25,6 +27,18 @@ public class VoiceAIAssistant {
     public VoiceAIAssistant() {
         conversationManager = new ConversationManager();
         responseGenerator = new ConversationResponseGenerator();
+        initializeIntentKeywords();
+    }
+    
+    /**
+     * 帶 Context 的構造函數（用於 Ollama API）
+     */
+    public VoiceAIAssistant(Context context) {
+        this.context = context;
+        conversationManager = new ConversationManager();
+        responseGenerator = new ConversationResponseGenerator(context);
+        // 設置對話管理器，讓回應生成器可以獲取上下文
+        responseGenerator.setConversationManager(conversationManager);
         initializeIntentKeywords();
     }
     
@@ -61,7 +75,7 @@ public class VoiceAIAssistant {
     }
     
     /**
-     * 處理用戶輸入
+     * 處理用戶輸入（同步版本）
      * @param userInput 用戶輸入的文本
      * @return 處理結果
      */
@@ -85,7 +99,7 @@ public class VoiceAIAssistant {
         // 2. 識別意圖
         String intent = identifyIntent(userInput);
         
-        // 3. 生成回應
+        // 3. 生成回應（同步，使用關鍵詞匹配）
         String response = generateChatResponse(userInput, intent);
         
         // 4. 記錄對話
@@ -93,6 +107,53 @@ public class VoiceAIAssistant {
         conversationManager.setCurrentState(ConversationManager.ConversationState.IDLE);
         
         return new AssistantResponse(response, false, null, intent);
+    }
+    
+    /**
+     * 處理用戶輸入（異步版本，支持 Ollama API）
+     * @param userInput 用戶輸入的文本
+     * @param callback 回調接口
+     */
+    public void processInputAsync(String userInput, AssistantResponseCallback callback) {
+        if (userInput == null || userInput.trim().isEmpty()) {
+            callback.onResponse(new AssistantResponse("", false, null, "empty"));
+            return;
+        }
+        
+        conversationManager.setCurrentState(ConversationManager.ConversationState.PROCESSING);
+        
+        // 1. 檢查是否為命令
+        String command = checkForCommand(userInput);
+        if (command != null) {
+            // 是命令
+            String response = generateCommandResponse(command, userInput);
+            conversationManager.addTurn(userInput, response, true, command);
+            conversationManager.setCurrentState(ConversationManager.ConversationState.IDLE);
+            callback.onResponse(new AssistantResponse(response, true, command, "command"));
+            return;
+        }
+        
+        // 2. 識別意圖
+        String intent = identifyIntent(userInput);
+        
+        // 3. 生成回應（異步，使用 Ollama API 或關鍵詞匹配）
+        generateChatResponseAsync(userInput, intent, new ResponseCallback() {
+            @Override
+            public void onResponse(String response) {
+                // 4. 記錄對話
+                conversationManager.addTurn(userInput, response, false, intent);
+                conversationManager.setCurrentState(ConversationManager.ConversationState.IDLE);
+                
+                callback.onResponse(new AssistantResponse(response, false, null, intent));
+            }
+        });
+    }
+    
+    /**
+     * 助手回應回調接口
+     */
+    public interface AssistantResponseCallback {
+        void onResponse(AssistantResponse response);
     }
     
     /**
@@ -149,7 +210,7 @@ public class VoiceAIAssistant {
     }
     
     /**
-     * 生成聊天回應
+     * 生成聊天回應（同步版本）
      */
     private String generateChatResponse(String userInput, String intent) {
         // 使用回應生成器
@@ -164,6 +225,33 @@ public class VoiceAIAssistant {
         response = enhanceResponseWithContext(response, userInput);
         
         return response;
+    }
+    
+    /**
+     * 生成聊天回應（異步版本，使用 Ollama API）
+     */
+    private void generateChatResponseAsync(String userInput, String intent, ResponseCallback callback) {
+        responseGenerator.generateResponseAsync(userInput, new ConversationResponseGenerator.ResponseCallback() {
+            @Override
+            public void onResponse(String response) {
+                // 如果回應生成器沒有生成回應，根據意圖生成
+                if (response == null || response.isEmpty()) {
+                    response = generateResponseByIntent(userInput, intent);
+                }
+                
+                // 增強回應（添加上下文）
+                response = enhanceResponseWithContext(response, userInput);
+                
+                callback.onResponse(response);
+            }
+        });
+    }
+    
+    /**
+     * 回應回調接口
+     */
+    private interface ResponseCallback {
+        void onResponse(String response);
     }
     
     /**
