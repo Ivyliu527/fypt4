@@ -12,7 +12,7 @@ import java.util.Random;
 /**
  * 對話回應生成器
  * 根據用戶的語音輸入生成智能回應
- * 支持 Ollama AI API 和關鍵詞匹配兩種模式
+ * 使用關鍵詞匹配模式
  */
 public class ConversationResponseGenerator {
     private static final String TAG = "ConversationResponseGenerator";
@@ -20,8 +20,6 @@ public class ConversationResponseGenerator {
     private String currentLanguage = "cantonese";
     private Random random = new Random();
     private Context context;
-    private OllamaApiClient ollamaClient;
-    private boolean useOllama = false; // 是否使用 Ollama API
     private ConversationManager conversationManager; // 用於獲取對話上下文
     
     // 關鍵詞到回應模板的映射（粵語）
@@ -36,38 +34,11 @@ public class ConversationResponseGenerator {
     }
     
     /**
-     * 帶 Context 的構造函數（用於 Ollama API）
+     * 帶 Context 的構造函數
      */
     public ConversationResponseGenerator(Context context) {
         this.context = context;
         initializeResponses();
-        
-        // 初始化 Ollama 客戶端
-        if (context != null) {
-            try {
-                ollamaClient = new OllamaApiClient(context);
-                useOllama = true;
-                Log.d(TAG, "Ollama API 客戶端已初始化");
-            } catch (Exception e) {
-                Log.e(TAG, "初始化 Ollama API 客戶端失敗", e);
-                useOllama = false;
-            }
-        }
-    }
-    
-    /**
-     * 設置是否使用 Ollama API
-     */
-    public void setUseOllama(boolean useOllama) {
-        this.useOllama = useOllama && ollamaClient != null;
-        Log.d(TAG, "Ollama API 使用狀態: " + this.useOllama);
-    }
-    
-    /**
-     * 獲取 Ollama 客戶端（用於配置）
-     */
-    public OllamaApiClient getOllamaClient() {
-        return ollamaClient;
     }
     
     /**
@@ -85,8 +56,8 @@ public class ConversationResponseGenerator {
     }
     
     /**
-     * 獲取對話上下文（用於 Ollama API）
-     * 類似DeepSeek的多輪對話上下文管理
+     * 獲取對話上下文
+     * 用於多輪對話上下文管理
      */
     private String getConversationContext() {
         if (conversationManager == null) {
@@ -174,6 +145,18 @@ public class ConversationResponseGenerator {
         cantoneseResponses.put("天氣", new String[]{
             "係啊，今日天氣真係好好，好適合出街", "天氣真係唔錯，心情都好好", "係啊，天氣幾好，你有冇出街啊？"
         });
+        cantoneseResponses.put("幾多度", new String[]{
+            "等我幫你查下今日溫度", "我幫你睇下天氣", "等我查下天氣資料"
+        });
+        cantoneseResponses.put("溫度", new String[]{
+            "等我幫你查下溫度", "我幫你睇下天氣", "等我查下天氣資料"
+        });
+        cantoneseResponses.put("熱", new String[]{
+            "係啊，今日真係幾熱，記得多飲水", "天氣熱要小心防曬", "熱就開冷氣或者去陰涼地方"
+        });
+        cantoneseResponses.put("冷", new String[]{
+            "係啊，今日真係幾凍，記得多著衫", "天氣凍要保暖", "凍就著多件衫，注意保暖"
+        });
         cantoneseResponses.put("好", new String[]{
             "係啊，真係好好", "我都覺得係，真係唔錯", "同意，我都係咁諗"
         });
@@ -197,6 +180,18 @@ public class ConversationResponseGenerator {
         mandarinResponses.put("天氣", new String[]{
             "是啊，今天天氣真的很好，很適合出門", "天氣真不錯，心情也變好了", "是啊，天氣挺好的，你有出門嗎？"
         });
+        mandarinResponses.put("多少度", new String[]{
+            "等我幫你查一下今天溫度", "我幫你看一下天氣", "等我查一下天氣資料"
+        });
+        mandarinResponses.put("溫度", new String[]{
+            "等我幫你查一下溫度", "我幫你看一下天氣", "等我查一下天氣資料"
+        });
+        mandarinResponses.put("熱", new String[]{
+            "是啊，今天真的很熱，記得多喝水", "天氣熱要小心防曬", "熱就開空調或者去陰涼地方"
+        });
+        mandarinResponses.put("冷", new String[]{
+            "是啊，今天真的很冷，記得多穿衣服", "天氣冷要保暖", "冷就多穿點衣服，注意保暖"
+        });
         mandarinResponses.put("好", new String[]{
             "是啊，真的很好", "我也覺得是，真的不錯", "同意，我也是這麼想的"
         });
@@ -219,6 +214,18 @@ public class ConversationResponseGenerator {
         // 英語回應（更自然的表達）
         englishResponses.put("weather", new String[]{
             "Yes, the weather is really nice today, perfect for going out", "The weather is great, it makes me feel good too", "Yes, the weather is good, did you go out?"
+        });
+        englishResponses.put("temperature", new String[]{
+            "Let me check the temperature for you", "I'll look up the weather for you", "Let me check the weather information"
+        });
+        englishResponses.put("how hot", new String[]{
+            "Let me check the temperature for you", "I'll look up the weather for you", "Let me check the weather information"
+        });
+        englishResponses.put("hot", new String[]{
+            "Yes, it's really hot today, remember to drink more water", "Hot weather requires sun protection", "When it's hot, turn on the AC or go to a shady place"
+        });
+        englishResponses.put("cold", new String[]{
+            "Yes, it's really cold today, remember to wear more clothes", "Cold weather requires keeping warm", "When it's cold, wear more clothes and stay warm"
         });
         englishResponses.put("good", new String[]{
             "Yes, it's really good", "I think so too, it's really nice", "Agreed, I feel the same way"
@@ -276,7 +283,7 @@ public class ConversationResponseGenerator {
     }
     
     /**
-     * 生成回應（異步版本，使用 Ollama API）
+     * 生成回應（異步版本）
      * @param userText 用戶輸入的文本
      * @param callback 回調接口
      */
@@ -286,36 +293,10 @@ public class ConversationResponseGenerator {
             return;
         }
         
-        // 如果啟用了 Ollama 且客戶端可用，使用 Ollama API
-        if (useOllama && ollamaClient != null) {
-            Log.d(TAG, "使用 Ollama API 生成回應");
-            
-            // 獲取對話上下文（如果有的話）
-            String context = getConversationContext();
-            
-            ollamaClient.generateResponse(userText, currentLanguage, context, new OllamaApiClient.OllamaCallback() {
-                @Override
-                public void onResponse(String response) {
-                    Log.d(TAG, "Ollama API 回應: " + response);
-                    // 後處理：確保回應自然
-                    String processedResponse = postProcessResponse(response);
-                    callback.onResponse(processedResponse);
-                }
-                
-                @Override
-                public void onError(String error) {
-                    Log.w(TAG, "Ollama API 錯誤，回退到關鍵詞匹配: " + error);
-                    // 回退到關鍵詞匹配
-                    String fallbackResponse = generateResponse(userText);
-                    callback.onResponse(fallbackResponse);
-                }
-            });
-        } else {
-            // 使用關鍵詞匹配
-            Log.d(TAG, "使用關鍵詞匹配生成回應");
-            String response = generateResponse(userText);
-            callback.onResponse(response);
-        }
+        // 使用關鍵詞匹配生成回應
+        Log.d(TAG, "使用關鍵詞匹配生成回應");
+        String response = generateResponse(userText);
+        callback.onResponse(response);
     }
     
     /**
@@ -327,51 +308,11 @@ public class ConversationResponseGenerator {
     
     /**
      * 增強回應，將用戶的話語融入回應中
-     * 例如：用戶說「今天天氣很好」，回應「今天天氣真的很好」
+     * 注意：不要重複用戶的話，而是給出真正的對話回應
      */
     private String enhanceResponse(String template, String userText, String keyword) {
-        // 如果模板已經包含完整回應，直接返回
-        if (template.length() > 15) {
-            return template;
-        }
-        
-        // 嘗試構建更自然的回應
-        if (currentLanguage.equals("cantonese")) {
-            // 粵語：在用戶話語基礎上添加肯定詞
-            if (userText.contains("天氣")) {
-                if (userText.contains("好")) {
-                    // 「今天天氣很好」 -> 「今天天氣真的很好」
-                    return userText.replace("天氣很好", "天氣真係好好")
-                                   .replace("天氣好", "天氣真係好");
-                }
-            }
-            if (userText.contains("好") && !userText.contains("真")) {
-                // 添加「真係」
-                return userText.replace("好", "真係好");
-            }
-        } else if (currentLanguage.equals("mandarin")) {
-            // 普通話：在用戶話語基礎上添加肯定詞
-            if (userText.contains("天氣")) {
-                if (userText.contains("好")) {
-                    // 「今天天氣很好」 -> 「今天天氣真的很好」
-                    return userText.replace("天氣很好", "天氣真的很好")
-                                   .replace("天氣好", "天氣真的很好");
-                }
-            }
-            if (userText.contains("好") && !userText.contains("真的")) {
-                // 添加「真的」
-                return userText.replace("很好", "真的很好")
-                               .replace("好", "真的很好");
-            }
-        } else {
-            // 英語：類似處理
-            if (userText.contains("weather") && userText.contains("good")) {
-                return userText.replace("good", "really good")
-                               .replace("nice", "really nice");
-            }
-        }
-        
-        // 如果無法增強，返回模板
+        // 直接返回模板，不要重複用戶的話
+        // 模板已經包含了合適的回應，不需要修改用戶的話語
         return template;
     }
     

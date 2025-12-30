@@ -31,7 +31,7 @@ public class VoiceAIAssistant {
     }
     
     /**
-     * 帶 Context 的構造函數（用於 Ollama API）
+     * 帶 Context 的構造函數
      */
     public VoiceAIAssistant(Context context) {
         this.context = context;
@@ -110,7 +110,7 @@ public class VoiceAIAssistant {
     }
     
     /**
-     * 處理用戶輸入（異步版本，支持 Ollama API）
+     * 處理用戶輸入（異步版本）
      * @param userInput 用戶輸入的文本
      * @param callback 回調接口
      */
@@ -136,7 +136,7 @@ public class VoiceAIAssistant {
         // 2. 識別意圖
         String intent = identifyIntent(userInput);
         
-        // 3. 生成回應（異步，使用 Ollama API 或關鍵詞匹配）
+        // 3. 生成回應（異步，使用關鍵詞匹配）
         generateChatResponseAsync(userInput, intent, new ResponseCallback() {
             @Override
             public void onResponse(String response) {
@@ -201,6 +201,15 @@ public class VoiceAIAssistant {
             }
         }
         
+        // 檢查天氣相關關鍵詞
+        if (lowerInput.contains("天氣") || lowerInput.contains("天气") || lowerInput.contains("weather") ||
+            lowerInput.contains("幾多度") || lowerInput.contains("多少度") || lowerInput.contains("temperature") ||
+            lowerInput.contains("溫度") || lowerInput.contains("温度") || lowerInput.contains("熱") ||
+            lowerInput.contains("热") || lowerInput.contains("冷") || lowerInput.contains("hot") ||
+            lowerInput.contains("cold")) {
+            return "weather_topic";
+        }
+        
         // 檢查是否在討論某個話題
         if (conversationManager.isDiscussingTopic("天氣")) {
             return "weather_topic";
@@ -228,9 +237,23 @@ public class VoiceAIAssistant {
     }
     
     /**
-     * 生成聊天回應（異步版本，使用 Ollama API）
+     * 生成聊天回應（異步版本）
      */
     private void generateChatResponseAsync(String userInput, String intent, ResponseCallback callback) {
+        // 檢查是否需要獲取天氣信息
+        if ("weather_topic".equals(intent) && context != null) {
+            // 檢查是否為天氣查詢（包含溫度相關關鍵詞）
+            String lowerInput = userInput.toLowerCase();
+            if (lowerInput.contains("幾多度") || lowerInput.contains("多少度") || 
+                lowerInput.contains("temperature") || lowerInput.contains("溫度") || 
+                lowerInput.contains("温度")) {
+                // 這是天氣查詢，應該獲取實際天氣信息
+                // 注意：這裡需要 WeatherInfoManager，但目前代碼中沒有
+                // 先使用關鍵詞匹配回應，後續可以集成天氣API
+                Log.d(TAG, "檢測到天氣查詢意圖，但天氣API未集成，使用關鍵詞匹配");
+            }
+        }
+        
         responseGenerator.generateResponseAsync(userInput, new ConversationResponseGenerator.ResponseCallback() {
             @Override
             public void onResponse(String response) {
@@ -381,28 +404,31 @@ public class VoiceAIAssistant {
      * 使用上下文增強回應
      */
     private String enhanceResponseWithContext(String baseResponse, String userInput) {
-        // 獲取上下文
-        String context = conversationManager.getContextSummary();
-        
-        // 如果沒有基礎回應，嘗試從用戶輸入生成
-        if (baseResponse == null || baseResponse.isEmpty()) {
-            // 簡單的回應增強：在用戶話語基礎上添加肯定
-            if (currentLanguage.equals("cantonese")) {
-                if (userInput.contains("好") || userInput.contains("不錯")) {
-                    return "係啊，" + userInput;
-                }
-                return "我明白，" + userInput;
-            } else if (currentLanguage.equals("mandarin")) {
-                if (userInput.contains("好") || userInput.contains("不錯")) {
-                    return "是啊，" + userInput;
-                }
-                return "我明白，" + userInput;
-            } else {
-                return "I understand, " + userInput;
-            }
+        // 如果有基礎回應，直接返回，不要重複用戶的話
+        if (baseResponse != null && !baseResponse.isEmpty()) {
+            return baseResponse;
         }
         
-        return baseResponse;
+        // 如果沒有基礎回應，生成真正的對話回應，不要重複用戶的話
+        if (currentLanguage.equals("cantonese")) {
+            String[] responses = {
+                "我明白，繼續講", "係啊，我聽到", "嗯，我理解", "好，繼續",
+                "有咩可以幫你？", "我聽到，然後呢？", "明白，繼續", "好，我明白"
+            };
+            return responses[random.nextInt(responses.length)];
+        } else if (currentLanguage.equals("mandarin")) {
+            String[] responses = {
+                "我明白，繼續說", "是啊，我聽到", "嗯，我理解", "好，繼續",
+                "有什麼可以幫你？", "我聽到，然後呢？", "明白，繼續", "好，我明白"
+            };
+            return responses[random.nextInt(responses.length)];
+        } else {
+            String[] responses = {
+                "I understand, continue", "Yes, I hear you", "Hmm, I see", "Okay, go on",
+                "How can I help you?", "I hear you, what's next?", "Got it, continue", "Okay, I understand"
+            };
+            return responses[random.nextInt(responses.length)];
+        }
     }
     
     /**
