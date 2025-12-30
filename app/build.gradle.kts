@@ -80,7 +80,7 @@ dependencies {
     // Agora RTC SDK for video calling
     implementation("io.agora.rtc:full-sdk:4.3.0")
     
-    // OkHttp for HTTP requests (Ollama API)
+    // OkHttp for HTTP requests
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     

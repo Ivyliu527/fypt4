@@ -27,6 +27,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     
     private VoiceCommandManager voiceCommandManager;
     private VoiceAIAssistant aiAssistant;
+    private StreamingVoiceAI streamingAI; // 高級即時對話AI
     private Button listenButton;
     private TextView statusText;
     private TextView commandText;
@@ -35,6 +36,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     private TextView availableCommandsTitle;
     
     private boolean isListening = false;
+    private boolean useStreamingMode = false; // 是否使用連續對話模式
     
     // 聊天記錄導航
     private int currentHistoryIndex = -1; // 當前查看的記錄索引（-1表示未在查看記錄）
@@ -64,10 +66,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             String cantoneseText = "語音AI助手頁面。你可以同我聊天，或者說出指令控制應用，例如：打開環境識別、讀文件、緊急求助等。" +
                     "你可以說「查看聊天記錄」來回顧之前的對話，說「上一句」或「下一句」來瀏覽記錄。" +
-                    "點擊中間的按鈕開始對話。";
+                    "點擊中間的按鈕開始對話。長按按鈕可以切換到連續對話模式，無需每次點擊即可持續對話。";
             String englishText = "Voice AI Assistant page. You can chat with me or speak commands to control the app, such as: open environment, read document, emergency help. " +
                     "You can say 'view chat history' to review previous conversations, say 'previous message' or 'next message' to navigate. " +
-                    "Tap the center button to start conversation.";
+                    "Tap the center button to start conversation. Long press the button to switch to continuous conversation mode for hands-free continuous dialogue.";
             ttsManager.speak(cantoneseText, englishText, true);
         }, 500);
     }
@@ -84,6 +86,13 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         listenButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
             toggleListening();
+        });
+        
+        // 長按切換連續對話模式
+        listenButton.setOnLongClickListener(v -> {
+            vibrationManager.vibrateLongPress();
+            toggleStreamingMode();
+            return true;
         });
         
         // 返回按鈕
@@ -210,9 +219,12 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         voiceCommandManager = VoiceCommandManager.getInstance(this);
         voiceCommandManager.setLanguage(currentLanguage);
         
-        // 初始化AI助手（傳入 Context 以支持 Ollama API）
+        // 初始化AI助手
         aiAssistant = new VoiceAIAssistant(this);
         aiAssistant.setLanguage(currentLanguage);
+        
+        // 初始化高級即時對話AI
+        initStreamingAI();
         
         // 啟用 ASRManager 並設置引擎
         setupASRManager();
@@ -310,7 +322,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                         ("mandarin".equals(currentLanguage) ? "您: " : "您: ") + text;
                     commandText.setText(recognizedText);
                     
-                    // 使用AI助手處理對話（異步版本，支持 Ollama API）
+                    // 使用AI助手處理對話（異步版本）
                     aiAssistant.processInputAsync(text, new VoiceAIAssistant.AssistantResponseCallback() {
                         @Override
                         public void onResponse(VoiceAIAssistant.AssistantResponse response) {
@@ -334,6 +346,157 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 });
             }
         });
+    }
+    
+    /**
+     * 初始化高級即時對話AI
+     */
+    private void initStreamingAI() {
+        streamingAI = new StreamingVoiceAI(this);
+        streamingAI.setLanguage(currentLanguage);
+        streamingAI.setCallback(new StreamingVoiceAI.StreamingAICallback() {
+            @Override
+            public void onPartialText(String partialText) {
+                runOnUiThread(() -> {
+                    // 實時顯示識別中的文本
+                    String recognizingText = "english".equals(currentLanguage) ? 
+                        "Recognizing: " + partialText :
+                        ("mandarin".equals(currentLanguage) ? "识别中: " : "識別中: ") + partialText;
+                    commandText.setText(recognizingText);
+                    commandText.setTextColor(getResources().getColor(android.R.color.holo_blue_light));
+                });
+            }
+            
+            @Override
+            public void onFinalText(String finalText) {
+                runOnUiThread(() -> {
+                    vibrationManager.vibrateSuccess();
+                    // 顯示最終識別結果
+                    String recognizedText = "english".equals(currentLanguage) ? 
+                        "You: " + finalText :
+                        ("mandarin".equals(currentLanguage) ? "您: " : "您: ") + finalText;
+                    commandText.setText(recognizedText);
+                    commandText.setTextColor(getResources().getColor(android.R.color.white));
+                });
+            }
+            
+            @Override
+            public void onAIResponse(String response) {
+                runOnUiThread(() -> {
+                    // 顯示AI回應
+                    String aiText = "english".equals(currentLanguage) ? 
+                        "AI: " + response :
+                        ("mandarin".equals(currentLanguage) ? "AI: " : "AI: ") + response;
+                    commandText.setText(aiText);
+                    commandText.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+                });
+            }
+            
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    vibrationManager.vibrateError();
+                    String errorMessage = getLocalizedErrorMessage(error);
+                    statusText.setText(errorMessage);
+                    announceError(errorMessage);
+                    updateUI(false);
+                });
+            }
+            
+            @Override
+            public void onListeningStateChanged(boolean isListening) {
+                runOnUiThread(() -> {
+                    VoiceCommandActivity.this.isListening = isListening;
+                    updateUI(isListening);
+                    if (isListening) {
+                        statusText.setText(getLocalizedString("listening_active"));
+                        String announceText = "english".equals(currentLanguage) ? 
+                            "Continuous conversation mode active, please speak" :
+                            ("mandarin".equals(currentLanguage) ? "连续对话模式已激活，请说话" : "連續對話模式已激活，請說話");
+                        announceInfo(announceText);
+                    } else {
+                        statusText.setText(getLocalizedString("listening_status"));
+                    }
+                });
+            }
+        });
+    }
+    
+    /**
+     * 切換連續對話模式
+     */
+    private void toggleStreamingMode() {
+        useStreamingMode = !useStreamingMode;
+        
+        // 如果正在監聽，先停止
+        if (isListening) {
+            if (useStreamingMode) {
+                stopListening();
+                // 延遲啟動連續對話模式
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    startStreamingConversation();
+                }, 500);
+            } else {
+                stopStreamingConversation();
+                // 延遲啟動普通模式
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    startListening();
+                }, 500);
+            }
+        }
+        
+        // 播報模式切換
+        String modeText = useStreamingMode ? 
+            ("english".equals(currentLanguage) ? "Switched to continuous conversation mode" :
+             ("mandarin".equals(currentLanguage) ? "已切换到连续对话模式" : "已切換到連續對話模式")) :
+            ("english".equals(currentLanguage) ? "Switched to normal mode" :
+             ("mandarin".equals(currentLanguage) ? "已切换到普通模式" : "已切換到普通模式"));
+        announceInfo(modeText);
+        
+        // 更新按鈕提示
+        updateModeHint();
+    }
+    
+    /**
+     * 更新模式提示
+     */
+    private void updateModeHint() {
+        String hint = useStreamingMode ?
+            ("english".equals(currentLanguage) ? "Long press to switch to normal mode" :
+             ("mandarin".equals(currentLanguage) ? "长按切换到普通模式" : "長按切換到普通模式")) :
+            ("english".equals(currentLanguage) ? "Long press to switch to continuous conversation mode" :
+             ("mandarin".equals(currentLanguage) ? "长按切换到连续对话模式" : "長按切換到連續對話模式"));
+        
+        if (hintText != null) {
+            String currentHint = hintText.getText().toString();
+            // 保留原有提示，添加模式提示
+            if (!currentHint.contains("長按") && !currentHint.contains("长按") && !currentHint.contains("Long press")) {
+                hintText.setText(currentHint + "\n\n" + hint);
+            }
+        }
+    }
+    
+    /**
+     * 開始連續對話
+     */
+    private void startStreamingConversation() {
+        if (streamingAI == null) {
+            initStreamingAI();
+        }
+        
+        if (streamingAI != null) {
+            streamingAI.setLanguage(currentLanguage);
+            streamingAI.startContinuousConversation();
+        }
+    }
+    
+    /**
+     * 停止連續對話
+     */
+    private void stopStreamingConversation() {
+        if (streamingAI != null) {
+            streamingAI.stopConversation();
+        }
     }
     
     /**
@@ -428,13 +591,25 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
             return;
         }
         
-        isListening = true;
-        voiceCommandManager.startListening();
+        // 根據模式選擇啟動方式
+        if (useStreamingMode) {
+            startStreamingConversation();
+        } else {
+            isListening = true;
+            voiceCommandManager.startListening();
+        }
     }
     
     private void stopListening() {
         isListening = false;
-        voiceCommandManager.stopListening();
+        
+        // 根據模式選擇停止方式
+        if (useStreamingMode) {
+            stopStreamingConversation();
+        } else {
+            voiceCommandManager.stopListening();
+        }
+        
         updateUI(false);
     }
     
@@ -1080,6 +1255,9 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 if (aiAssistant != null) {
                     aiAssistant.setLanguage("english");
                 }
+                if (streamingAI != null) {
+                    streamingAI.setLanguage("english");
+                }
                 announceInfo("Switched to English");
                 break;
             case "english":
@@ -1088,6 +1266,9 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 voiceCommandManager.setLanguage("mandarin");
                 if (aiAssistant != null) {
                     aiAssistant.setLanguage("mandarin");
+                }
+                if (streamingAI != null) {
+                    streamingAI.setLanguage("mandarin");
                 }
                 announceInfo("已切換到普通話");
                 break;
@@ -1098,6 +1279,9 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 voiceCommandManager.setLanguage("cantonese");
                 if (aiAssistant != null) {
                     aiAssistant.setLanguage("cantonese");
+                }
+                if (streamingAI != null) {
+                    streamingAI.setLanguage("cantonese");
                 }
                 announceInfo("已切換到廣東話");
                 break;
@@ -1119,12 +1303,19 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         if (voiceCommandManager != null) {
             voiceCommandManager.stopListening();
         }
+        if (streamingAI != null) {
+            streamingAI.release();
+        }
+        if (ttsManager != null) {
+            ttsManager.stopSpeaking();
+        }
         super.onDestroy();
     }
     
     @Override
     protected void onPause() {
         super.onPause();
+        // 暫停時停止監聽
         if (isListening) {
             stopListening();
         }
