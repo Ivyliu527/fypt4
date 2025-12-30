@@ -64,10 +64,10 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     @Override
     protected void announcePageTitle() {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            String cantoneseText = "語音AI助手頁面。你可以同我聊天，或者說出指令控制應用，例如：打開環境識別、讀文件、緊急求助等。" +
+            String cantoneseText = "語音助手頁面。你可以同我聊天，或者說出指令控制應用，例如：打開環境識別、讀文件、緊急求助等。" +
                     "你可以說「查看聊天記錄」來回顧之前的對話，說「上一句」或「下一句」來瀏覽記錄。" +
                     "點擊中間的按鈕開始對話。長按按鈕可以切換到連續對話模式，無需每次點擊即可持續對話。";
-            String englishText = "Voice AI Assistant page. You can chat with me or speak commands to control the app, such as: open environment, read document, emergency help. " +
+            String englishText = "Voice Assistant page. You can chat with me or speak commands to control the app, such as: open environment, read document, emergency help. " +
                     "You can say 'view chat history' to review previous conversations, say 'previous message' or 'next message' to navigate. " +
                     "Tap the center button to start conversation. Long press the button to switch to continuous conversation mode for hands-free continuous dialogue.";
             ttsManager.speak(cantoneseText, englishText, true);

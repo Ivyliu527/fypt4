@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * 語音AI助手
+ * 語音助手
  * 整合對話管理、回應生成和命令識別
  */
 public class VoiceAIAssistant {
