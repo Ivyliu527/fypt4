@@ -28,21 +28,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 真實AI物體檢測器
- * 基於 TensorFlow Lite 的 SSD MobileNet 模型實現
- * 提供真實的AI檢測能力，支持90個COCO類別
+ * Real AI object detector
+ * Implementation based on TensorFlow Lite SSD MobileNet model
+ * Provides real AI detection capability, supports 90 COCO categories
  */
 public class YoloDetector {
     private static final String TAG = "YoloDetector";
     
-    // 模型參數 - 使用AppConstants
+    // Model parameters - use AppConstants
     
     private Context context;
     private Interpreter tflite;
     private boolean isInitialized = false;
     private DetectionPerformanceMonitor performanceMonitor;
     
-    // COCO 數據集類別名稱（繁體中文）
+    // COCO dataset category names (Traditional Chinese)
     private static final Map<String, String> CLASS_NAMES_ZH = new HashMap<>();
     
     static {
@@ -127,7 +127,7 @@ public class YoloDetector {
         CLASS_NAMES_ZH.put("hair drier", "吹風機");
         CLASS_NAMES_ZH.put("toothbrush", "牙刷");
         
-        // 添加更多SSD模型支持的類別
+        // Add more categories supported by SSD model
         CLASS_NAMES_ZH.put("background", "背景");
         CLASS_NAMES_ZH.put("aeroplane", "飛機");
         CLASS_NAMES_ZH.put("bicycle", "腳踏車");
@@ -150,7 +150,7 @@ public class YoloDetector {
         CLASS_NAMES_ZH.put("tvmonitor", "電視");
     }
     
-    // COCO 類別名稱數組（按索引順序）- SSD MobileNet 格式
+    // COCO category name array (in index order) - SSD MobileNet format
     private static final String[] COCO_CLASSES = {
         "background", "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat",
         "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
@@ -174,40 +174,40 @@ public class YoloDetector {
     
     private void initialize() {
         try {
-            Log.d(TAG, "開始初始化真實AI檢測器...");
+            Log.d(TAG, "Start initializing real AI detector...");
             
-            // 載入 TensorFlow Lite 模型
+            // Load TensorFlow Lite model
             tflite = new Interpreter(loadModelFile());
             
             if (tflite != null) {
                 isInitialized = true;
-                Log.d(TAG, "真實AI檢測器初始化成功 - 使用YOLOv8模型");
+                Log.d(TAG, "Real AI detector initialized successfully - using YOLOv8 model");
             } else {
-                Log.e(TAG, "無法載入 TensorFlow Lite 模型");
+                Log.e(TAG, "Unable to load TensorFlow Lite model");
                 isInitialized = false;
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "真實AI檢測器初始化失敗: " + e.getMessage());
+            Log.e(TAG, "Real AI detector initialization failed: " + e.getMessage());
             isInitialized = false;
         }
     }
     
     /**
-     * 載入模型文件
+     * Load model file
      */
     private MappedByteBuffer loadModelFile() throws IOException {
         try {
-            // 嘗試從 assets 載入模型文件
+            // Try to load model file from assets
             return loadModelFromAssets();
         } catch (IOException e) {
-            Log.w(TAG, "無法從 assets 載入模型，使用備用檢測方法");
+            Log.w(TAG, "Unable to load model from assets, using fallback detection method");
             return null;
         }
     }
     
     /**
-     * 從 assets 載入模型文件
+     * Load model file from assets
      */
     private MappedByteBuffer loadModelFromAssets() throws IOException {
         android.content.res.AssetFileDescriptor fileDescriptor = 
@@ -220,16 +220,16 @@ public class YoloDetector {
     }
     
     /**
-     * 檢測圖像中的物體
+     * Detect objects in image
      */
     public List<DetectionResult> detect(ImageProxy image) {
         if (!isInitialized) {
-            Log.w(TAG, "檢測器尚未初始化");
+            Log.w(TAG, "Detector not initialized");
             return new ArrayList<>();
         }
         
         try {
-            // 將 ImageProxy 轉換為 Bitmap
+            // Convert ImageProxy to Bitmap
             Bitmap bitmap = imageProxyToBitmap(image);
             if (bitmap == null) {
                 return new ArrayList<>();
@@ -238,13 +238,13 @@ public class YoloDetector {
             return detect(bitmap);
             
         } catch (Exception e) {
-            Log.e(TAG, "檢測失敗: " + e.getMessage());
+            Log.e(TAG, "Detection failed: " + e.getMessage());
             return new ArrayList<>();
         }
     }
     
     /**
-     * 檢測 Bitmap 圖像
+     * Detect Bitmap image
      */
     public List<DetectionResult> detect(Bitmap bitmap) {
         if (bitmap == null) {
@@ -252,46 +252,46 @@ public class YoloDetector {
         }
         
         if (!isInitialized || tflite == null) {
-            Log.w(TAG, "真實AI模型未載入，使用備用檢測方法");
+            Log.w(TAG, "Real AI model not loaded, using fallback detection method");
             return getFallbackDetections(bitmap);
         }
         
         try {
             long startTime = System.currentTimeMillis();
             
-            // 動態檢測模型的輸入張量要求
+            // Dynamically detect model input tensor requirements
             org.tensorflow.lite.Tensor inputTensor = tflite.getInputTensor(0);
             int[] inputShape = inputTensor.shape();
             int inputHeight = inputShape[1];
             int inputWidth = inputShape[2];
             int inputChannels = inputShape.length > 3 ? inputShape[3] : 3;
             
-            Log.d(TAG, String.format("模型輸入張量形狀: [%s], 期望尺寸: %dx%d, 通道數: %d", 
+            Log.d(TAG, String.format("Model input tensor shape: [%s], expected size: %dx%d, channels: %d", 
                 java.util.Arrays.toString(inputShape), inputWidth, inputHeight, inputChannels));
             
-            // 檢查數據類型（float32 vs uint8）
+            // Check data type (float32 vs uint8)
             org.tensorflow.lite.DataType inputDataType = inputTensor.dataType();
             boolean isFloatInput = (inputDataType == org.tensorflow.lite.DataType.FLOAT32);
-            Log.d(TAG, "輸入數據類型: " + inputDataType + ", 是否為float: " + isFloatInput);
+            Log.d(TAG, "Input data type: " + inputDataType + ", is float: " + isFloatInput);
             
-            // 根據模型要求調整圖像尺寸
+            // Adjust image size according to model requirements
             Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, inputWidth, inputHeight, true);
             ByteBuffer inputBuffer = bitmapToByteBuffer(resizedBitmap, inputWidth, inputHeight, isFloatInput);
             
-            // 動態獲取輸出張量的形狀
+            // Dynamically get output tensor shapes
             int numOutputs = tflite.getOutputTensorCount();
-            Log.d(TAG, "模型輸出張量數量: " + numOutputs);
+            Log.d(TAG, "Model output tensor count: " + numOutputs);
             
-            // 檢查第一個輸出張量的形狀，判斷模型格式
+            // Check first output tensor shape to determine model format
             org.tensorflow.lite.Tensor firstOutputTensor = tflite.getOutputTensor(0);
             int[] firstOutputShape = firstOutputTensor.shape();
-            Log.d(TAG, "第一個輸出張量形狀: " + java.util.Arrays.toString(firstOutputShape));
+            Log.d(TAG, "First output tensor shape: " + java.util.Arrays.toString(firstOutputShape));
             
             List<DetectionResult> results = new ArrayList<>();
             
-            // 根據第一個輸出張量的形狀判斷模型格式
-            // YOLOv8格式: [1, 84, 8400] = [batch, 4+80, num_anchors]
-            // 後處理格式: [1, num_detections, 4] 或 [1, num_detections, 6]
+            // Determine model format based on first output tensor shape
+            // YOLOv8 format: [1, 84, 8400] = [batch, 4+80, num_anchors]
+            // Post-processed format: [1, num_detections, 4] or [1, num_detections, 6]
             boolean isYoloV8Format = (numOutputs == 1 && firstOutputShape.length == 3 && 
                                       firstOutputShape[0] == 1 && 
                                       firstOutputShape[1] == 84 && 
@@ -302,88 +302,88 @@ public class YoloDetector {
                                       (firstOutputShape[2] == 4 || firstOutputShape[2] == 6));
             
             if (isYoloV8Format) {
-                // YOLOv8 原生格式：[1, 84, 8400]
-                // 84 = 4 (bbox坐标) + 80 (COCO类别)
-                // 8400 = 检测位置数量
-                Log.d(TAG, "檢測到YOLOv8原生格式: [1, 84, 8400]");
+                // YOLOv8 native format: [1, 84, 8400]
+                // 84 = 4 (bbox coordinates) + 80 (COCO categories)
+                // 8400 = number of detection positions
+                Log.d(TAG, "Detected YOLOv8 native format: [1, 84, 8400]");
                 
-                // 分配輸出緩衝區 [1, 84, 8400]
+                // Allocate output buffer [1, 84, 8400]
                 float[][][] detectionOutput = new float[1][84][8400];
                 
-                // 執行推理
+                // Execute inference
                 Object[] inputs = {inputBuffer};
                 Map<Integer, Object> outputs = new HashMap<>();
                 outputs.put(0, detectionOutput);
                 
                 tflite.runForMultipleInputsOutputs(inputs, outputs);
                 
-                // 處理YOLOv8輸出格式
+                // Process YOLOv8 output format
                 results = postProcessYoloV8Output(
                     detectionOutput[0], inputWidth, inputHeight, bitmap.getWidth(), bitmap.getHeight());
                     
             } else if (isPostProcessed || numOutputs == 1) {
-                // 後處理版本：單一輸出 [1, num_detections, 4] 或 [1, num_detections, 6]
+                // Post-processed version: single output [1, num_detections, 4] or [1, num_detections, 6]
                 int maxDetections = firstOutputShape.length >= 2 ? firstOutputShape[1] : 10;
                 int coordsPerDetection = firstOutputShape.length >= 3 ? firstOutputShape[2] : 4;
                 
-                Log.d(TAG, "檢測到後處理版本，最大檢測數: " + maxDetections + ", 每檢測座標數: " + coordsPerDetection);
+                Log.d(TAG, "Detected post-processed version, max detections: " + maxDetections + ", coords per detection: " + coordsPerDetection);
                 
-                // 分配輸出緩衝區
+                // Allocate output buffer
                 float[][][] detectionOutput = new float[1][maxDetections][coordsPerDetection];
                 
-                // 執行推理
+                // Execute inference
                 Object[] inputs = {inputBuffer};
                 Map<Integer, Object> outputs = new HashMap<>();
                 outputs.put(0, detectionOutput);
                 
                 tflite.runForMultipleInputsOutputs(inputs, outputs);
                 
-                // 處理後處理輸出格式 [1, num_detections, 6] 或 [1, num_detections, 4]
+                // Process post-processed output format [1, num_detections, 6] or [1, num_detections, 4]
                 results = postProcessDetections(
                     detectionOutput[0], bitmap.getWidth(), bitmap.getHeight(), coordsPerDetection);
                     
             } else if (numOutputs >= 2) {
-                // 後處理版本：多個輸出張量
-                // 格式可能是：boxes [1, N, 4], classes [1, N], scores [1, N], num_detections [1]
-                // 或者：boxes [1, N, 4], classes [1, N, 91], scores [1, N], num_detections [1]
-                Log.d(TAG, "檢測到多輸出格式，動態檢測輸出張量形狀");
+                // Post-processed version: multiple output tensors
+                // Format may be: boxes [1, N, 4], classes [1, N], scores [1, N], num_detections [1]
+                // Or: boxes [1, N, 4], classes [1, N, 91], scores [1, N], num_detections [1]
+                Log.d(TAG, "Detected multi-output format, dynamically detect output tensor shapes");
                 
-                // 檢查所有輸出張量的形狀
-                int maxDetections = 10; // 默認值
-                boolean isClassIndexFormat = false; // classes 是索引還是概率矩陣
+                // Check all output tensor shapes
+                int maxDetections = 10; // Default value
+                boolean isClassIndexFormat = false; // classes is index or probability matrix
                 
-                // 檢查第一個輸出張量（boxes）的形狀
+                // Check first output tensor (boxes) shape
                 if (firstOutputShape.length >= 2) {
                     maxDetections = firstOutputShape[1];
-                    Log.d(TAG, "從第一個輸出張量檢測到最大檢測數: " + maxDetections);
+                    Log.d(TAG, "Detected max detections from first output tensor: " + maxDetections);
                 }
                 
-                // 檢查第二個輸出張量（classes）的形狀
+                // Check second output tensor (classes) shape
                 if (numOutputs > 1) {
                     org.tensorflow.lite.Tensor classesTensor = tflite.getOutputTensor(1);
                     int[] classesShape = classesTensor.shape();
-                    Log.d(TAG, "第二個輸出張量（classes）形狀: " + java.util.Arrays.toString(classesShape));
+                    Log.d(TAG, "Second output tensor (classes) shape: " + java.util.Arrays.toString(classesShape));
                     
-                    // 如果形狀是 [1, N]，說明是類別索引格式
-                    // 如果形狀是 [1, N, num_classes]，說明是類別概率矩陣格式
+                    // If shape is [1, N], it's class index format
+                    // If shape is [1, N, num_classes], it's class probability matrix format
                     if (classesShape.length == 2) {
                         isClassIndexFormat = true;
-                        Log.d(TAG, "檢測到類別索引格式 [1, N]");
+                        Log.d(TAG, "Detected class index format [1, N]");
                     } else if (classesShape.length == 3) {
-                        Log.d(TAG, "檢測到類別概率矩陣格式 [1, N, num_classes]");
+                        Log.d(TAG, "Detected class probability matrix format [1, N, num_classes]");
                     }
                 }
                 
-                // 根據實際形狀分配輸出緩衝區
+                // Allocate output buffers based on actual shapes
                 float[][][] detectionBoxes = new float[1][maxDetections][4];
                 
                 Object[] inputs = {inputBuffer};
                 Map<Integer, Object> outputs = new HashMap<>();
                 outputs.put(0, detectionBoxes);
                 
-                // 根據格式分配不同的輸出緩衝區
+                // Allocate different output buffers based on format
                 if (isClassIndexFormat) {
-                    // 後處理格式：classes 是索引數組 [1, N]
+                    // Post-processed format: classes is index array [1, N]
                     float[][] detectionClasses = new float[1][maxDetections];
                     float[][] detectionScores = numOutputs > 2 ? new float[1][maxDetections] : null;
                     float[] numDetections = numOutputs > 3 ? new float[1] : null;
@@ -394,7 +394,7 @@ public class YoloDetector {
                     
                     tflite.runForMultipleInputsOutputs(inputs, outputs);
                     
-                    // 處理後處理格式的輸出
+                    // Process post-processed format output
                     results = postProcessPostProcessedOutput(
                         detectionBoxes[0],
                         detectionClasses[0],
@@ -402,8 +402,8 @@ public class YoloDetector {
                         numDetections != null ? (int)numDetections[0] : maxDetections,
                         bitmap.getWidth(), bitmap.getHeight());
                 } else {
-                    // 原始格式：classes 是概率矩陣 [1, N, num_classes]
-                    int numClasses = 91; // 默認值
+                    // Original format: classes is probability matrix [1, N, num_classes]
+                    int numClasses = 91; // Default value
                     if (numOutputs > 1) {
                         org.tensorflow.lite.Tensor classesTensor = tflite.getOutputTensor(1);
                         int[] classesShape = classesTensor.shape();
@@ -430,16 +430,16 @@ public class YoloDetector {
                         bitmap.getWidth(), bitmap.getHeight());
                 }
             } else {
-                Log.e(TAG, "未知的輸出格式，輸出張量數量: " + numOutputs);
+                Log.e(TAG, "Unknown output format, output tensor count: " + numOutputs);
                 return getFallbackDetections(bitmap);
             }
             
-            // 記錄性能數據
+            // Record performance data
             long detectionTime = System.currentTimeMillis() - startTime;
             performanceMonitor.recordDetectionTime(detectionTime);
             performanceMonitor.recordDetectionResult(results);
             
-            // 回收臨時 bitmap
+            // Recycle temporary bitmap
             if (resizedBitmap != bitmap) {
                 resizedBitmap.recycle();
             }
@@ -447,35 +447,35 @@ public class YoloDetector {
             return results;
             
         } catch (Exception e) {
-            Log.e(TAG, "真實AI檢測失敗，使用備用方法: " + e.getMessage());
+            Log.e(TAG, "Real AI detection failed, using fallback method: " + e.getMessage());
             e.printStackTrace();
             return getFallbackDetections(bitmap);
         }
     }
     
     /**
-     * 將 Bitmap 轉換為 ByteBuffer
-     * 支持兩種格式：
-     * - uint8: 1字節/通道，值範圍 0-255
-     * - float32: 4字節/通道，值範圍 0.0-1.0 (歸一化)
+     * Convert Bitmap to ByteBuffer
+     * Supports two formats:
+     * - uint8: 1 byte/channel, value range 0-255
+     * - float32: 4 bytes/channel, value range 0.0-1.0 (normalized)
      */
     private ByteBuffer bitmapToByteBuffer(Bitmap bitmap, int inputWidth, int inputHeight, boolean isFloatInput) {
-        // 根據數據類型計算緩衝區大小
+        // Calculate buffer size based on data type
         int bufferSize;
         if (isFloatInput) {
-            // float32: width × height × 3 × 4 字節
+            // float32: width × height × 3 × 4 bytes
             bufferSize = inputWidth * inputHeight * 3 * 4;
         } else {
-            // uint8: width × height × 3 字節
+            // uint8: width × height × 3 bytes
             bufferSize = inputWidth * inputHeight * 3;
         }
         
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(bufferSize);
         byteBuffer.order(ByteOrder.nativeOrder());
         
-        // 確保bitmap是正確尺寸
+        // Ensure bitmap is correct size
         if (bitmap.getWidth() != inputWidth || bitmap.getHeight() != inputHeight) {
-            Log.w(TAG, String.format("Bitmap尺寸不正確: %dx%d, 期望: %dx%d", 
+            Log.w(TAG, String.format("Bitmap size incorrect: %dx%d, expected: %dx%d", 
                 bitmap.getWidth(), bitmap.getHeight(), inputWidth, inputHeight));
             return byteBuffer;
         }
@@ -483,35 +483,35 @@ public class YoloDetector {
         int[] pixels = new int[inputWidth * inputHeight];
         bitmap.getPixels(pixels, 0, inputWidth, 0, 0, inputWidth, inputHeight);
         
-        // 將像素值轉換為RGB並添加到緩衝區
+        // Convert pixel values to RGB and add to buffer
         for (int pixel : pixels) {
-            // 提取 RGB 值 (ARGB格式)
+            // Extract RGB values (ARGB format)
             int r = (pixel >> 16) & 0xFF;
             int g = (pixel >> 8) & 0xFF;
             int b = pixel & 0xFF;
             
             if (isFloatInput) {
-                // float32格式：歸一化到 0.0-1.0
+                // float32 format: normalize to 0.0-1.0
                 byteBuffer.putFloat(r / 255.0f);
                 byteBuffer.putFloat(g / 255.0f);
                 byteBuffer.putFloat(b / 255.0f);
             } else {
-                // uint8格式：值範圍 0-255
+                // uint8 format: value range 0-255
                 byteBuffer.put((byte) r);
                 byteBuffer.put((byte) g);
                 byteBuffer.put((byte) b);
             }
         }
         
-        byteBuffer.rewind(); // 重置位置到開始
+        byteBuffer.rewind(); // Reset position to start
         return byteBuffer;
     }
     
     /**
-     * 處理YOLOv8原生輸出格式 [84, 8400]
-     * output[0-3][j] = bbox坐标 (x_center, y_center, width, height)，相对于模型输入尺寸
-     * output[4-83][j] = 80个类别的置信度分数
-     * j = 0-8399 是不同的检测位置
+     * Process YOLOv8 native output format [84, 8400]
+     * output[0-3][j] = bbox coordinates (x_center, y_center, width, height), relative to model input size
+     * output[4-83][j] = confidence scores for 80 categories
+     * j = 0-8399 are different detection positions
      */
     private List<DetectionResult> postProcessYoloV8Output(float[][] output, 
                                                           int modelWidth, int modelHeight,
@@ -520,16 +520,16 @@ public class YoloDetector {
         int numAnchors = 8400;
         int numClasses = 80;
         
-        // 第一步：提取所有有效检测
+        // Step 1: Extract all valid detections
         for (int j = 0; j < numAnchors; j++) {
-            // YOLOv8输出格式：bbox坐标可能是归一化(0-1)或像素坐标
-            // 格式：output[0-3][j] = (x_center, y_center, width, height)
+            // YOLOv8 output format: bbox coordinates may be normalized (0-1) or pixel coordinates
+            // Format: output[0-3][j] = (x_center, y_center, width, height)
             float x_center = output[0][j];
             float y_center = output[1][j];
             float width = output[2][j];
             float height = output[3][j];
             
-            // 找到最高置信度的类别
+            // Find class with highest confidence
             float maxConfidence = 0.0f;
             int bestClassIndex = 0;
             for (int c = 0; c < numClasses; c++) {
@@ -540,62 +540,62 @@ public class YoloDetector {
                 }
             }
             
-            // 过滤低置信度检测
+            // Filter low confidence detections
             if (maxConfidence < AppConstants.CONFIDENCE_THRESHOLD) {
                 continue;
             }
             
-            // 判断坐标格式：如果坐标值 > 1，说明是像素坐标；否则是归一化坐标(0-1)
+            // Determine coordinate format: if coordinate value > 1, it's pixel coordinates; otherwise normalized (0-1)
             boolean isNormalized = (x_center <= 1.0f && y_center <= 1.0f && 
                                    width <= 1.0f && height <= 1.0f && 
                                    x_center >= 0 && y_center >= 0);
             
             float left, top, right, bottom;
             if (isNormalized) {
-                // 归一化坐标：直接转换为(left, top, right, bottom)
+                // Normalized coordinates: directly convert to (left, top, right, bottom)
                 left = x_center - width / 2;
                 top = y_center - height / 2;
                 right = x_center + width / 2;
                 bottom = y_center + height / 2;
             } else {
-                // 像素坐标：先归一化再转换
+                // Pixel coordinates: normalize first then convert
                 left = (x_center - width / 2) / modelWidth;
                 top = (y_center - height / 2) / modelHeight;
                 right = (x_center + width / 2) / modelWidth;
                 bottom = (y_center + height / 2) / modelHeight;
             }
             
-            // 跳过无效的bbox
+            // Skip invalid bbox
             if (width <= 0 || height <= 0 || left >= right || top >= bottom ||
                 left < 0 || top < 0 || right > 1.0f || bottom > 1.0f) {
                 continue;
             }
             
-            // 确保坐标在有效范围内 (0-1)
+            // Ensure coordinates are within valid range (0-1)
             left = Math.max(0.0f, Math.min(1.0f, left));
             top = Math.max(0.0f, Math.min(1.0f, top));
             right = Math.max(left + 0.01f, Math.min(1.0f, right));
             bottom = Math.max(top + 0.01f, Math.min(1.0f, bottom));
             
-            // 转换到像素坐标
+            // Convert to pixel coordinates
             int pixelLeft = (int)(left * originalWidth);
             int pixelTop = (int)(top * originalHeight);
             int pixelRight = (int)(right * originalWidth);
             int pixelBottom = (int)(bottom * originalHeight);
             
-            // 验证bbox尺寸（至少20像素）
+            // Verify bbox size (at least 20 pixels)
             if (pixelRight - pixelLeft < 20 || pixelBottom - pixelTop < 20) {
                 continue;
             }
             
-            // 获取类别名称（YOLOv8使用COCO类别，索引0-79对应类别1-80，不包括background）
-            // COCO_CLASSES[0]是"background"，所以YOLOv8的索引0对应COCO_CLASSES[1]
+            // Get category name (YOLOv8 uses COCO categories, indices 0-79 correspond to categories 1-80, excluding background)
+            // COCO_CLASSES[0] is "background", so YOLOv8 index 0 corresponds to COCO_CLASSES[1]
             String className = "object";
-            int cocoClassIndex = bestClassIndex + 1; // YOLOv8索引+1 = COCO索引
+            int cocoClassIndex = bestClassIndex + 1; // YOLOv8 index + 1 = COCO index
             if (cocoClassIndex >= 1 && cocoClassIndex < COCO_CLASSES.length) {
                 className = COCO_CLASSES[cocoClassIndex];
             } else if (bestClassIndex >= 0 && bestClassIndex < COCO_CLASSES.length) {
-                // 备用：直接使用索引（如果数组对齐）
+                // Fallback: use index directly (if array aligned)
                 className = COCO_CLASSES[bestClassIndex];
             }
             String chineseName = CLASS_NAMES_ZH.get(className);
@@ -603,19 +603,19 @@ public class YoloDetector {
                 chineseName = className;
             }
             
-            // 创建检测结果
+            // Create detection result
             android.graphics.Rect boundingBox = new android.graphics.Rect(
                 pixelLeft, pixelTop, pixelRight, pixelBottom);
             DetectionResult result = new DetectionResult(className, chineseName, maxConfidence, boundingBox);
             rawResults.add(result);
         }
         
-        Log.d(TAG, "YOLOv8原始检测数量: " + rawResults.size());
+        Log.d(TAG, "YOLOv8 raw detection count: " + rawResults.size());
         
-        // 第二步：应用非极大值抑制（NMS）过滤重复检测
+        // Step 2: Apply Non-Maximum Suppression (NMS) to filter duplicate detections
         List<DetectionResult> filteredResults = applyNMS(rawResults, AppConstants.NMS_THRESHOLD);
         
-        // 第三步：按置信度排序并限制数量
+        // Step 3: Sort by confidence and limit count
         Collections.sort(filteredResults, new Comparator<DetectionResult>() {
             @Override
             public int compare(DetectionResult a, DetectionResult b) {
@@ -626,12 +626,12 @@ public class YoloDetector {
         int maxResults = Math.min(AppConstants.MAX_RESULTS, filteredResults.size());
         List<DetectionResult> finalResults = filteredResults.subList(0, maxResults);
         
-        Log.d(TAG, "YOLOv8最终检测数量: " + finalResults.size());
+        Log.d(TAG, "YOLOv8 final detection count: " + finalResults.size());
         return finalResults;
     }
     
     /**
-     * 非极大值抑制（NMS）过滤重叠的检测框
+     * Non-Maximum Suppression (NMS) to filter overlapping detection boxes
      */
     private List<DetectionResult> applyNMS(List<DetectionResult> detections, float iouThreshold) {
         if (detections.isEmpty()) {
@@ -660,7 +660,7 @@ public class YoloDetector {
                 DetectionResult other = detections.get(j);
                 android.graphics.Rect box2 = other.getBoundingBox();
                 
-                // 计算IoU
+                // Calculate IoU
                 int x1 = Math.max(box1.left, box2.left);
                 int y1 = Math.max(box1.top, box2.top);
                 int x2 = Math.min(box1.right, box2.right);
@@ -672,7 +672,7 @@ public class YoloDetector {
                 
                 float iou = unionArea > 0 ? (float)intersectionArea / unionArea : 0.0f;
                 
-                // 如果IoU超过阈值，抑制检测
+                // If IoU exceeds threshold, suppress detection
                 if (iou > iouThreshold) {
                     suppressed[j] = true;
                 }
@@ -683,9 +683,9 @@ public class YoloDetector {
     }
     
     /**
-     * 處理後處理版本的檢測輸出
-     * 輸出格式可能是 [num_detections, 4] 或 [num_detections, 6]
-     * 格式：[ymin, xmin, ymax, xmax] 或 [ymin, xmin, ymax, xmax, class, score]
+     * Process post-processed version detection output
+     * Output format may be [num_detections, 4] or [num_detections, 6]
+     * Format: [ymin, xmin, ymax, xmax] or [ymin, xmin, ymax, xmax, class, score]
      */
     private List<DetectionResult> postProcessDetections(float[][] detections, 
                                                        int originalWidth, int originalHeight, 
@@ -702,7 +702,7 @@ public class YoloDetector {
             int classIndex = 0;
             
             if (coordsPerDetection >= 6) {
-                // 格式：[ymin, xmin, ymax, xmax, class, score]
+                // Format: [ymin, xmin, ymax, xmax, class, score]
                 ymin = detection[0];
                 xmin = detection[1];
                 ymax = detection[2];
@@ -710,16 +710,16 @@ public class YoloDetector {
                 classIndex = (int) detection[4];
                 confidence = detection[5];
             } else {
-                // 格式：[ymin, xmin, ymax, xmax] 或 [xmin, ymin, xmax, ymax]
-                // 嘗試檢測格式
+                // Format: [ymin, xmin, ymax, xmax] or [xmin, ymin, xmax, ymax]
+                // Try to detect format
                 if (detection[0] > detection[2] || detection[1] > detection[3]) {
-                    // 可能是 [xmin, ymin, xmax, ymax]
+                    // May be [xmin, ymin, xmax, ymax]
                     xmin = detection[0];
                     ymin = detection[1];
                     xmax = detection[2];
                     ymax = detection[3];
                 } else {
-                    // 可能是 [ymin, xmin, ymax, xmax]
+                    // May be [ymin, xmin, ymax, xmax]
                     ymin = detection[0];
                     xmin = detection[1];
                     ymax = detection[2];
@@ -727,20 +727,20 @@ public class YoloDetector {
                 }
             }
             
-            // 過濾低置信度檢測
+            // Filter low confidence detections
             if (confidence < AppConstants.CONFIDENCE_THRESHOLD) {
                 continue;
             }
             
-            // 轉換為相對座標 (0-1)，因為 DetectionResult 期望 RectF 格式
-            // 座標已經是相對座標 (0-1)，直接使用
-            // 確保座標在有效範圍內 (0-1)
+            // Convert to relative coordinates (0-1), because DetectionResult expects RectF format
+            // Coordinates are already relative (0-1), use directly
+            // Ensure coordinates are within valid range (0-1)
             xmin = Math.max(0.0f, Math.min(1.0f, xmin));
             ymin = Math.max(0.0f, Math.min(1.0f, ymin));
             xmax = Math.max(0.0f, Math.min(1.0f, xmax));
             ymax = Math.max(0.0f, Math.min(1.0f, ymax));
             
-            // 確保 xmax >= xmin 且 ymax >= ymin
+            // Ensure xmax >= xmin and ymax >= ymin
             if (xmax < xmin) {
                 float temp = xmin;
                 xmin = xmax;
@@ -752,15 +752,15 @@ public class YoloDetector {
                 ymax = temp;
             }
             
-            // 驗證邊界框合理性（相對座標）
+            // Verify bounding box validity (relative coordinates)
             float width = xmax - xmin;
             float height = ymax - ymin;
-            // 最小尺寸約為 2% 的圖像尺寸
+            // Minimum size approximately 2% of image size
             if (width < 0.02f || height < 0.02f || width <= 0 || height <= 0) {
                 continue;
             }
             
-            // 獲取類別名稱
+            // Get category name
             String className = "object";
             if (classIndex > 0 && classIndex <= COCO_CLASSES.length) {
                 className = COCO_CLASSES[classIndex - 1];
@@ -770,14 +770,14 @@ public class YoloDetector {
                 chineseName = className;
             }
             
-            // 創建檢測結果（使用相對座標轉換為像素座標）
-            // DetectionResult 期望 Rect，所以需要轉換為像素座標
+            // Create detection result (convert relative coordinates to pixel coordinates)
+            // DetectionResult expects Rect, so need to convert to pixel coordinates
             int left = (int)(xmin * originalWidth);
             int top = (int)(ymin * originalHeight);
             int right = (int)(xmax * originalWidth);
             int bottom = (int)(ymax * originalHeight);
             
-            // 確保座標在有效範圍內
+            // Ensure coordinates are within valid range
             left = Math.max(0, Math.min(originalWidth - 1, left));
             top = Math.max(0, Math.min(originalHeight - 1, top));
             right = Math.max(left + 1, Math.min(originalWidth, right));

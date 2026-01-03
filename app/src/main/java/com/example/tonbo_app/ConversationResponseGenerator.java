@@ -10,9 +10,9 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * 對話回應生成器
- * 根據用戶的語音輸入生成智能回應
- * 使用關鍵詞匹配模式
+ * Conversation response generator
+ * Generates intelligent responses based on user's voice input
+ * Uses keyword matching pattern
  */
 public class ConversationResponseGenerator {
     private static final String TAG = "ConversationResponseGenerator";
@@ -20,13 +20,13 @@ public class ConversationResponseGenerator {
     private String currentLanguage = "cantonese";
     private Random random = new Random();
     private Context context;
-    private ConversationManager conversationManager; // 用於獲取對話上下文
+    private ConversationManager conversationManager; // Used to get conversation context
     
-    // 關鍵詞到回應模板的映射（粵語）
+    // Keyword to response template mapping (Cantonese)
     private Map<String, String[]> cantoneseResponses = new HashMap<>();
-    // 關鍵詞到回應模板的映射（普通話）
+    // Keyword to response template mapping (Mandarin)
     private Map<String, String[]> mandarinResponses = new HashMap<>();
-    // 關鍵詞到回應模板的映射（英語）
+    // Keyword to response template mapping (English)
     private Map<String, String[]> englishResponses = new HashMap<>();
     
     public ConversationResponseGenerator() {
@@ -34,7 +34,7 @@ public class ConversationResponseGenerator {
     }
     
     /**
-     * 帶 Context 的構造函數
+     * Constructor with Context
      */
     public ConversationResponseGenerator(Context context) {
         this.context = context;
@@ -42,29 +42,29 @@ public class ConversationResponseGenerator {
     }
     
     /**
-     * 設置語言
+     * Set language
      */
     public void setLanguage(String language) {
         this.currentLanguage = language;
     }
     
     /**
-     * 設置對話管理器（用於獲取上下文）
+     * Set conversation manager (for getting context)
      */
     public void setConversationManager(ConversationManager manager) {
         this.conversationManager = manager;
     }
     
     /**
-     * 獲取對話上下文
-     * 用於多輪對話上下文管理
+     * Get conversation context
+     * Used for multi-turn conversation context management
      */
     private String getConversationContext() {
         if (conversationManager == null) {
             return null;
         }
         
-        // 獲取最近5輪對話作為上下文（增加上下文長度以提升理解）
+        // Get recent 5 conversation turns as context (increase context length to improve understanding)
         List<ConversationManager.ConversationTurn> recentHistory = 
             conversationManager.getRecentHistory(5);
         
@@ -72,7 +72,7 @@ public class ConversationResponseGenerator {
             return null;
         }
         
-        // 構建更清晰的上下文格式
+        // Build clearer context format
         StringBuilder context = new StringBuilder();
         context.append("以下是之前的對話歷史：\n\n");
         
@@ -91,24 +91,24 @@ public class ConversationResponseGenerator {
     }
     
     /**
-     * 後處理回應，使其更自然
+     * Post-process response to make it more natural
      */
     private String postProcessResponse(String response) {
         if (response == null || response.isEmpty()) {
             return response;
         }
         
-        // 移除可能的AI標記或格式
+        // Remove possible AI markers or formatting
         response = response.trim();
         
-        // 移除常見的AI開頭詞
+        // Remove common AI opening words
         String[] aiPrefixes = currentLanguage.equals("english") ? 
             new String[]{"As an AI", "I'm an AI", "As a language model"} :
             new String[]{"作為AI", "我是一個AI", "作為語言模型", "我係一個AI"};
         
         for (String prefix : aiPrefixes) {
             if (response.startsWith(prefix)) {
-                // 找到第一個句號後開始
+                // Start after first period
                 int periodIndex = response.indexOf("。");
                 if (periodIndex < 0) periodIndex = response.indexOf(".");
                 if (periodIndex >= 0 && periodIndex < response.length() - 1) {
@@ -117,10 +117,10 @@ public class ConversationResponseGenerator {
             }
         }
         
-        // 確保回應長度適中（允許更長的回應，類似DeepSeek）
-        // 如果超過200字，在合適的位置截斷
+        // Ensure response length is appropriate (allow longer responses, similar to DeepSeek)
+        // If exceeds 200 characters, truncate at appropriate position
         if (response.length() > 200) {
-            // 嘗試在句號處截斷
+            // Try to truncate at period
             int lastPeriod = response.lastIndexOf("。", 180);
             if (lastPeriod < 0) lastPeriod = response.lastIndexOf(".", 180);
             if (lastPeriod < 0) lastPeriod = response.lastIndexOf("，", 180);
@@ -129,7 +129,7 @@ public class ConversationResponseGenerator {
             if (lastPeriod > 0 && lastPeriod < 190) {
                 response = response.substring(0, lastPeriod + 1);
             } else {
-                // 如果找不到合適的截斷點，在180字處截斷
+                // If no suitable truncation point found, truncate at 180 characters
                 response = response.substring(0, 177) + "...";
             }
         }
@@ -138,10 +138,10 @@ public class ConversationResponseGenerator {
     }
     
     /**
-     * 初始化回應模板
+     * Initialize response templates
      */
     private void initializeResponses() {
-        // 粵語回應（更自然的表達）
+        // Cantonese responses (more natural expressions)
         cantoneseResponses.put("天氣", new String[]{
             "係啊，今日天氣真係好好，好適合出街", "天氣真係唔錯，心情都好好", "係啊，天氣幾好，你有冇出街啊？"
         });
@@ -176,7 +176,7 @@ public class ConversationResponseGenerator {
             "再見，有需要隨時叫我", "再見，保重，有咩事隨時搵我", "再見，祝你一切順利"
         });
         
-        // 普通話回應（更自然的表達）
+        // Mandarin responses (more natural expressions)
         mandarinResponses.put("天氣", new String[]{
             "是啊，今天天氣真的很好，很適合出門", "天氣真不錯，心情也變好了", "是啊，天氣挺好的，你有出門嗎？"
         });
@@ -211,7 +211,7 @@ public class ConversationResponseGenerator {
             "再見，有需要隨時叫我", "再見，保重，有什麼事隨時找我", "再見，祝你一切順利"
         });
         
-        // 英語回應（更自然的表達）
+        // English responses (more natural expressions)
         englishResponses.put("weather", new String[]{
             "Yes, the weather is really nice today, perfect for going out", "The weather is great, it makes me feel good too", "Yes, the weather is good, did you go out?"
         });
@@ -248,9 +248,9 @@ public class ConversationResponseGenerator {
     }
     
     /**
-     * 生成回應（同步版本，使用關鍵詞匹配）
-     * @param userText 用戶輸入的文本
-     * @return 回應文本，如果無法生成則返回 null
+     * Generate response (synchronous version, using keyword matching)
+     * @param userText User input text
+     * @return Response text, returns null if cannot generate
      */
     public String generateResponse(String userText) {
         if (userText == null || userText.trim().isEmpty()) {
@@ -260,32 +260,32 @@ public class ConversationResponseGenerator {
         String lowerText = userText.toLowerCase().trim();
         Map<String, String[]> responses = getResponsesForLanguage();
         
-        // 檢查是否包含關鍵詞
+        // Check if contains keywords
         for (Map.Entry<String, String[]> entry : responses.entrySet()) {
             String keyword = entry.getKey();
             if (lowerText.contains(keyword)) {
                 String[] templates = entry.getValue();
                 if (templates != null && templates.length > 0) {
-                    // 隨機選擇一個回應模板
+                    // Randomly select a response template
                     String template = templates[random.nextInt(templates.length)];
                     
-                    // 嘗試提取用戶話語中的關鍵信息並融入回應
+                    // Try to extract key information from user's words and incorporate into response
                     String response = enhanceResponse(template, userText, keyword);
                     
-                    Log.d(TAG, "生成回應: " + response + " (關鍵詞: " + keyword + ")");
+                    Log.d(TAG, "Generate response: " + response + " (keyword: " + keyword + ")");
                     return response;
                 }
             }
         }
         
-        // 如果沒有匹配的關鍵詞，生成通用回應
+        // If no matching keywords, generate generic response
         return generateGenericResponse(userText);
     }
     
     /**
-     * 生成回應（異步版本）
-     * @param userText 用戶輸入的文本
-     * @param callback 回調接口
+     * Generate response (asynchronous version)
+     * @param userText User input text
+     * @param callback Callback interface
      */
     public void generateResponseAsync(String userText, ResponseCallback callback) {
         if (userText == null || userText.trim().isEmpty()) {
@@ -293,42 +293,42 @@ public class ConversationResponseGenerator {
             return;
         }
         
-        // 使用關鍵詞匹配生成回應
-        Log.d(TAG, "使用關鍵詞匹配生成回應");
+        // Use keyword matching to generate response
+        Log.d(TAG, "Using keyword matching to generate response");
         String response = generateResponse(userText);
         callback.onResponse(response);
     }
     
     /**
-     * 回應回調接口
+     * Response callback interface
      */
     public interface ResponseCallback {
         void onResponse(String response);
     }
     
     /**
-     * 增強回應，將用戶的話語融入回應中
-     * 注意：不要重複用戶的話，而是給出真正的對話回應
+     * Enhance response, incorporate user's words into response
+     * Note: Don't repeat user's words, but give real conversation response
      */
     private String enhanceResponse(String template, String userText, String keyword) {
-        // 直接返回模板，不要重複用戶的話
-        // 模板已經包含了合適的回應，不需要修改用戶的話語
+        // Directly return template, don't repeat user's words
+        // Template already contains appropriate response, no need to modify user's words
         return template;
     }
     
     /**
-     * 生成通用回應（當沒有匹配關鍵詞時）
+     * Generate generic response (when no matching keywords)
      */
     private String generateGenericResponse(String userText) {
         Map<String, String> genericResponses = new HashMap<>();
         
         if (currentLanguage.equals("cantonese")) {
-            // 更自然的通用回應
+            // More natural generic responses
             String[] naturalResponses = {
                 "我明白，繼續講", "係啊，我聽到", "嗯，我理解", "好，繼續"
             };
             if (userText.length() > 5) {
-                // 嘗試融入用戶的話語，但更自然
+                // Try to incorporate user's words, but more naturally
                 String lastPart = userText.length() > 15 ? 
                     userText.substring(userText.length() - 15) : userText;
                 return "係啊，" + lastPart + "，我明白";
@@ -358,7 +358,7 @@ public class ConversationResponseGenerator {
     }
     
     /**
-     * 獲取當前語言的回應映射
+     * Get response mapping for current language
      */
     private Map<String, String[]> getResponsesForLanguage() {
         switch (currentLanguage) {
@@ -373,20 +373,20 @@ public class ConversationResponseGenerator {
     }
     
     /**
-     * 檢查是否應該生成回應
-     * 某些情況下可能不需要回應（例如用戶只是在思考）
+     * Check if should generate response
+     * Some cases may not need response (e.g., user is just thinking)
      */
     public boolean shouldRespond(String userText) {
         if (userText == null || userText.trim().isEmpty()) {
             return false;
         }
         
-        // 如果太短（可能是誤識別）
+        // If too short (may be misrecognition)
         if (userText.trim().length() < 2) {
             return false;
         }
         
-        // 如果只是語氣詞
+        // If just filler words
         String[] fillerWords = currentLanguage.equals("english") ? 
             new String[]{"um", "uh", "ah", "oh"} :
             new String[]{"嗯", "啊", "哦", "呃"};

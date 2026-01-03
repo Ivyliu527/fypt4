@@ -12,25 +12,25 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 顏色和光線分析器
- * 用於分析圖像中的主要顏色、色調、亮度和光線條件
+ * Color and lighting analyzer
+ * Used to analyze primary colors, tones, brightness, and lighting conditions in images
  */
 public class ColorLightingAnalyzer {
     private static final String TAG = "ColorLightingAnalyzer";
     
-    // 顏色分析參數
-    private static final int SAMPLE_SIZE = 100; // 採樣大小
-    private static final int COLOR_TOLERANCE = 50; // 顏色容差
-    private static final float MIN_COLOR_PERCENTAGE = 5.0f; // 最小顏色百分比
+    // Color analysis parameters
+    private static final int SAMPLE_SIZE = 100; // Sample size
+    private static final int COLOR_TOLERANCE = 50; // Color tolerance
+    private static final float MIN_COLOR_PERCENTAGE = 5.0f; // Minimum color percentage
     
-    // 光線分析參數
-    private static final int BRIGHTNESS_THRESHOLD_LOW = 85; // 低亮度閾值
-    private static final int BRIGHTNESS_THRESHOLD_HIGH = 170; // 高亮度閾值
-    private static final int CONTRAST_THRESHOLD_LOW = 30; // 低對比度閾值
-    private static final int CONTRAST_THRESHOLD_HIGH = 80; // 高對比度閾值
+    // Lighting analysis parameters
+    private static final int BRIGHTNESS_THRESHOLD_LOW = 85; // Low brightness threshold
+    private static final int BRIGHTNESS_THRESHOLD_HIGH = 170; // High brightness threshold
+    private static final int CONTRAST_THRESHOLD_LOW = 30; // Low contrast threshold
+    private static final int CONTRAST_THRESHOLD_HIGH = 80; // High contrast threshold
     
     /**
-     * 顏色分析結果
+     * Color analysis result
      */
     public static class ColorAnalysisResult {
         private String primaryColor;
@@ -60,7 +60,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 光線分析結果
+     * Lighting analysis result
      */
     public static class LightingAnalysisResult {
         private String brightnessLevel;
@@ -91,7 +91,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 顏色信息
+     * Color information
      */
     public static class ColorInfo {
         private String colorName;
@@ -111,93 +111,93 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 分析圖像的顏色
+     * Analyze image colors
      */
     public ColorAnalysisResult analyzeColors(Bitmap bitmap) {
-        Log.d(TAG, "開始顏色分析");
+        Log.d(TAG, "Start color analysis");
         ColorAnalysisResult result = new ColorAnalysisResult();
         
         if (bitmap == null || bitmap.isRecycled()) {
-            Log.w(TAG, "無效的bitmap");
+            Log.w(TAG, "Invalid bitmap");
             return result;
         }
         
         try {
-            // 採樣像素
+            // Sample pixels
             List<Integer> pixelSamples = samplePixels(bitmap);
             
-            // 分析主要顏色
+            // Analyze primary colors
             Map<String, Integer> colorCount = countColors(pixelSamples);
             
-            // 生成顏色調色板
+            // Generate color palette
             generateColorPalette(colorCount, result);
             
-            // 確定主要和次要顏色
+            // Determine primary and secondary colors
             determinePrimarySecondaryColors(result);
             
-            // 確定主色調
+            // Determine dominant tone
             determineDominantTone(result);
             
-            Log.d(TAG, "顏色分析完成: " + result.getPrimaryColor() + " + " + result.getSecondaryColor());
+            Log.d(TAG, "Color analysis complete: " + result.getPrimaryColor() + " + " + result.getSecondaryColor());
             
         } catch (Exception e) {
-            Log.e(TAG, "顏色分析失敗: " + e.getMessage());
+            Log.e(TAG, "Color analysis failed: " + e.getMessage());
         }
         
         return result;
     }
     
     /**
-     * 分析圖像的光線條件
+     * Analyze image lighting conditions
      */
     public LightingAnalysisResult analyzeLighting(Bitmap bitmap) {
-        Log.d(TAG, "開始光線分析");
+        Log.d(TAG, "Start lighting analysis");
         LightingAnalysisResult result = new LightingAnalysisResult();
         
         if (bitmap == null || bitmap.isRecycled()) {
-            Log.w(TAG, "無效的bitmap");
+            Log.w(TAG, "Invalid bitmap");
             return result;
         }
         
         try {
-            // 計算平均亮度
+            // Calculate average brightness
             float averageBrightness = calculateAverageBrightness(bitmap);
             result.setAverageBrightness(averageBrightness);
             
-            // 分析亮度等級
+            // Analyze brightness level
             result.setBrightnessLevel(analyzeBrightnessLevel(averageBrightness));
             
-            // 計算對比度
+            // Calculate contrast
             float contrastRatio = calculateContrastRatio(bitmap);
             result.setContrastRatio(contrastRatio);
             
-            // 分析對比度等級
+            // Analyze contrast level
             result.setContrastLevel(analyzeContrastLevel(contrastRatio));
             
-            // 分析光線方向
+            // Analyze light direction
             result.setLightDirection(analyzeLightDirection(bitmap));
             
-            // 綜合光線條件
+            // Comprehensive lighting condition
             result.setLightingCondition(determineLightingCondition(averageBrightness, contrastRatio));
             
-            Log.d(TAG, "光線分析完成: " + result.getLightingCondition());
+            Log.d(TAG, "Lighting analysis complete: " + result.getLightingCondition());
             
         } catch (Exception e) {
-            Log.e(TAG, "光線分析失敗: " + e.getMessage());
+            Log.e(TAG, "Lighting analysis failed: " + e.getMessage());
         }
         
         return result;
     }
     
     /**
-     * 採樣像素
+     * Sample pixels
      */
     private List<Integer> samplePixels(Bitmap bitmap) {
         List<Integer> samples = new ArrayList<>();
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         
-        // 隨機採樣
+        // Random sampling
         for (int i = 0; i < SAMPLE_SIZE; i++) {
             int x = (int) (Math.random() * width);
             int y = (int) (Math.random() * height);
@@ -208,7 +208,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 統計顏色
+     * Count colors
      */
     private Map<String, Integer> countColors(List<Integer> pixels) {
         Map<String, Integer> colorCount = new HashMap<>();
@@ -223,14 +223,14 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 將像素分類為顏色類別
+     * Categorize pixel into color category
      */
     private String categorizeColor(int pixel) {
         int r = Color.red(pixel);
         int g = Color.green(pixel);
         int b = Color.blue(pixel);
         
-        // 轉換為HSV進行更好的顏色分類
+        // Convert to HSV for better color classification
         float[] hsv = new float[3];
         Color.RGBToHSV(r, g, b, hsv);
         
@@ -238,14 +238,14 @@ public class ColorLightingAnalyzer {
         float saturation = hsv[1];
         float value = hsv[2];
         
-        // 低飽和度 = 灰階
+        // Low saturation = grayscale
         if (saturation < 0.2f) {
             if (value < 0.3f) return "黑色";
             if (value > 0.7f) return "白色";
             return "灰色";
         }
         
-        // 基於色相分類顏色
+        // Classify colors based on hue
         if (hue < 15 || hue > 345) return "紅色";
         if (hue < 45) return "橙色";
         if (hue < 75) return "黃色";
@@ -257,7 +257,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 生成顏色調色板
+     * Generate color palette
      */
     private void generateColorPalette(Map<String, Integer> colorCount, ColorAnalysisResult result) {
         int totalSamples = SAMPLE_SIZE;
@@ -269,7 +269,7 @@ public class ColorLightingAnalyzer {
             }
         }
         
-        // 按百分比排序
+        // Sort by percentage
         Collections.sort(result.getColorPalette(), new Comparator<ColorInfo>() {
             @Override
             public int compare(ColorInfo a, ColorInfo b) {
@@ -279,7 +279,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 確定主要和次要顏色
+     * Determine primary and secondary colors
      */
     private void determinePrimarySecondaryColors(ColorAnalysisResult result) {
         if (result.getColorPalette().size() > 0) {
@@ -291,7 +291,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 確定主色調
+     * Determine dominant tone
      */
     private void determineDominantTone(ColorAnalysisResult result) {
         if (result.getColorPalette().isEmpty()) {
@@ -299,7 +299,7 @@ public class ColorLightingAnalyzer {
             return;
         }
         
-        // 計算暖色和冷色的比例
+        // Calculate ratio of warm and cool colors
         float warmColors = 0;
         float coolColors = 0;
         
@@ -322,21 +322,21 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 判斷是否為暖色
+     * Check if color is warm
      */
     private boolean isWarmColor(String colorName) {
         return colorName.equals("紅色") || colorName.equals("橙色") || colorName.equals("黃色");
     }
     
     /**
-     * 判斷是否為冷色
+     * Check if color is cool
      */
     private boolean isCoolColor(String colorName) {
         return colorName.equals("藍色") || colorName.equals("青色") || colorName.equals("紫色");
     }
     
     /**
-     * 計算平均亮度
+     * Calculate average brightness
      */
     private float calculateAverageBrightness(Bitmap bitmap) {
         int width = bitmap.getWidth();
@@ -344,7 +344,7 @@ public class ColorLightingAnalyzer {
         long totalBrightness = 0;
         int sampleCount = 0;
         
-        // 採樣計算平均亮度
+        // Sample to calculate average brightness
         for (int i = 0; i < width; i += width / 20) {
             for (int j = 0; j < height; j += height / 20) {
                 int pixel = bitmap.getPixel(i, j);
@@ -352,7 +352,7 @@ public class ColorLightingAnalyzer {
                 int g = Color.green(pixel);
                 int b = Color.blue(pixel);
                 
-                // 使用標準亮度公式
+                // Use standard brightness formula
                 float brightness = 0.299f * r + 0.587f * g + 0.114f * b;
                 totalBrightness += brightness;
                 sampleCount++;
@@ -363,7 +363,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 分析亮度等級
+     * Analyze brightness level
      */
     private String analyzeBrightnessLevel(float averageBrightness) {
         if (averageBrightness < BRIGHTNESS_THRESHOLD_LOW) {
@@ -376,7 +376,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 計算對比度比率
+     * Calculate contrast ratio
      */
     private float calculateContrastRatio(Bitmap bitmap) {
         int width = bitmap.getWidth();
@@ -385,7 +385,7 @@ public class ColorLightingAnalyzer {
         int minBrightness = 255;
         int maxBrightness = 0;
         
-        // 採樣計算最大最小亮度
+        // Sample to calculate max and min brightness
         for (int i = 0; i < width; i += width / 15) {
             for (int j = 0; j < height; j += height / 15) {
                 int pixel = bitmap.getPixel(i, j);
@@ -404,7 +404,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 分析對比度等級
+     * Analyze contrast level
      */
     private String analyzeContrastLevel(float contrastRatio) {
         if (contrastRatio < CONTRAST_THRESHOLD_LOW) {
@@ -417,10 +417,10 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 分析光線方向（簡化版）
+     * Analyze light direction (simplified version)
      */
     private String analyzeLightDirection(Bitmap bitmap) {
-        // 簡化實現：分析圖像邊緣的亮度差異
+        // Simplified implementation: analyze brightness differences at image edges
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         
@@ -431,31 +431,31 @@ public class ColorLightingAnalyzer {
         
         int sampleSize = 10;
         
-        // 左側亮度
+        // Left side brightness
         for (int j = 0; j < height; j += height / sampleSize) {
             int pixel = bitmap.getPixel(width / 8, j);
             leftBrightness += getPixelBrightness(pixel);
         }
         
-        // 右側亮度
+        // Right side brightness
         for (int j = 0; j < height; j += height / sampleSize) {
             int pixel = bitmap.getPixel(width * 7 / 8, j);
             rightBrightness += getPixelBrightness(pixel);
         }
         
-        // 頂部亮度
+        // Top brightness
         for (int i = 0; i < width; i += width / sampleSize) {
             int pixel = bitmap.getPixel(i, height / 8);
             topBrightness += getPixelBrightness(pixel);
         }
         
-        // 底部亮度
+        // Bottom brightness
         for (int i = 0; i < width; i += width / sampleSize) {
             int pixel = bitmap.getPixel(i, height * 7 / 8);
             bottomBrightness += getPixelBrightness(pixel);
         }
         
-        // 分析光線方向
+        // Analyze light direction
         if (leftBrightness > rightBrightness + 20) {
             return "左側光線";
         } else if (rightBrightness > leftBrightness + 20) {
@@ -470,7 +470,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 獲取像素亮度
+     * Get pixel brightness
      */
     private float getPixelBrightness(int pixel) {
         int r = Color.red(pixel);
@@ -480,7 +480,7 @@ public class ColorLightingAnalyzer {
     }
     
     /**
-     * 綜合判斷光線條件
+     * Comprehensive lighting condition judgment
      */
     private String determineLightingCondition(float brightness, float contrast) {
         if (brightness < BRIGHTNESS_THRESHOLD_LOW && contrast < CONTRAST_THRESHOLD_LOW) {

@@ -21,14 +21,14 @@ public class TTSManager {
     private boolean isSpeaking = false;
     private boolean isInitializing = false;
     
-    // 語音隊列管理
+    // Speech queue management
     private ConcurrentLinkedQueue<String> speechQueue = new ConcurrentLinkedQueue<>();
     private Handler handler = new Handler(Looper.getMainLooper());
     
     private TTSManager(Context context) {
         this.context = context.getApplicationContext();
         cantoneseLocale = new Locale("zh", "HK");
-        // 不在構造函數中初始化TTS，等待第一次使用時初始化
+        // Don't initialize TTS in constructor, wait for first use
     }
     
     private void ensureTTSInitialized() {
@@ -51,10 +51,10 @@ public class TTSManager {
     }
     
     /**
-     * 強制初始化TTS引擎
+     * Force initialize TTS engine
      */
     public void forceInitialize() {
-        Log.d(TAG, "🔊 強制初始化TTS引擎");
+        Log.d(TAG, "🔊 Force initialize TTS engine");
         ensureTTSInitialized();
     }
     
@@ -93,95 +93,95 @@ public class TTSManager {
         
         switch (language) {
             case "cantonese":
-                // 優先使用香港廣東話 (zh-HK)
-                Log.d(TAG, "🔊 嘗試設置廣東話 (zh-HK)");
+                // Prioritize Hong Kong Cantonese (zh-HK)
+                Log.d(TAG, "🔊 Try to set Cantonese (zh-HK)");
                 result = textToSpeech.setLanguage(cantoneseLocale);
-                Log.d(TAG, "🔊 廣東話設置結果: " + result);
+                Log.d(TAG, "🔊 Cantonese setting result: " + result);
                 
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.w(TAG, "⚠️ 廣東話不支持，嘗試使用台灣國語");
+                    Log.w(TAG, "⚠️ Cantonese not supported, try Taiwan Mandarin");
                     result = textToSpeech.setLanguage(Locale.TAIWAN);
-                    Log.d(TAG, "🔊 台灣國語設置結果: " + result);
+                    Log.d(TAG, "🔊 Taiwan Mandarin setting result: " + result);
                     
                     if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Log.w(TAG, "⚠️ 台灣國語不支持，使用繁體中文");
+                        Log.w(TAG, "⚠️ Taiwan Mandarin not supported, use Traditional Chinese");
                         result = textToSpeech.setLanguage(Locale.TRADITIONAL_CHINESE);
-                        Log.d(TAG, "🔊 繁體中文設置結果: " + result);
+                        Log.d(TAG, "🔊 Traditional Chinese setting result: " + result);
                     }
                 }
                 break;
                 
             case "english":
-                Log.d(TAG, "🔊 設置英文");
+                Log.d(TAG, "🔊 Set English");
                 result = textToSpeech.setLanguage(Locale.ENGLISH);
-                Log.d(TAG, "🔊 英文設置結果: " + result);
+                Log.d(TAG, "🔊 English setting result: " + result);
                 break;
                 
             case "mandarin":
             default:
-                Log.d(TAG, "🔊 設置普通話/簡體中文");
+                Log.d(TAG, "🔊 Set Mandarin/Simplified Chinese");
                 result = textToSpeech.setLanguage(Locale.SIMPLIFIED_CHINESE);
-                Log.d(TAG, "🔊 簡體中文設置結果: " + result);
+                Log.d(TAG, "🔊 Simplified Chinese setting result: " + result);
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.w(TAG, "⚠️ 簡體中文不支持，使用繁體中文");
+                    Log.w(TAG, "⚠️ Simplified Chinese not supported, use Traditional Chinese");
                     result = textToSpeech.setLanguage(Locale.TRADITIONAL_CHINESE);
-                    Log.d(TAG, "🔊 繁體中文設置結果: " + result);
+                    Log.d(TAG, "🔊 Traditional Chinese setting result: " + result);
                 }
                 break;
         }
         
         if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-            Log.e(TAG, "❌ 語言不支持: " + language);
+            Log.e(TAG, "❌ Language not supported: " + language);
         } else {
-            Log.d(TAG, "✅ TTS語言設置成功: " + language);
+            Log.d(TAG, "✅ TTS language set successfully: " + language);
         }
     }
     
-    // 靜默設置語言，不播報語言切換信息
+    // Set language silently, don't announce language switch
     public void setLanguageSilently(String language) {
         currentLanguage = language;
         setLanguage(language);
-        Log.d(TAG, "語言已靜默設置為: " + language);
+        Log.d(TAG, "Language silently set to: " + language);
     }
     
     /**
-     * 設置語音速度
+     * Set speech rate
      */
     public void setSpeechRate(float rate) {
         if (textToSpeech != null) {
             textToSpeech.setSpeechRate(rate);
-            Log.d(TAG, "語音速度已設置為: " + rate);
+            Log.d(TAG, "Speech rate set to: " + rate);
         }
     }
     
     /**
-     * 設置語音音調
+     * Set speech pitch
      */
     public void setSpeechPitch(float pitch) {
         if (textToSpeech != null) {
             textToSpeech.setPitch(pitch);
-            Log.d(TAG, "語音音調已設置為: " + pitch);
+            Log.d(TAG, "Speech pitch set to: " + pitch);
         }
     }
     
     /**
-     * 設置語音音量（注意：Android TTS沒有直接的音量控制）
+     * Set speech volume (Note: Android TTS has no direct volume control)
      */
     public void setSpeechVolume(float volume) {
         if (textToSpeech != null) {
-            // Android TTS音量是相對於系統媒體音量的比例
-            // 這裡記錄設定，實際音量控制需要通過系統音量實現
-            Log.d(TAG, "語音音量已設置為: " + volume + "（需要調整系統媒體音量）");
+            // Android TTS volume is relative to system media volume
+            // Here we record the setting, actual volume control needs to be done through system volume
+            Log.d(TAG, "Speech volume set to: " + volume + " (need to adjust system media volume)");
         }
     }
     
     /**
-     * 停止當前語音播報
+     * Stop current speech playback
      */
     public void stop() {
         if (textToSpeech != null) {
             textToSpeech.stop();
-            Log.d(TAG, "語音播報已停止");
+            Log.d(TAG, "Speech playback stopped");
         }
     }
     
@@ -208,69 +208,69 @@ public class TTSManager {
         Log.d(TAG, "🔊 當前語言: " + currentLanguage + ", TTS初始化狀態: " + isInitialized);
         Log.d(TAG, "🔊 textToSpeech對象: " + (textToSpeech != null ? "存在" : "為空"));
         
-        // 強制確保TTS已初始化
+        // Force ensure TTS is initialized
         ensureTTSInitialized();
         
-        // 根據當前語言選擇對應的文本
+        // Select corresponding text based on current language
         String textToSpeak;
         if ("english".equals(currentLanguage)) {
-            // 英文模式：使用英文文本
+            // English mode: use English text
             textToSpeak = englishText != null ? englishText : cantoneseText;
         } else if ("mandarin".equals(currentLanguage)) {
-            // 普通話模式：使用中文文本（cantoneseText 參數在普通話模式下包含中文標籤）
+            // Mandarin mode: use Chinese text (cantoneseText parameter contains Chinese labels in Mandarin mode)
             textToSpeak = cantoneseText != null ? cantoneseText : englishText;
         } else {
-            // 廣東話模式：使用中文文本
+            // Cantonese mode: use Chinese text
             textToSpeak = cantoneseText != null ? cantoneseText : englishText;
         }
         
-        Log.d(TAG, "🔊 選擇的語音文本: " + textToSpeak);
+        Log.d(TAG, "🔊 Selected speech text: " + textToSpeak);
         
-        // 確保TTS語言設置與當前語言一致（在播報前設置）
+        // Ensure TTS language setting matches current language (set before playback)
         if (textToSpeech != null && isInitialized) {
             setLanguage(currentLanguage);
         }
         
-        // 如果TTS未初始化，等待初始化完成
+        // If TTS not initialized, wait for initialization to complete
         if (!isInitialized || textToSpeech == null) {
-            Log.w(TAG, "TTS未初始化，等待初始化完成後播放");
-            Log.d(TAG, "🔊 延遲播放語音: " + textToSpeak);
+            Log.w(TAG, "TTS not initialized, waiting for initialization to complete before playback");
+            Log.d(TAG, "🔊 Delayed speech playback: " + textToSpeak);
             
-            // 使用更長的延遲時間，確保TTS完全初始化
+            // Use longer delay time to ensure TTS is fully initialized
             handler.postDelayed(() -> {
-                Log.d(TAG, "🔊 重試播放語音: " + textToSpeak);
-                Log.d(TAG, "🔊 重試時TTS狀態: " + isInitialized + ", textToSpeech: " + (textToSpeech != null));
+                Log.d(TAG, "🔊 Retry speech playback: " + textToSpeak);
+                Log.d(TAG, "🔊 TTS status on retry: " + isInitialized + ", textToSpeech: " + (textToSpeech != null));
                 speak(cantoneseText, englishText, priority);
-            }, 2000); // 增加到2秒
+            }, 2000); // Increased to 2 seconds
             return;
         }
         
         if (textToSpeak != null && !textToSpeak.trim().isEmpty()) {
             if (priority) {
-                // 優先播放，停止當前語音並立即播放
-                Log.d(TAG, "🔊 優先播放語音: " + textToSpeak);
+                // Priority playback, stop current speech and play immediately
+                Log.d(TAG, "🔊 Priority speech playback: " + textToSpeak);
                 textToSpeech.stop();
                 speechQueue.clear();
                 int result = textToSpeech.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "priority_speech");
-                Log.d(TAG, "🔊 TTS speak 結果: " + result + " (SUCCESS=" + TextToSpeech.SUCCESS + ", ERROR=" + TextToSpeech.ERROR + ")");
+                Log.d(TAG, "🔊 TTS speak result: " + result + " (SUCCESS=" + TextToSpeech.SUCCESS + ", ERROR=" + TextToSpeech.ERROR + ")");
                 
                 if (result == TextToSpeech.ERROR) {
-                    Log.e(TAG, "❌ TTS播放失敗！");
+                    Log.e(TAG, "❌ TTS playback failed!");
                 } else if (result == TextToSpeech.SUCCESS) {
-                    Log.d(TAG, "✅ TTS播放成功");
+                    Log.d(TAG, "✅ TTS playback successful");
                 } else {
-                    Log.w(TAG, "⚠️ TTS播放結果未知: " + result);
+                    Log.w(TAG, "⚠️ TTS playback result unknown: " + result);
                 }
             } else {
-                // 加入隊列播放
-                Log.d(TAG, "🔊 加入隊列播放: " + textToSpeak);
+                // Add to queue for playback
+                Log.d(TAG, "🔊 Add to queue for playback: " + textToSpeak);
                 speechQueue.offer(textToSpeak);
                 if (!isSpeaking) {
                     playNextInQueue();
                 }
             }
         } else {
-            Log.w(TAG, "❌ 語音文本為空，無法播放");
+            Log.w(TAG, "❌ Speech text is empty, cannot play");
         }
     }
     
@@ -285,8 +285,8 @@ public class TTSManager {
             isSpeaking = true;
             textToSpeech.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "queue_speech");
             
-            // 估算播放時間並安排下一段語音
-            int estimatedDuration = Math.max(textToSpeak.length() * 100, 2000); // 至少2秒
+            // Estimate playback time and schedule next speech
+            int estimatedDuration = Math.max(textToSpeak.length() * 100, 2000); // At least 2 seconds
             handler.postDelayed(() -> playNextInQueue(), estimatedDuration);
         }
     }
@@ -294,17 +294,17 @@ public class TTSManager {
     public void changeLanguage(String language) {
         currentLanguage = language;
         
-        // 清除當前語音隊列，避免延誤
+        // Clear current speech queue to avoid delays
         stopSpeaking();
         
-        // 確保TTS已初始化
+        // Ensure TTS is initialized
         ensureTTSInitialized();
         
         if (isInitialized && textToSpeech != null) {
             setLanguage(language);
-            Log.d(TAG, "語言已切換到: " + language);
+            Log.d(TAG, "Language switched to: " + language);
         } else {
-            Log.w(TAG, "TTS未初始化，無法切換語言");
+            Log.w(TAG, "TTS not initialized, cannot switch language");
         }
     }
     
@@ -364,18 +364,18 @@ public class TTSManager {
     }
     
     public void shutdown() {
-        // 不再完全關閉TTS，只停止播放
-        // 保留TTS實例以便Activity重新創建時可以繼續使用
+        // No longer completely close TTS, only stop playback
+        // Keep TTS instance so it can continue to be used when Activity is recreated
         if (textToSpeech != null) {
             textToSpeech.stop();
         }
         speechQueue.clear();
         isSpeaking = false;
-        Log.d(TAG, "TTS播放已停止");
+        Log.d(TAG, "TTS playback stopped");
     }
     
     public void forceShutdown() {
-        // 只在應用真正退出時才調用此方法
+        // Only call this method when app truly exits
         if (textToSpeech != null) {
             textToSpeech.stop();
             textToSpeech.shutdown();
@@ -385,6 +385,6 @@ public class TTSManager {
         isInitialized = false;
         isInitializing = false;
         isSpeaking = false;
-        Log.d(TAG, "TTS已完全關閉");
+        Log.d(TAG, "TTS completely closed");
     }
 }

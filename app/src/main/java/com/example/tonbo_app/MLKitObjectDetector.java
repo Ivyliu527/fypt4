@@ -8,15 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ML Kit 物體檢測器（暫時禁用版本）
+ * ML Kit object detector (temporarily disabled version)
  * 
- * 注意：由於網絡問題，ML Kit 依賴已暫時禁用
- * 當網絡可以訪問 Google 服務時，可以恢復使用 ML Kit
+ * Note: Due to network issues, ML Kit dependency has been temporarily disabled
+ * When network can access Google services, ML Kit can be restored
  * 
- * 恢復步驟：
- * 1. 在 build.gradle.kts 中取消 ML Kit 依賴的註釋
- * 2. 恢復此文件中的 ML Kit 導入和實現
- * 3. 在 ObjectDetectorHelper 中啟用 setupMLKitDetector()
+ * Restoration steps:
+ * 1. Uncomment ML Kit dependency in build.gradle.kts
+ * 2. Restore ML Kit imports and implementation in this file
+ * 3. Enable setupMLKitDetector() in ObjectDetectorHelper
  * 
  * @author Auto (AI Assistant)
  */
@@ -28,34 +28,34 @@ public class MLKitObjectDetector {
     
     public MLKitObjectDetector(Context context) {
         this.context = context;
-        // ML Kit 暫時禁用，避免編譯錯誤
+        // ML Kit temporarily disabled to avoid compilation errors
         isInitialized = false;
-        Log.d(TAG, "ML Kit 檢測器已禁用（網絡問題）");
+        Log.d(TAG, "ML Kit detector disabled (network issues)");
     }
     
     /**
-     * 檢測圖像中的物體（暫時禁用）
-     * @param bitmap 輸入圖像
-     * @return 空的檢測結果列表
+     * Detect objects in image (temporarily disabled)
+     * @param bitmap Input image
+     * @return Empty detection result list
      */
     public List<ObjectDetectorHelper.DetectionResult> detect(Bitmap bitmap) {
-        // ML Kit 暫時禁用，返回空結果
-        Log.d(TAG, "ML Kit 檢測器已禁用，返回空結果");
+        // ML Kit temporarily disabled, return empty results
+        Log.d(TAG, "ML Kit detector disabled, returning empty results");
         return new ArrayList<>();
     }
     
     /**
-     * 關閉檢測器，釋放資源
+     * Close detector, release resources
      */
     public void close() {
-        Log.d(TAG, "ML Kit 檢測器已關閉（已禁用）");
+        Log.d(TAG, "ML Kit detector closed (disabled)");
         isInitialized = false;
     }
     
     /**
-     * 檢查檢測器是否已初始化
+     * Check if detector is initialized
      */
     public boolean isInitialized() {
-        return false;  // 始終返回 false，因為已禁用
+        return false;  // Always return false because disabled
     }
 }

@@ -32,18 +32,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * 真實AI檢測演示活動
- * 展示真實的AI物體檢測功能
+ * Real AI detection demo activity
+ * Demonstrates real AI object detection functionality
  */
 public class RealAIDetectionActivity extends BaseAccessibleActivity {
     private static final String TAG = "RealAIDetection";
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 1001;
     
-    // 靜態標誌，用於追蹤是否在環境識別頁面（供語音命令使用）
+    // Static flag to track if in environment recognition page (for voice commands)
     private static boolean isEnvironmentActivityActive = false;
     
     /**
-     * 檢查是否在環境識別頁面（供其他 Activity 調用）
+     * Check if in environment recognition page (for other Activities to call)
      */
     public static boolean isActive() {
         return isEnvironmentActivityActive;
@@ -66,28 +66,28 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     private ExecutorService cameraExecutor;
     private boolean isDetecting = false;
     
-    // 用於去重，避免重複播報相同的識別結果
+    // For deduplication, avoid repeating same recognition results
     private String lastAnnouncedObjects = "";
-    private Set<String> lastAnnouncedLabels = new HashSet<>(); // 用於更精確的比較
+    private Set<String> lastAnnouncedLabels = new HashSet<>(); // For more precise comparison
     private long lastAnnounceTime = 0;
-    private static final long MIN_ANNOUNCE_INTERVAL_MS = 200; // 最小播報間隔（0.2秒，避免過度重複播報完全相同的結果，縮短以減少延遲）
+    private static final long MIN_ANNOUNCE_INTERVAL_MS = 200; // Minimum announcement interval (0.2 seconds, avoid excessive repetition of identical results, shortened to reduce delay)
     
-    // 用於延長檢測框顯示時間
+    // For extending detection box display time
     private Handler detectionBoxHandler = new Handler(Looper.getMainLooper());
     private Runnable clearDetectionBoxRunnable;
-    private static final long DETECTION_BOX_DISPLAY_DURATION_MS = 2000; // 檢測框保留2秒
+    private static final long DETECTION_BOX_DISPLAY_DURATION_MS = 2000; // Detection box retained for 2 seconds
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_real_ai_detection);
         
-        // 獲取語言設置
+        // Get language settings
         if (getIntent() != null && getIntent().hasExtra("language")) {
             currentLanguage = getIntent().getStringExtra("language");
         }
         
-        // 初始化TTS
+        // Initialize TTS
         ttsManager = TTSManager.getInstance(this);
         ttsManager.changeLanguage(currentLanguage);
         
@@ -95,14 +95,14 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         initDetector();
         checkCameraPermission();
         
-        // 播報頁面標題
+        // Announce page title
         announcePageTitle();
     }
     
     private void initViews() {
         previewView = findViewById(R.id.previewView);
         detectionOverlay = findViewById(R.id.detectionOverlay);
-        // 設置檢測框的語言，確保標籤顯示正確的語言
+        // Set detection box language to ensure labels display correct language
         if (detectionOverlay != null) {
             detectionOverlay.setLanguage(currentLanguage);
         }
@@ -112,29 +112,29 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         stopButton = findViewById(R.id.stopButton);
         pageTitle = findViewById(R.id.pageTitle);
         
-        // 設置按鈕點擊事件
+        // Set button click events
         backButton.setOnClickListener(v -> {
-            // 停止檢測
+            // Stop detection
             if (isDetecting) {
                 stopDetection();
             }
-            // 返回主頁（會檢查是否從手勢登入進入）
+            // Return to main page (will check if entered from gesture login)
             handleBackPressed();
         });
         
         startButton.setOnClickListener(v -> startDetection());
         stopButton.setOnClickListener(v -> stopDetection());
         
-        // 根據當前語言更新界面文字
+        // Update UI text based on current language
         updateLanguageUI();
         
-        // 初始化狀態指示燈
+        // Initialize status indicator
         updateStatusIndicator("ready");
         stopButton.setEnabled(false);
     }
     
     /**
-     * 更新語言UI
+     * Update language UI
      */
     private void updateLanguageUI() {
         if (pageTitle != null) {
@@ -238,38 +238,38 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             }, ContextCompat.getMainExecutor(this));
             
         } catch (Exception e) {
-            Log.e(TAG, "相機提供者獲取失敗: " + e.getMessage());
+            Log.e(TAG, "Camera provider acquisition failed: " + e.getMessage());
             updateStatusIndicator("error");
         }
     }
     
     private void setupCamera() {
         try {
-            // 設置相機預覽
+            // Set camera preview
             androidx.camera.core.Preview preview = new androidx.camera.core.Preview.Builder()
                 .build();
             
-            // 設置預覽視圖的縮放模式為 FIT（保持寬高比，居中顯示）
-            // 這與座標轉換邏輯匹配
+            // Set preview view scale type to FIT (maintain aspect ratio, center display)
+            // This matches coordinate conversion logic
             previewView.setScaleType(androidx.camera.view.PreviewView.ScaleType.FIT_CENTER);
             
             preview.setSurfaceProvider(previewView.getSurfaceProvider());
             
-            // 設置圖像分析
+            // Set image analysis
             imageAnalysis = new ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
             
-            // 設置空的分析器（不進行檢測）
+            // Set empty analyzer (no detection)
             imageAnalysis.setAnalyzer(cameraExecutor, new ImageAnalysis.Analyzer() {
                 @Override
                 public void analyze(@NonNull ImageProxy image) {
-                    // 初始狀態不進行檢測，只關閉圖像
+                    // Initial state: no detection, just close image
                     image.close();
                 }
             });
             
-            // 綁定相機
+            // Bind camera
             CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
             cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
             
@@ -277,16 +277,16 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             startButton.setEnabled(true);
             
         } catch (Exception e) {
-            Log.e(TAG, "相機設置失敗: " + e.getMessage());
+            Log.e(TAG, "Camera setup failed: " + e.getMessage());
             updateStatusIndicator("error");
         }
     }
     
     private void analyzeImage(ImageProxy image) {
         try {
-            // 檢查 Activity 是否正在銷毀或已銷毀
+            // Check if Activity is finishing or destroyed
             if (isFinishing() || isDestroyed()) {
-                Log.d(TAG, "Activity 正在銷毀，跳過圖像分析");
+                Log.d(TAG, "Activity is finishing, skip image analysis");
                 image.close();
                 return;
             }
@@ -296,17 +296,17 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 return;
             }
             
-            Log.d(TAG, "開始分析圖像，寬度: " + image.getWidth() + ", 高度: " + image.getHeight());
+            Log.d(TAG, "Start analyzing image, width: " + image.getWidth() + ", height: " + image.getHeight());
             
-            // 執行AI檢測
+            // Execute AI detection
             List<YoloDetector.DetectionResult> results = yoloDetector.detect(image);
             
-            Log.d(TAG, "檢測完成，結果數量: " + (results != null ? results.size() : 0));
+            Log.d(TAG, "Detection complete, result count: " + (results != null ? results.size() : 0));
             if (results != null && !results.isEmpty()) {
                 for (int i = 0; i < results.size(); i++) {
                     YoloDetector.DetectionResult result = results.get(i);
                     android.graphics.Rect bbox = result.getBoundingBox();
-                    Log.d(TAG, String.format("檢測結果[%d]: %s, 置信度: %.2f, bbox: [%d,%d,%d,%d]", 
+                    Log.d(TAG, String.format("Detection result[%d]: %s, confidence: %.2f, bbox: [%d,%d,%d,%d]", 
                         i, result.getLabelZh(), result.getConfidence(),
                         bbox != null ? bbox.left : -1,
                         bbox != null ? bbox.top : -1,
@@ -315,57 +315,57 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 }
             }
             
-            // 獲取圖像旋轉角度（考慮相機方向）
+            // Get image rotation angle (consider camera orientation)
             int rotationDegrees = image.getImageInfo().getRotationDegrees();
-            Log.d(TAG, "圖像旋轉角度: " + rotationDegrees + "度, 圖像尺寸: " + image.getWidth() + "x" + image.getHeight());
+            Log.d(TAG, "Image rotation angle: " + rotationDegrees + " degrees, image size: " + image.getWidth() + "x" + image.getHeight());
             
-            // 在主線程更新UI
+            // Update UI on main thread
             runOnUiThread(() -> {
                 if (results != null && !results.isEmpty()) {
                     updateStatusIndicator("scanning");
                     
-                    // 取消之前的清除任務（如果有）
+                    // Cancel previous clear task (if any)
                     if (clearDetectionBoxRunnable != null) {
                         detectionBoxHandler.removeCallbacks(clearDetectionBoxRunnable);
                         clearDetectionBoxRunnable = null;
                     }
                     
-                    // 調整結果座標以適應圖像旋轉
+                    // Adjust result coordinates to adapt to image rotation
                     List<YoloDetector.DetectionResult> adjustedResults = adjustResultsForRotation(
                         results, image.getWidth(), image.getHeight(), rotationDegrees);
-                    Log.d(TAG, "座標調整後結果數量: " + adjustedResults.size());
+                    Log.d(TAG, "Result count after coordinate adjustment: " + adjustedResults.size());
                     
-                    // 過濾掉室內不合理的檢測結果（如滑浪板、雪櫃等）
+                    // Filter out unreasonable detection results for indoor environments (e.g., surfboard, refrigerator)
                     List<YoloDetector.DetectionResult> filteredResults = filterUnreasonableDetections(adjustedResults);
-                    Log.d(TAG, "過濾後結果數量: " + filteredResults.size());
+                    Log.d(TAG, "Result count after filtering: " + filteredResults.size());
                     
-                    // 統一限制為前2個結果，確保顯示和語音播報完全同步
+                    // Uniformly limit to top 2 results, ensure display and voice announcement are completely synchronized
                     List<YoloDetector.DetectionResult> displayResults;
                     if (filteredResults.size() > 2) {
                         displayResults = new ArrayList<>(filteredResults.subList(0, 2));
-                        Log.d(TAG, "限制顯示和播報為前2個檢測結果");
+                        Log.d(TAG, "Limit display and announcement to top 2 detection results");
                     } else {
                         displayResults = filteredResults;
                     }
                     
-                    // 更新檢測結果覆蓋層
+                    // Update detection result overlay
                     if (detectionOverlay != null) {
-                        Log.d(TAG, "=== 更新檢測結果到覆蓋層，數量: " + displayResults.size() + " ===");
+                        Log.d(TAG, "=== Update detection results to overlay, count: " + displayResults.size() + " ===");
                         
-                        // 獲取預覽視圖的實際顯示尺寸
+                        // Get preview view's actual display size
                         int previewWidth = previewView.getWidth();
                         int previewHeight = previewView.getHeight();
-                        Log.d(TAG, "預覽視圖尺寸: " + previewWidth + "x" + previewHeight);
+                        Log.d(TAG, "Preview view size: " + previewWidth + "x" + previewHeight);
                         
-                        // 告知覆蓋層來源影像尺寸，確保像素坐標正確映射
-                        // 使用圖像的實際尺寸（YoloDetector 返回的座標基於此尺寸）
+                        // Inform overlay of source image size to ensure pixel coordinates are correctly mapped
+                        // Use image's actual size (YoloDetector returns coordinates based on this size)
                         detectionOverlay.setSourceImageSize(image.getWidth(), image.getHeight());
                         
-                        // 設置當前語言，確保標籤顯示正確的語言（必須在更新結果前設置）
+                        // Set current language to ensure labels display correct language (must be set before updating results)
                         detectionOverlay.setLanguage(currentLanguage);
-                        Log.d(TAG, "設置檢測覆蓋層語言為: " + currentLanguage);
+                        Log.d(TAG, "Set detection overlay language to: " + currentLanguage);
                         
-                        // 記錄將要顯示的標籤（用於驗證一致性）
+                        // Record labels to be displayed (for consistency verification)
                         for (int i = 0; i < displayResults.size(); i++) {
                             YoloDetector.DetectionResult result = displayResults.get(i);
                             String displayLabel;
@@ -374,22 +374,22 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                             } else {
                                 displayLabel = result.getLabelZh();
                             }
-                            Log.d(TAG, String.format("顯示結果[%d]: %s (英文: %s, 中文: %s, 置信度: %.2f)", 
+                            Log.d(TAG, String.format("Display result[%d]: %s (English: %s, Chinese: %s, confidence: %.2f)", 
                                 i, displayLabel, result.getLabel(), result.getLabelZh(), result.getConfidence()));
                         }
                         
-                        // 直接傳遞已限制的結果，不再在 overlay 中限制
+                        // Directly pass limited results, no longer limit in overlay
                         detectionOverlay.updateDetectionResults(displayResults);
-                        Log.d(TAG, "已更新檢測覆蓋層，結果數量: " + displayResults.size());
+                        Log.d(TAG, "Updated detection overlay, result count: " + displayResults.size());
                     } else {
-                        Log.e(TAG, "❌ detectionOverlay 為 null，無法更新檢測結果！");
+                        Log.e(TAG, "❌ detectionOverlay is null, cannot update detection results!");
                     }
                     
-                    // 使用相同的結果列表進行語音播報，確保完全同步
-                    Log.d(TAG, "=== 開始語音播報，使用相同的結果列表 ===");
+                    // Use same result list for voice announcement to ensure complete synchronization
+                    Log.d(TAG, "=== Start voice announcement, using same result list ===");
                     
-                    // 驗證：記錄將要播報的標籤，確保與顯示一致
-                    StringBuilder verificationLog = new StringBuilder("驗證播報標籤順序: ");
+                    // Verification: record labels to be announced, ensure consistency with display
+                    StringBuilder verificationLog = new StringBuilder("Verify announcement label order: ");
                     for (int i = 0; i < displayResults.size(); i++) {
                         YoloDetector.DetectionResult result = displayResults.get(i);
                         String label;
@@ -404,10 +404,10 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     
                     announceDetectionResults(displayResults);
                 } else {
-                    Log.d(TAG, "檢測結果為空，延遲清除覆蓋層");
+                    Log.d(TAG, "Detection results empty, delay clearing overlay");
                     updateStatusIndicator("scanning");
                     
-                    // 延遲清除檢測結果覆蓋層，讓檢測框停留更長時間
+                    // Delay clearing detection result overlay to keep detection boxes visible longer
                     if (clearDetectionBoxRunnable != null) {
                         detectionBoxHandler.removeCallbacks(clearDetectionBoxRunnable);
                     }
@@ -415,7 +415,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     clearDetectionBoxRunnable = () -> {
                         if (detectionOverlay != null) {
                             detectionOverlay.clearDetectionResults();
-                            Log.d(TAG, "延遲清除檢測框完成");
+                            Log.d(TAG, "Delayed clearing detection boxes complete");
                         }
                         clearDetectionBoxRunnable = null;
                     };
@@ -427,7 +427,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             image.close();
             
         } catch (Exception e) {
-            Log.e(TAG, "圖像分析失敗: " + e.getMessage(), e);
+            Log.e(TAG, "Image analysis failed: " + e.getMessage(), e);
             runOnUiThread(() -> updateStatusIndicator("error"));
             image.close();
         }
@@ -439,10 +439,10 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             return;
         }
         
-        // 立即停止所有正在進行的語音播報
+        // Immediately stop all ongoing speech playback
         if (ttsManager != null) {
             ttsManager.stopSpeaking();
-            Log.d(TAG, "已停止當前語音播報");
+            Log.d(TAG, "Stopped current speech playback");
         }
         
         isDetecting = true;
@@ -450,7 +450,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         stopButton.setEnabled(true);
         updateStatusIndicator("scanning");
         
-        // 設置真正的圖像分析器，立即開始識別（不等待語音播報）
+        // Set real image analyzer, start recognition immediately (don't wait for speech playback)
         if (imageAnalysis != null) {
             imageAnalysis.setAnalyzer(cameraExecutor, new ImageAnalysis.Analyzer() {
                 @Override
@@ -464,13 +464,13 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             });
         }
         
-        // 播報"環境識別已開始"（但不會阻塞識別功能的啟動）
+        // Announce "Environment recognition started" (but won't block recognition function startup)
         String announcement = (currentLanguage.equals("english")) 
             ? "Environment recognition started" 
             : (currentLanguage.equals("mandarin") ? "環境識別已開始" : "環境識別已開始");
         ttsManager.speak(announcement, announcement, true);
         
-        Log.d(TAG, "環境識別已立即開始，語音播報在後台進行");
+        Log.d(TAG, "Environment recognition started immediately, speech playback in background");
         Toast.makeText(this, "環境識別已開始", Toast.LENGTH_SHORT).show();
     }
     
@@ -479,18 +479,18 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         startButton.setEnabled(true);
         stopButton.setEnabled(false);
         
-        // 停止圖像分析，避免後台繼續處理
+        // Stop image analysis to avoid background processing
         if (imageAnalysis != null) {
             imageAnalysis.setAnalyzer(null, null);
         }
         
-        // 取消延遲清除任務
+        // Cancel delayed clear task
         if (clearDetectionBoxRunnable != null) {
             detectionBoxHandler.removeCallbacks(clearDetectionBoxRunnable);
             clearDetectionBoxRunnable = null;
         }
         
-        // 清除檢測結果顯示
+        // Clear detection result display
         if (detectionOverlay != null) {
             detectionOverlay.clearDetectionResults();
         }
@@ -499,7 +499,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         
         Toast.makeText(this, "環境識別已停止", Toast.LENGTH_SHORT).show();
 
-        // 停止一切語音播報
+        // Stop all speech playback
         if (ttsManager != null) {
             ttsManager.stopSpeaking();
         }
@@ -523,51 +523,51 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 break;
         }
         statusIndicator.setBackgroundResource(drawableRes);
-        Log.d(TAG, "狀態指示燈更新: " + status);
+        Log.d(TAG, "Status indicator updated: " + status);
     }
     
     
     private void announceDetectionResults(List<YoloDetector.DetectionResult> results) {
         if (results == null || results.isEmpty()) {
-            // 空結果不播報，避免信息過載
-            lastAnnouncedObjects = ""; // 清除上次播報記錄
-            lastAnnouncedLabels.clear(); // 清除標籤集合
-            Log.d(TAG, "語音播報：結果為空，跳過播報並清除記錄");
+            // Don't announce empty results to avoid information overload
+            lastAnnouncedObjects = ""; // Clear last announcement record
+            lastAnnouncedLabels.clear(); // Clear label set
+            Log.d(TAG, "Voice announcement: results empty, skip announcement and clear records");
             return;
         }
         
-        // 直接使用傳入的結果（已在調用前限制為前2個，與顯示完全同步）
-        // 確保播報的物體與屏幕上顯示的檢測框完全一致
+        // Directly use passed results (already limited to top 2 before call, completely synchronized with display)
+        // Ensure announced objects completely match detection boxes displayed on screen
         StringBuilder announcement = new StringBuilder();
         
-        // 根據當前語言選擇標籤
+        // Select labels based on current language
         boolean useEnglish = "english".equals(currentLanguage);
         String separator = useEnglish ? ", " : "、";
         
-        Log.d(TAG, "語音播報：當前語言 = " + currentLanguage + ", 結果數量 = " + results.size());
+        Log.d(TAG, "Voice announcement: current language = " + currentLanguage + ", result count = " + results.size());
         
-        // 播報所有傳入的結果（已限制為前2個，與顯示完全同步）
-        // 確保標籤選擇邏輯與顯示完全一致（與 OptimizedDetectionOverlayView.drawDetectionResult() 完全一致）
-        // 使用與顯示完全相同的順序和標籤選擇邏輯
+        // Announce all passed results (already limited to top 2, completely synchronized with display)
+        // Ensure label selection logic completely matches display (completely consistent with OptimizedDetectionOverlayView.drawDetectionResult())
+        // Use exactly the same order and label selection logic as display
         for (int i = 0; i < results.size(); i++) {
             YoloDetector.DetectionResult result = results.get(i);
             if (result == null) {
-                Log.w(TAG, "語音播報結果[" + i + "]為 null，跳過");
+                Log.w(TAG, "Voice announcement result[" + i + "] is null, skip");
                 continue;
             }
             
-            // 根據語言選擇標籤（與 OptimizedDetectionOverlayView 中的邏輯完全一致）
+            // Select labels based on language (completely consistent with logic in OptimizedDetectionOverlayView)
             String label;
             if ("english".equals(currentLanguage)) {
-                label = result.getLabel(); // 英文模式使用英文標籤
+                label = result.getLabel(); // English mode uses English labels
             } else if ("mandarin".equals(currentLanguage)) {
-                label = result.getLabelZh(); // 普通話模式使用中文標籤
+                label = result.getLabelZh(); // Mandarin mode uses Chinese labels
             } else {
-                label = result.getLabelZh(); // 廣東話模式使用中文標籤
+                label = result.getLabelZh(); // Cantonese mode uses Chinese labels
             }
             
-            // 詳細日誌，確保與顯示一致
-            Log.d(TAG, String.format("語音播報結果[%d]: %s (英文: %s, 中文: %s, 置信度: %.2f, bbox: %s)", 
+            // Detailed logging to ensure consistency with display
+            Log.d(TAG, String.format("Voice announcement result[%d]: %s (English: %s, Chinese: %s, confidence: %.2f, bbox: %s)", 
                 i, label, result.getLabel(), result.getLabelZh(), result.getConfidence(),
                 result.getBoundingBox() != null ? result.getBoundingBox().toString() : "null"));
             
@@ -579,9 +579,9 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         
         String currentObjects = announcement.toString();
         long currentTime = System.currentTimeMillis();
-        Log.d(TAG, "語音播報：構建的播報文本 = \"" + currentObjects + "\"");
+        Log.d(TAG, "Voice announcement: constructed announcement text = \"" + currentObjects + "\"");
         
-        // 驗證：確保播報文本與顯示標籤完全一致
+        // Verification: ensure announcement text completely matches display labels
         StringBuilder expectedText = new StringBuilder();
         for (int i = 0; i < results.size(); i++) {
             YoloDetector.DetectionResult result = results.get(i);
@@ -599,12 +599,12 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         }
         String expected = expectedText.toString();
         if (!currentObjects.equals(expected)) {
-            Log.e(TAG, "❌ 語音播報文本不一致！預期: \"" + expected + "\", 實際: \"" + currentObjects + "\"");
+            Log.e(TAG, "❌ Voice announcement text inconsistent! Expected: \"" + expected + "\", Actual: \"" + currentObjects + "\"");
         } else {
-            Log.d(TAG, "✅ 語音播報文本驗證通過: \"" + currentObjects + "\"");
+            Log.d(TAG, "✅ Voice announcement text verification passed: \"" + currentObjects + "\"");
         }
         
-        // 構建當前檢測到的標籤集合（用於更精確的比較）
+        // Build current detected label set (for more precise comparison)
         Set<String> currentLabels = new HashSet<>();
         for (YoloDetector.DetectionResult result : results) {
             String label;
@@ -616,49 +616,49 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             currentLabels.add(label);
         }
         
-        // 檢查是否需要播報：
-        // 1. 第一次檢測到物品（上次記錄為空）- 立即播報（無延遲）
-        // 2. 檢測到的物體集合與上次不同（使用集合比較，不依賴順序）- 立即播報（無延遲）
-        // 3. 檢測結果數量有變化 - 立即播報（無延遲）
-        // 4. 播報文本與上次不同 - 立即播報（無延遲）
-        // 5. 距離上次播報已超過最小間隔（即使標籤相同，也定期播報以確保響應性）
+        // Check if need to announce:
+        // 1. First time detecting items (last record empty) - announce immediately (no delay)
+        // 2. Detected object set differs from last time (use set comparison, order-independent) - announce immediately (no delay)
+        // 3. Detection result count changed - announce immediately (no delay)
+        // 4. Announcement text differs from last time - announce immediately (no delay)
+        // 5. Time since last announcement exceeds minimum interval (even if labels same, periodically announce to ensure responsiveness)
         boolean isFirstDetection = lastAnnouncedLabels.isEmpty();
         boolean labelsChanged = !currentLabels.equals(lastAnnouncedLabels);
         boolean countChanged = currentLabels.size() != lastAnnouncedLabels.size();
         boolean textChanged = !currentObjects.equals(lastAnnouncedObjects);
         
-        // 優先級：檢測結果有變化時立即播報（無延遲）
-        // 如果播報文本完全相同，則不播報（避免重複播報相同的內容，如"筆筆筆筆筆"）
-        // 只有在檢測結果真的改變時才播報，確保不會重複播報相同的內容
+        // Priority: announce immediately when detection results change (no delay)
+        // If announcement text is exactly the same, don't announce (avoid repeating same content, e.g., "pen pen pen pen pen")
+        // Only announce when detection results really change, ensure won't repeat same content
         boolean hasChange = isFirstDetection || labelsChanged || countChanged || textChanged;
         
-        // 如果檢測結果完全相同，即使時間過期也不重複播報（避免重複播報相同的內容）
-        // 只有在檢測結果真的改變時才播報
+        // If detection results are exactly the same, don't repeat even if time expired (avoid repeating same content)
+        // Only announce when detection results really change
         boolean shouldAnnounce = hasChange;
         
         if (!hasChange) {
-            Log.d(TAG, "⏭️ 跳過重複播報：播報文本完全相同 (\"" + currentObjects + "\")，不重複播報");
+            Log.d(TAG, "⏭️ Skip duplicate announcement: announcement text exactly the same (\"" + currentObjects + "\"), don't repeat");
         }
         
-        Log.d(TAG, String.format("播報判斷 - 首次檢測: %s, 標籤變化: %s, 數量變化: %s, 文本變化: %s, 結果: %s", 
+        Log.d(TAG, String.format("Announcement decision - First detection: %s, Label change: %s, Count change: %s, Text change: %s, Result: %s", 
             isFirstDetection, labelsChanged, countChanged, textChanged, shouldAnnounce));
         
         if (shouldAnnounce) {
-            // 根據語言播報（確保與顯示標籤完全一致）
-            // currentObjects 已經根據 currentLanguage 選擇了正確的標籤（英文或中文）
+            // Announce based on language (ensure completely consistent with display labels)
+            // currentObjects already selected correct labels (English or Chinese) based on currentLanguage
             String cantoneseText;
             String englishText;
             
             if ("english".equals(currentLanguage)) {
-                // 英文模式：currentObjects 包含英文標籤
-                englishText = currentObjects; // 直接使用，與顯示標籤完全一致
-                // 對於英文模式，cantoneseText 可以是空或英文（TTS 會使用 englishText）
+                // English mode: currentObjects contains English labels
+                englishText = currentObjects; // Use directly, completely consistent with display labels
+                // For English mode, cantoneseText can be empty or English (TTS will use englishText)
                 cantoneseText = currentObjects;
-                Log.d(TAG, "英文模式播報 - 英文文本: " + englishText + " (與顯示標籤一致)");
+                Log.d(TAG, "English mode announcement - English text: " + englishText + " (consistent with display labels)");
             } else if ("mandarin".equals(currentLanguage)) {
-                // 普通話模式：currentObjects 包含中文標籤
-                cantoneseText = currentObjects; // 直接使用，與顯示標籤完全一致
-                // 獲取對應的英文標籤用於備用（確保順序與顯示一致）
+                // Mandarin mode: currentObjects contains Chinese labels
+                cantoneseText = currentObjects; // Use directly, completely consistent with display labels
+                // Get corresponding English labels for backup (ensure order consistent with display)
                 StringBuilder englishBuilder = new StringBuilder();
                 for (int i = 0; i < results.size(); i++) {
                     YoloDetector.DetectionResult result = results.get(i);
@@ -669,11 +669,11 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     }
                 }
                 englishText = englishBuilder.toString();
-                Log.d(TAG, "普通話模式播報 - 中文文本: " + cantoneseText + " (與顯示標籤一致), 英文文本: " + englishText);
+                Log.d(TAG, "Mandarin mode announcement - Chinese text: " + cantoneseText + " (consistent with display labels), English text: " + englishText);
             } else {
-                // 廣東話模式：currentObjects 包含中文標籤
-                cantoneseText = currentObjects; // 直接使用，與顯示標籤完全一致
-                // 獲取對應的英文標籤用於備用（確保順序與顯示一致）
+                // Cantonese mode: currentObjects contains Chinese labels
+                cantoneseText = currentObjects; // Use directly, completely consistent with display labels
+                // Get corresponding English labels for backup (ensure order consistent with display)
                 StringBuilder englishBuilder = new StringBuilder();
                 for (int i = 0; i < results.size(); i++) {
                     YoloDetector.DetectionResult result = results.get(i);
@@ -684,60 +684,60 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     }
                 }
                 englishText = englishBuilder.toString();
-                Log.d(TAG, "廣東話模式播報 - 中文文本: " + cantoneseText + " (與顯示標籤一致), 英文文本: " + englishText);
+                Log.d(TAG, "Cantonese mode announcement - Chinese text: " + cantoneseText + " (consistent with display labels), English text: " + englishText);
             }
             
-            Log.d(TAG, "準備播報 - 當前語言: " + currentLanguage + ", 中文文本: " + cantoneseText + ", 英文文本: " + englishText);
+            Log.d(TAG, "Prepare announcement - Current language: " + currentLanguage + ", Chinese text: " + cantoneseText + ", English text: " + englishText);
             
-            // 最終驗證：確保播報文本與顯示標籤完全一致
-            Log.d(TAG, "=== 最終驗證：播報文本 ===");
-            Log.d(TAG, "顯示標籤順序: " + currentObjects);
-            Log.d(TAG, "TTS 將播報的文本（中文模式）: " + cantoneseText);
-            Log.d(TAG, "TTS 將播報的文本（英文模式）: " + englishText);
+            // Final verification: ensure announcement text completely matches display labels
+            Log.d(TAG, "=== Final verification: announcement text ===");
+            Log.d(TAG, "Display label order: " + currentObjects);
+            Log.d(TAG, "TTS will announce text (Chinese mode): " + cantoneseText);
+            Log.d(TAG, "TTS will announce text (English mode): " + englishText);
             if (!cantoneseText.equals(currentObjects) && !"english".equals(currentLanguage)) {
-                Log.e(TAG, "❌ 警告：TTS 中文文本與顯示標籤不一致！");
+                Log.e(TAG, "❌ Warning: TTS Chinese text inconsistent with display labels!");
             }
             if (!englishText.equals(currentObjects) && "english".equals(currentLanguage)) {
-                Log.e(TAG, "❌ 警告：TTS 英文文本與顯示標籤不一致！");
+                Log.e(TAG, "❌ Warning: TTS English text inconsistent with display labels!");
             }
             
-            // 使用優先級播報，立即停止當前語音並播放新的，減少延遲
+            // Use priority announcement, immediately stop current speech and play new, reduce delay
             ttsManager.speak(cantoneseText, englishText, true);
             
-            // 更新記錄（同時更新字符串和標籤集合）
+            // Update records (update both string and label set)
             lastAnnouncedObjects = currentObjects;
-            lastAnnouncedLabels = new HashSet<>(currentLabels); // 創建副本
+            lastAnnouncedLabels = new HashSet<>(currentLabels); // Create copy
             lastAnnounceTime = currentTime;
             
-            Log.d(TAG, "✅ 已播報檢測結果: " + currentObjects + " (標籤集合: " + currentLabels + ", 與顯示標籤完全一致)");
+            Log.d(TAG, "✅ Announced detection results: " + currentObjects + " (label set: " + currentLabels + ", completely consistent with display labels)");
         } else {
-            Log.d(TAG, String.format("⏭️ 跳過重複播報: %s (上次: %s, 當前標籤: %s, 上次標籤: %s, 距離上次: %dms)", 
+            Log.d(TAG, String.format("⏭️ Skip duplicate announcement: %s (last: %s, current labels: %s, last labels: %s, time since last: %dms)", 
                 currentObjects, lastAnnouncedObjects, currentLabels, lastAnnouncedLabels, (currentTime - lastAnnounceTime)));
         }
     }
     
     private String categorizeImportance(String label) {
-        // 關鍵物體：人、車輛、障礙物
+        // Critical objects: person, vehicles, obstacles
         if (label.contains("person") || label.contains("car") || 
             label.contains("truck") || label.contains("bus") || 
             label.contains("motorcycle") || label.contains("obstacle")) {
             return "critical";
         }
         
-        // 重要物體：家具、門、開關
+        // Important objects: furniture, doors, switches
         if (label.contains("chair") || label.contains("table") || 
             label.contains("door") || label.contains("sofa") ||
             label.contains("bed") || label.contains("keyboard")) {
             return "important";
         }
         
-        // 可選物體：裝飾品
+        // Optional objects: decorations
         return "optional";
     }
     
     /**
-     * 過濾掉室內不合理的檢測結果
-     * 移除一些在室內環境中不應該出現的物品（如滑浪板、雪櫃等）
+     * Filter out unreasonable detection results for indoor environments
+     * Remove items that shouldn't appear in indoor environments (e.g., surfboard, refrigerator)
      */
     private List<YoloDetector.DetectionResult> filterUnreasonableDetections(
             List<YoloDetector.DetectionResult> results) {
@@ -745,62 +745,62 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             return results;
         }
         
-        // 定義室內不應該出現的物品列表（英文標籤）
+        // Define list of items that shouldn't appear indoors (English labels)
         Set<String> unreasonableItems = new HashSet<>();
         
-        // 交通工具
-        unreasonableItems.add("car");             // 汽車
-        unreasonableItems.add("bus");             // 公車
-        unreasonableItems.add("train");           // 火車
-        unreasonableItems.add("truck");           // 卡車
-        unreasonableItems.add("boat");            // 船
-        unreasonableItems.add("airplane");        // 飛機
-        unreasonableItems.add("aeroplane");       // 飛機（另一種寫法）
-        unreasonableItems.add("bicycle");         // 腳踏車
-        unreasonableItems.add("motorcycle");      // 摩托車
-        unreasonableItems.add("motorbike");       // 摩托車（另一種寫法）
-        unreasonableItems.add("traffic light");   // 交通燈
+        // Transportation
+        unreasonableItems.add("car");             // Car
+        unreasonableItems.add("bus");             // Bus
+        unreasonableItems.add("train");           // Train
+        unreasonableItems.add("truck");           // Truck
+        unreasonableItems.add("boat");            // Boat
+        unreasonableItems.add("airplane");        // Airplane
+        unreasonableItems.add("aeroplane");       // Airplane (alternative spelling)
+        unreasonableItems.add("bicycle");         // Bicycle
+        unreasonableItems.add("motorcycle");      // Motorcycle
+        unreasonableItems.add("motorbike");       // Motorcycle (alternative spelling)
+        unreasonableItems.add("traffic light");   // Traffic light
         
-        // 運動用品
-        unreasonableItems.add("frisbee");         // 飛盤
-        unreasonableItems.add("skis");           // 滑雪板
-        unreasonableItems.add("snowboard");      // 滑雪板
-        unreasonableItems.add("sports ball");    // 運動球
-        unreasonableItems.add("kite");           // 風箏
-        unreasonableItems.add("baseball bat");    // 棒球棒
-        unreasonableItems.add("baseball glove");  // 棒球手套
-        unreasonableItems.add("skateboard");      // 滑板
-        unreasonableItems.add("surfboard");       // 衝浪板
-        unreasonableItems.add("tennis racket");   // 網球拍
+        // Sports equipment
+        unreasonableItems.add("frisbee");         // Frisbee
+        unreasonableItems.add("skis");           // Skis
+        unreasonableItems.add("snowboard");      // Snowboard
+        unreasonableItems.add("sports ball");    // Sports ball
+        unreasonableItems.add("kite");           // Kite
+        unreasonableItems.add("baseball bat");    // Baseball bat
+        unreasonableItems.add("baseball glove");  // Baseball glove
+        unreasonableItems.add("skateboard");      // Skateboard
+        unreasonableItems.add("surfboard");       // Surfboard
+        unreasonableItems.add("tennis racket");   // Tennis racket
         
-        // 廚房用品
-        unreasonableItems.add("bottle");         // 瓶子
-        unreasonableItems.add("wine glass");     // 酒杯
-        unreasonableItems.add("cup");            // 杯子
-        unreasonableItems.add("fork");           // 叉子
-        unreasonableItems.add("knife");          // 刀
-        unreasonableItems.add("spoon");          // 湯匙
-        unreasonableItems.add("bowl");           // 碗
-        unreasonableItems.add("microwave");      // 微波爐
-        unreasonableItems.add("oven");           // 烤箱
-        unreasonableItems.add("toaster");        // 烤麵包機
-        unreasonableItems.add("sink");           // 水槽
-        unreasonableItems.add("refrigerator");   // 冰箱
+        // Kitchen items
+        unreasonableItems.add("bottle");         // Bottle
+        unreasonableItems.add("wine glass");     // Wine glass
+        unreasonableItems.add("cup");            // Cup
+        unreasonableItems.add("fork");           // Fork
+        unreasonableItems.add("knife");          // Knife
+        unreasonableItems.add("spoon");          // Spoon
+        unreasonableItems.add("bowl");           // Bowl
+        unreasonableItems.add("microwave");      // Microwave
+        unreasonableItems.add("oven");           // Oven
+        unreasonableItems.add("toaster");        // Toaster
+        unreasonableItems.add("sink");           // Sink
+        unreasonableItems.add("refrigerator");   // Refrigerator
         
-        // 動物
-        unreasonableItems.add("cat");            // 貓
-        unreasonableItems.add("dog");            // 狗
-        unreasonableItems.add("bird");           // 鳥
-        unreasonableItems.add("horse");          // 馬
-        unreasonableItems.add("sheep");          // 羊
-        unreasonableItems.add("cow");            // 牛
-        unreasonableItems.add("elephant");       // 大象
-        unreasonableItems.add("bear");           // 熊
-        unreasonableItems.add("zebra");          // 斑馬
-        unreasonableItems.add("giraffe");        // 長頸鹿
+        // Animals
+        unreasonableItems.add("cat");            // Cat
+        unreasonableItems.add("dog");            // Dog
+        unreasonableItems.add("bird");           // Bird
+        unreasonableItems.add("horse");          // Horse
+        unreasonableItems.add("sheep");          // Sheep
+        unreasonableItems.add("cow");            // Cow
+        unreasonableItems.add("elephant");       // Elephant
+        unreasonableItems.add("bear");           // Bear
+        unreasonableItems.add("zebra");          // Zebra
+        unreasonableItems.add("giraffe");        // Giraffe
         
-        // 其他
-        unreasonableItems.add("toilet");         // 馬桶
+        // Others
+        unreasonableItems.add("toilet");         // Toilet
         
         List<YoloDetector.DetectionResult> filteredResults = new ArrayList<>();
         int filteredCount = 0;
@@ -809,11 +809,11 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             String label = result.getLabel().toLowerCase();
             float confidence = result.getConfidence();
             
-            Log.d(TAG, "檢查檢測結果: " + label + " (置信度: " + confidence + ")");
+            Log.d(TAG, "Check detection result: " + label + " (confidence: " + confidence + ")");
             
-            // 檢查是否為不合理的物品（室內環境中不應該出現的物品，直接過濾）
+            // Check if unreasonable item (items that shouldn't appear in indoor environments, filter directly)
             if (unreasonableItems.contains(label)) {
-                Log.d(TAG, "過濾掉室內不合理的檢測: " + label + " (置信度: " + confidence + ")");
+                Log.d(TAG, "Filter out unreasonable indoor detection: " + label + " (confidence: " + confidence + ")");
                 filteredCount++;
                 continue;
             }
@@ -822,14 +822,14 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         }
         
         if (filteredCount > 0) {
-            Log.d(TAG, "過濾統計: 過濾了 " + filteredCount + " 個不合理檢測，保留 " + filteredResults.size() + " 個結果 (原始: " + results.size() + ")");
+            Log.d(TAG, "Filter statistics: filtered " + filteredCount + " unreasonable detections, kept " + filteredResults.size() + " results (original: " + results.size() + ")");
         }
         
         return filteredResults;
     }
     
     /**
-     * 根據圖像旋轉角度調整檢測結果的座標
+     * Adjust detection result coordinates based on image rotation angle
      */
     private List<YoloDetector.DetectionResult> adjustResultsForRotation(
             List<YoloDetector.DetectionResult> results, 
@@ -851,7 +851,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             
             Rect adjustedBbox = rotateBoundingBox(bbox, imageWidth, imageHeight, rotationDegrees);
             
-            // 創建新的檢測結果，使用調整後的邊界框
+            // Create new detection result with adjusted bounding box
             YoloDetector.DetectionResult adjustedResult = new YoloDetector.DetectionResult(
                 result.getLabel(), 
                 result.getLabelZh(), 
@@ -865,7 +865,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     }
     
     /**
-     * 旋轉邊界框座標
+     * Rotate bounding box coordinates
      */
     private Rect rotateBoundingBox(Rect bbox, int imageWidth, int imageHeight, int rotationDegrees) {
         int left = bbox.left;
@@ -877,7 +877,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         
         switch (rotationDegrees) {
             case 90:
-                // 順時針旋轉90度：左上角變為右上角
+                // Clockwise rotate 90 degrees: top-left becomes top-right
                 newLeft = imageHeight - bottom;
                 newTop = left;
                 newRight = imageHeight - top;
@@ -885,7 +885,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 return new Rect(newLeft, newTop, newRight, newBottom);
                 
             case 180:
-                // 旋轉180度：上下左右都翻轉
+                // Rotate 180 degrees: flip top-bottom and left-right
                 newLeft = imageWidth - right;
                 newTop = imageHeight - bottom;
                 newRight = imageWidth - left;
@@ -893,7 +893,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 return new Rect(newLeft, newTop, newRight, newBottom);
                 
             case 270:
-                // 順時針旋轉270度（或逆時針90度）：左上角變為左下角
+                // Clockwise rotate 270 degrees (or counterclockwise 90 degrees): top-left becomes bottom-left
                 newLeft = top;
                 newTop = imageWidth - right;
                 newRight = bottom;
@@ -901,7 +901,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 return new Rect(newLeft, newTop, newRight, newBottom);
                 
             default:
-                // 0度或其他，不需要調整
+                // 0 degrees or other, no adjustment needed
                 return bbox;
         }
     }
@@ -909,9 +909,9 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     private String estimateDistance(Rect boundingBox) {
         if (boundingBox == null) return "";
         
-        // 估算相對距離
+        // Estimate relative distance
         float area = boundingBox.width() * boundingBox.height();
-        float normalizedArea = area / (1080 * 1920); // 假設標準屏幕
+        float normalizedArea = area / (1080 * 1920); // Assume standard screen
         
         if (normalizedArea > 0.1) {
             return "約1米處";
@@ -925,7 +925,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     }
     
     private String translateToEnglish(String text) {
-        // 簡單翻譯映射
+        // Simple translation mapping
         if (text.contains("檢測到")) text = text.replace("檢測到", "detected");
         if (text.contains("個物體")) text = text.replace("個物體", " objects");
         if (text.contains("有")) text = text.replace("有", "has");
@@ -942,11 +942,11 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             return "未知位置";
         }
         
-        // 假設畫面大小為標準比例，計算相對位置
+        // Assume standard screen aspect ratio, calculate relative position
         float centerX = (boundingBox.left + boundingBox.right) / 2.0f;
         float centerY = (boundingBox.top + boundingBox.bottom) / 2.0f;
         
-        // 假設畫面寬度為1000，高度為1500（可以根據實際情況調整）
+        // Assume screen width 1000, height 1500 (can adjust based on actual situation)
         float relativeX = centerX / 1000.0f;
         float relativeY = centerY / 1500.0f;
         
@@ -985,45 +985,45 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         super.onPause();
         isEnvironmentActivityActive = false;
         
-        Log.d(TAG, "onPause: 停止檢測並清理相機資源");
+        Log.d(TAG, "onPause: Stop detection and clean up camera resources");
         
-        // 停止檢測
+        // Stop detection
         if (isDetecting) {
             stopDetection();
         }
         
-        // 解除相機綁定（防止在 Activity 暫停時繼續寫入 SurfaceView）
+        // Unbind camera (prevent continuing to write to SurfaceView when Activity is paused)
         if (cameraProvider != null) {
             try {
                 cameraProvider.unbindAll();
-                Log.d(TAG, "onPause: 已解除相機綁定");
+                Log.d(TAG, "onPause: Camera unbound");
             } catch (Exception e) {
-                Log.e(TAG, "onPause: 解除相機綁定失敗: " + e.getMessage());
+                Log.e(TAG, "onPause: Failed to unbind camera: " + e.getMessage());
             }
         }
         
-        // 清理圖像分析器
+        // Clean up image analyzer
         if (imageAnalysis != null) {
             try {
                 imageAnalysis.clearAnalyzer();
-                Log.d(TAG, "onPause: 已清理圖像分析器");
+                Log.d(TAG, "onPause: Image analyzer cleared");
             } catch (Exception e) {
-                Log.e(TAG, "onPause: 清理圖像分析器失敗: " + e.getMessage());
+                Log.e(TAG, "onPause: Failed to clear image analyzer: " + e.getMessage());
             }
         }
         
-        // 關閉相機執行器
+        // Close camera executor
         if (cameraExecutor != null) {
             try {
                 cameraExecutor.shutdown();
-                // 等待任務完成，但不強制終止
+                // Wait for tasks to complete, but don't force terminate
                 if (!cameraExecutor.awaitTermination(1, java.util.concurrent.TimeUnit.SECONDS)) {
-                    Log.w(TAG, "onPause: 相機執行器未在1秒內關閉，強制關閉");
+                    Log.w(TAG, "onPause: Camera executor didn't close within 1 second, force shutdown");
                     cameraExecutor.shutdownNow();
                 }
-                Log.d(TAG, "onPause: 已關閉相機執行器");
+                Log.d(TAG, "onPause: Camera executor closed");
             } catch (InterruptedException e) {
-                Log.e(TAG, "onPause: 關閉相機執行器被中斷");
+                Log.e(TAG, "onPause: Camera executor shutdown interrupted");
                 cameraExecutor.shutdownNow();
                 Thread.currentThread().interrupt();
             }
@@ -1034,66 +1034,66 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     protected void onDestroy() {
         super.onDestroy();
         
-        Log.d(TAG, "onDestroy: 開始清理所有資源");
+        Log.d(TAG, "onDestroy: Start cleaning up all resources");
         
-        // 停止檢測（如果還在運行）
+        // Stop detection (if still running)
         if (isDetecting) {
             stopDetection();
         }
         
-        // 確保停止檢測標誌已設置
+        // Ensure stop detection flag is set
         isDetecting = false;
         
-        // 清理圖像分析器
+        // Clean up image analyzer
         if (imageAnalysis != null) {
             try {
                 imageAnalysis.clearAnalyzer();
                 imageAnalysis = null;
-                Log.d(TAG, "onDestroy: 已清理圖像分析器");
+                Log.d(TAG, "onDestroy: Image analyzer cleared");
             } catch (Exception e) {
-                Log.e(TAG, "onDestroy: 清理圖像分析器失敗: " + e.getMessage());
+                Log.e(TAG, "onDestroy: Failed to clear image analyzer: " + e.getMessage());
             }
         }
         
-        // 解除相機綁定
+        // Unbind camera
         if (cameraProvider != null) {
             try {
                 cameraProvider.unbindAll();
                 cameraProvider = null;
-                Log.d(TAG, "onDestroy: 已解除相機綁定");
+                Log.d(TAG, "onDestroy: Camera unbound");
             } catch (Exception e) {
-                Log.e(TAG, "onDestroy: 解除相機綁定失敗: " + e.getMessage());
+                Log.e(TAG, "onDestroy: Failed to unbind camera: " + e.getMessage());
             }
         }
         
-        // 關閉 YOLO 檢測器
+        // Close YOLO detector
         if (yoloDetector != null) {
             try {
                 yoloDetector.close();
                 yoloDetector = null;
-                Log.d(TAG, "onDestroy: 已關閉 YOLO 檢測器");
+                Log.d(TAG, "onDestroy: YOLO detector closed");
             } catch (Exception e) {
-                Log.e(TAG, "onDestroy: 關閉 YOLO 檢測器失敗: " + e.getMessage());
+                Log.e(TAG, "onDestroy: Failed to close YOLO detector: " + e.getMessage());
             }
         }
         
-        // 關閉相機執行器
+        // Close camera executor
         if (cameraExecutor != null) {
             try {
                 cameraExecutor.shutdown();
                 if (!cameraExecutor.awaitTermination(2, java.util.concurrent.TimeUnit.SECONDS)) {
-                    Log.w(TAG, "onDestroy: 相機執行器未在2秒內關閉，強制關閉");
+                    Log.w(TAG, "onDestroy: Camera executor didn't close within 2 seconds, force shutdown");
                     cameraExecutor.shutdownNow();
                 }
                 cameraExecutor = null;
-                Log.d(TAG, "onDestroy: 已關閉相機執行器");
+                Log.d(TAG, "onDestroy: Camera executor closed");
             } catch (InterruptedException e) {
-                Log.e(TAG, "onDestroy: 關閉相機執行器被中斷");
+                Log.e(TAG, "onDestroy: Camera executor shutdown interrupted");
                 cameraExecutor.shutdownNow();
                 Thread.currentThread().interrupt();
             }
         }
         
-        Log.d(TAG, "onDestroy: 資源清理完成");
+        Log.d(TAG, "onDestroy: Resource cleanup complete");
     }
 }

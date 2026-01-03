@@ -5,38 +5,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 對話管理器
- * 管理對話上下文、歷史記錄和會話狀態
+ * Conversation manager
+ * Manages conversation context, history, and session state
  */
 public class ConversationManager {
     private static final String TAG = "ConversationManager";
-    private static final int MAX_HISTORY_SIZE = 20; // 最多保存20輪對話
+    private static final int MAX_HISTORY_SIZE = 20; // Maximum 20 conversation turns
     
-    // 對話歷史記錄
+    // Conversation history
     private List<ConversationTurn> conversationHistory;
     
-    // 當前會話狀態
+    // Current session state
     private ConversationState currentState;
     
-    // 用戶信息（可擴展）
+    // User information (extensible)
     private String userName;
     
     public enum ConversationState {
-        IDLE,           // 空閒狀態
-        LISTENING,      // 正在監聽
-        PROCESSING,     // 正在處理
-        RESPONDING      // 正在回應
+        IDLE,           // Idle state
+        LISTENING,      // Listening
+        PROCESSING,     // Processing
+        RESPONDING      // Responding
     }
     
     /**
-     * 對話輪次
+     * Conversation turn
      */
     public static class ConversationTurn {
-        public String userInput;      // 用戶輸入
-        public String assistantResponse; // 助手回應
-        public boolean isCommand;      // 是否為命令
-        public String commandType;    // 命令類型（如果為命令）
-        public long timestamp;        // 時間戳
+        public String userInput;      // User input
+        public String assistantResponse; // Assistant response
+        public boolean isCommand;      // Whether it's a command
+        public String commandType;    // Command type (if it's a command)
+        public long timestamp;        // Timestamp
         
         public ConversationTurn(String userInput, String assistantResponse, boolean isCommand, String commandType) {
             this.userInput = userInput;
@@ -53,22 +53,22 @@ public class ConversationManager {
     }
     
     /**
-     * 添加對話輪次
+     * Add conversation turn
      */
     public void addTurn(String userInput, String assistantResponse, boolean isCommand, String commandType) {
         ConversationTurn turn = new ConversationTurn(userInput, assistantResponse, isCommand, commandType);
         conversationHistory.add(turn);
         
-        // 限制歷史記錄大小
+        // Limit history size
         if (conversationHistory.size() > MAX_HISTORY_SIZE) {
             conversationHistory.remove(0);
         }
         
-        Log.d(TAG, "添加對話輪次: " + userInput + " -> " + assistantResponse);
+        Log.d(TAG, "Add conversation turn: " + userInput + " -> " + assistantResponse);
     }
     
     /**
-     * 獲取最近的對話歷史
+     * Get recent conversation history
      */
     public List<ConversationTurn> getRecentHistory(int count) {
         int start = Math.max(0, conversationHistory.size() - count);
@@ -76,14 +76,14 @@ public class ConversationManager {
     }
     
     /**
-     * 獲取所有對話歷史
+     * Get all conversation history
      */
     public List<ConversationTurn> getAllHistory() {
         return new ArrayList<>(conversationHistory);
     }
     
     /**
-     * 獲取上下文信息（用於生成回應）
+     * Get context information (for generating responses)
      */
     public String getContextSummary() {
         if (conversationHistory.isEmpty()) {
@@ -91,7 +91,7 @@ public class ConversationManager {
         }
         
         StringBuilder summary = new StringBuilder();
-        List<ConversationTurn> recent = getRecentHistory(3); // 最近3輪對話
+        List<ConversationTurn> recent = getRecentHistory(3); // Recent 3 conversation turns
         
         for (ConversationTurn turn : recent) {
             summary.append("用戶: ").append(turn.userInput).append("\n");
@@ -104,7 +104,7 @@ public class ConversationManager {
     }
     
     /**
-     * 檢查是否在討論某個話題
+     * Check if discussing a topic
      */
     public boolean isDiscussingTopic(String topic) {
         if (conversationHistory.isEmpty()) {
@@ -121,44 +121,44 @@ public class ConversationManager {
     }
     
     /**
-     * 獲取當前狀態
+     * Get current state
      */
     public ConversationState getCurrentState() {
         return currentState;
     }
     
     /**
-     * 設置當前狀態
+     * Set current state
      */
     public void setCurrentState(ConversationState state) {
         this.currentState = state;
-        Log.d(TAG, "對話狀態變更: " + state);
+        Log.d(TAG, "Conversation state changed: " + state);
     }
     
     /**
-     * 設置用戶名稱
+     * Set user name
      */
     public void setUserName(String name) {
         this.userName = name;
     }
     
     /**
-     * 獲取用戶名稱
+     * Get user name
      */
     public String getUserName() {
         return userName != null ? userName : "朋友";
     }
     
     /**
-     * 清除對話歷史
+     * Clear conversation history
      */
     public void clearHistory() {
         conversationHistory.clear();
-        Log.d(TAG, "對話歷史已清除");
+        Log.d(TAG, "Conversation history cleared");
     }
     
     /**
-     * 獲取對話統計
+     * Get conversation statistics
      */
     public ConversationStats getStats() {
         int totalTurns = conversationHistory.size();
@@ -177,7 +177,7 @@ public class ConversationManager {
     }
     
     /**
-     * 對話統計
+     * Conversation statistics
      */
     public static class ConversationStats {
         public int totalTurns;

@@ -6,13 +6,13 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * 檢測性能監控器 - 優化版本
- * 使用更高效的數據結構和算法
+ * Detection performance monitor - optimized version
+ * Uses more efficient data structures and algorithms
  */
 public class DetectionPerformanceMonitor {
     private static final String TAG = "DetectionPerformance";
     
-    // 使用Deque替代ArrayList，提供更好的性能
+    // Use Deque instead of ArrayList for better performance
     private final Deque<Long> detectionTimes = new ArrayDeque<>();
     private final Deque<Float> confidenceScores = new ArrayDeque<>();
     
@@ -22,14 +22,14 @@ public class DetectionPerformanceMonitor {
     private float totalConfidence = 0f;
     
     /**
-     * 記錄檢測時間 - 優化版本
+     * Record detection time - optimized version
      */
     public void recordDetectionTime(long detectionTimeMs) {
         detectionTimes.offerLast(detectionTimeMs);
         totalDetectionTime += detectionTimeMs;
         totalDetections++;
         
-        // 保持最近N次檢測的記錄，移除最舊的
+        // Keep records of last N detections, remove oldest
         if (detectionTimes.size() > AppConstants.MAX_DETECTION_TIME_RECORDS) {
             Long removed = detectionTimes.pollFirst();
             if (removed != null) {
@@ -37,23 +37,23 @@ public class DetectionPerformanceMonitor {
             }
         }
         
-        Log.d(TAG, "檢測時間: " + detectionTimeMs + "ms");
+        Log.d(TAG, "Detection time: " + detectionTimeMs + "ms");
     }
     
     /**
-     * 記錄檢測結果 - 優化版本
+     * Record detection results - optimized version
      */
     public void recordDetectionResult(List<YoloDetector.DetectionResult> results) {
         if (results != null && !results.isEmpty()) {
             successfulDetections++;
             
-            // 記錄置信度分數
+            // Record confidence scores
             for (YoloDetector.DetectionResult result : results) {
                 float confidence = result.getConfidence();
                 confidenceScores.offerLast(confidence);
                 totalConfidence += confidence;
                 
-                // 保持最近N個置信度記錄
+                // Keep last N confidence records
                 if (confidenceScores.size() > AppConstants.MAX_CONFIDENCE_RECORDS) {
                     Float removed = confidenceScores.pollFirst();
                     if (removed != null) {
@@ -62,33 +62,33 @@ public class DetectionPerformanceMonitor {
                 }
             }
             
-            Log.d(TAG, "檢測到 " + results.size() + " 個物體");
+            Log.d(TAG, "Detected " + results.size() + " objects");
         }
     }
     
     /**
-     * 獲取平均檢測時間 - 優化版本
+     * Get average detection time - optimized version
      */
     public float getAverageDetectionTime() {
         return detectionTimes.isEmpty() ? 0f : (float) totalDetectionTime / detectionTimes.size();
     }
     
     /**
-     * 獲取檢測成功率
+     * Get detection success rate
      */
     public float getSuccessRate() {
         return totalDetections == 0 ? 0f : (float) successfulDetections / totalDetections * 100f;
     }
     
     /**
-     * 獲取平均置信度 - 優化版本
+     * Get average confidence - optimized version
      */
     public float getAverageConfidence() {
         return confidenceScores.isEmpty() ? 0f : totalConfidence / confidenceScores.size();
     }
     
     /**
-     * 獲取性能報告
+     * Get performance report
      */
     public String getPerformanceReport() {
         return String.format(
@@ -107,7 +107,7 @@ public class DetectionPerformanceMonitor {
     }
     
     /**
-     * 檢查性能是否良好
+     * Check if performance is good
      */
     public boolean isPerformanceGood() {
         return getSuccessRate() > 70f && 
@@ -116,7 +116,7 @@ public class DetectionPerformanceMonitor {
     }
     
     /**
-     * 重置統計數據
+     * Reset statistics
      */
     public void reset() {
         detectionTimes.clear();
@@ -125,6 +125,6 @@ public class DetectionPerformanceMonitor {
         successfulDetections = 0;
         totalDetectionTime = 0;
         totalConfidence = 0f;
-        Log.d(TAG, "性能統計已重置");
+        Log.d(TAG, "Performance statistics reset");
     }
 }

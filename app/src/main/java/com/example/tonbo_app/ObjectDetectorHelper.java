@@ -19,114 +19,114 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 真實的物體檢測助手
- * 使用TensorFlow Lite Task Vision API
+ * Real object detection helper
+ * Uses TensorFlow Lite Task Vision API
  */
 public class ObjectDetectorHelper {
     private static final String TAG = "ObjectDetectorHelper";
     
-    // 環境識別相關的物體類別（只檢測這些常見物體）
+    // Environment recognition relevant object categories (only detect these common objects)
     private static final Set<String> ENVIRONMENT_RELEVANT_OBJECTS = new HashSet<>();
     
-    // 黑名單：明確排除不常見或不相關的物體
+    // Blacklist: explicitly exclude uncommon or irrelevant objects
     private static final Set<String> EXCLUDED_OBJECTS = new HashSet<>();
     
     static {
-        // 黑名單：排除不常見的物體
-        EXCLUDED_OBJECTS.add("giraffe");          // 長頸鹿
-        EXCLUDED_OBJECTS.add("zebra");            // 斑馬
-        EXCLUDED_OBJECTS.add("elephant");         // 大象
-        EXCLUDED_OBJECTS.add("bear");             // 熊
-        EXCLUDED_OBJECTS.add("cow");              // 牛
-        EXCLUDED_OBJECTS.add("sheep");            // 羊
-        EXCLUDED_OBJECTS.add("horse");            // 馬
-        EXCLUDED_OBJECTS.add("airplane");         // 飛機（通常不在室內環境）
-        EXCLUDED_OBJECTS.add("train");            // 火車
-        EXCLUDED_OBJECTS.add("boat");             // 船
-        EXCLUDED_OBJECTS.add("surfboard");        // 衝浪板
-        EXCLUDED_OBJECTS.add("kite");             // 風箏
-        EXCLUDED_OBJECTS.add("frisbee");          // 飛盤
-        EXCLUDED_OBJECTS.add("baseball bat");     // 棒球棒
-        EXCLUDED_OBJECTS.add("baseball glove");   // 棒球手套
-        EXCLUDED_OBJECTS.add("tennis racket");    // 網球拍
-        EXCLUDED_OBJECTS.add("skateboard");       // 滑板
+        // Blacklist: exclude uncommon objects
+        EXCLUDED_OBJECTS.add("giraffe");          // Giraffe
+        EXCLUDED_OBJECTS.add("zebra");            // Zebra
+        EXCLUDED_OBJECTS.add("elephant");         // Elephant
+        EXCLUDED_OBJECTS.add("bear");             // Bear
+        EXCLUDED_OBJECTS.add("cow");              // Cow
+        EXCLUDED_OBJECTS.add("sheep");            // Sheep
+        EXCLUDED_OBJECTS.add("horse");            // Horse
+        EXCLUDED_OBJECTS.add("airplane");         // Airplane (usually not in indoor environments)
+        EXCLUDED_OBJECTS.add("train");            // Train
+        EXCLUDED_OBJECTS.add("boat");             // Boat
+        EXCLUDED_OBJECTS.add("surfboard");        // Surfboard
+        EXCLUDED_OBJECTS.add("kite");             // Kite
+        EXCLUDED_OBJECTS.add("frisbee");          // Frisbee
+        EXCLUDED_OBJECTS.add("baseball bat");     // Baseball bat
+        EXCLUDED_OBJECTS.add("baseball glove");   // Baseball glove
+        EXCLUDED_OBJECTS.add("tennis racket");    // Tennis racket
+        EXCLUDED_OBJECTS.add("skateboard");       // Skateboard
         
-        // 環境識別相關的重要物體（白名單）- 只包含對視障人士有用的常見物體
-        // 交通相關
-        ENVIRONMENT_RELEVANT_OBJECTS.add("person");           // 人
-        ENVIRONMENT_RELEVANT_OBJECTS.add("car");              // 汽車
-        ENVIRONMENT_RELEVANT_OBJECTS.add("truck");            // 卡車
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bus");              // 公車
-        ENVIRONMENT_RELEVANT_OBJECTS.add("motorcycle");       // 摩托車
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bicycle");          // 腳踏車
-        ENVIRONMENT_RELEVANT_OBJECTS.add("traffic light");    // 交通燈
-        ENVIRONMENT_RELEVANT_OBJECTS.add("stop sign");        // 停車標誌
+        // Environment recognition relevant important objects (whitelist) - only includes common objects useful for visually impaired users
+        // Transportation related
+        ENVIRONMENT_RELEVANT_OBJECTS.add("person");           // Person
+        ENVIRONMENT_RELEVANT_OBJECTS.add("car");              // Car
+        ENVIRONMENT_RELEVANT_OBJECTS.add("truck");            // Truck
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bus");              // Bus
+        ENVIRONMENT_RELEVANT_OBJECTS.add("motorcycle");       // Motorcycle
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bicycle");          // Bicycle
+        ENVIRONMENT_RELEVANT_OBJECTS.add("traffic light");    // Traffic light
+        ENVIRONMENT_RELEVANT_OBJECTS.add("stop sign");        // Stop sign
         
-        // 家具
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bench");            // 長椅
-        ENVIRONMENT_RELEVANT_OBJECTS.add("chair");            // 椅子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("table");            // 桌子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("dining table");     // 餐桌
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bed");              // 床
-        ENVIRONMENT_RELEVANT_OBJECTS.add("couch");            // 沙發
-        ENVIRONMENT_RELEVANT_OBJECTS.add("toilet");           // 廁所
+        // Furniture
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bench");            // Bench
+        ENVIRONMENT_RELEVANT_OBJECTS.add("chair");            // Chair
+        ENVIRONMENT_RELEVANT_OBJECTS.add("table");            // Table
+        ENVIRONMENT_RELEVANT_OBJECTS.add("dining table");     // Dining table
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bed");              // Bed
+        ENVIRONMENT_RELEVANT_OBJECTS.add("couch");            // Couch
+        ENVIRONMENT_RELEVANT_OBJECTS.add("toilet");           // Toilet
         
-        // 電子設備
-        ENVIRONMENT_RELEVANT_OBJECTS.add("tv");               // 電視
-        ENVIRONMENT_RELEVANT_OBJECTS.add("laptop");           // 筆記本電腦
-        ENVIRONMENT_RELEVANT_OBJECTS.add("mouse");            // 滑鼠
-        ENVIRONMENT_RELEVANT_OBJECTS.add("remote");           // 遙控器
-        ENVIRONMENT_RELEVANT_OBJECTS.add("keyboard");         // 鍵盤
-        ENVIRONMENT_RELEVANT_OBJECTS.add("cell phone");       // 手機
-        ENVIRONMENT_RELEVANT_OBJECTS.add("clock");            // 時鐘
+        // Electronic devices
+        ENVIRONMENT_RELEVANT_OBJECTS.add("tv");               // TV
+        ENVIRONMENT_RELEVANT_OBJECTS.add("laptop");           // Laptop
+        ENVIRONMENT_RELEVANT_OBJECTS.add("mouse");            // Mouse
+        ENVIRONMENT_RELEVANT_OBJECTS.add("remote");           // Remote
+        ENVIRONMENT_RELEVANT_OBJECTS.add("keyboard");         // Keyboard
+        ENVIRONMENT_RELEVANT_OBJECTS.add("cell phone");       // Cell phone
+        ENVIRONMENT_RELEVANT_OBJECTS.add("clock");            // Clock
         
-        // 廚房用品
-        ENVIRONMENT_RELEVANT_OBJECTS.add("microwave");        // 微波爐
-        ENVIRONMENT_RELEVANT_OBJECTS.add("oven");             // 烤箱
-        ENVIRONMENT_RELEVANT_OBJECTS.add("toaster");          // 烤麵包機
-        ENVIRONMENT_RELEVANT_OBJECTS.add("sink");             // 水槽
-        ENVIRONMENT_RELEVANT_OBJECTS.add("refrigerator");     // 冰箱
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bottle");           // 瓶子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("cup");              // 杯子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("wine glass");       // 酒杯
-        ENVIRONMENT_RELEVANT_OBJECTS.add("bowl");             // 碗
-        ENVIRONMENT_RELEVANT_OBJECTS.add("fork");             // 叉子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("knife");            // 刀子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("spoon");            // 勺子
+        // Kitchen items
+        ENVIRONMENT_RELEVANT_OBJECTS.add("microwave");        // Microwave
+        ENVIRONMENT_RELEVANT_OBJECTS.add("oven");             // Oven
+        ENVIRONMENT_RELEVANT_OBJECTS.add("toaster");          // Toaster
+        ENVIRONMENT_RELEVANT_OBJECTS.add("sink");             // Sink
+        ENVIRONMENT_RELEVANT_OBJECTS.add("refrigerator");     // Refrigerator
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bottle");           // Bottle
+        ENVIRONMENT_RELEVANT_OBJECTS.add("cup");              // Cup
+        ENVIRONMENT_RELEVANT_OBJECTS.add("wine glass");       // Wine glass
+        ENVIRONMENT_RELEVANT_OBJECTS.add("bowl");             // Bowl
+        ENVIRONMENT_RELEVANT_OBJECTS.add("fork");             // Fork
+        ENVIRONMENT_RELEVANT_OBJECTS.add("knife");            // Knife
+        ENVIRONMENT_RELEVANT_OBJECTS.add("spoon");            // Spoon
         
-        // 日常用品
-        ENVIRONMENT_RELEVANT_OBJECTS.add("book");             // 書
-        ENVIRONMENT_RELEVANT_OBJECTS.add("umbrella");         // 雨傘
-        ENVIRONMENT_RELEVANT_OBJECTS.add("handbag");          // 手提包
-        ENVIRONMENT_RELEVANT_OBJECTS.add("backpack");         // 背包
-        ENVIRONMENT_RELEVANT_OBJECTS.add("suitcase");         // 手提箱
-        ENVIRONMENT_RELEVANT_OBJECTS.add("vase");             // 花瓶
-        ENVIRONMENT_RELEVANT_OBJECTS.add("scissors");         // 剪刀
-        ENVIRONMENT_RELEVANT_OBJECTS.add("hair drier");       // 吹風機
-        ENVIRONMENT_RELEVANT_OBJECTS.add("toothbrush");       // 牙刷
+        // Daily items
+        ENVIRONMENT_RELEVANT_OBJECTS.add("book");             // Book
+        ENVIRONMENT_RELEVANT_OBJECTS.add("umbrella");         // Umbrella
+        ENVIRONMENT_RELEVANT_OBJECTS.add("handbag");          // Handbag
+        ENVIRONMENT_RELEVANT_OBJECTS.add("backpack");         // Backpack
+        ENVIRONMENT_RELEVANT_OBJECTS.add("suitcase");         // Suitcase
+        ENVIRONMENT_RELEVANT_OBJECTS.add("vase");             // Vase
+        ENVIRONMENT_RELEVANT_OBJECTS.add("scissors");         // Scissors
+        ENVIRONMENT_RELEVANT_OBJECTS.add("hair drier");       // Hair drier
+        ENVIRONMENT_RELEVANT_OBJECTS.add("toothbrush");       // Toothbrush
         
-        // 食物（常見的）
-        ENVIRONMENT_RELEVANT_OBJECTS.add("banana");           // 香蕉
-        ENVIRONMENT_RELEVANT_OBJECTS.add("apple");            // 蘋果
-        ENVIRONMENT_RELEVANT_OBJECTS.add("orange");           // 橙子
-        ENVIRONMENT_RELEVANT_OBJECTS.add("sandwich");         // 三明治
-        ENVIRONMENT_RELEVANT_OBJECTS.add("pizza");            // 披薩
+        // Food (common)
+        ENVIRONMENT_RELEVANT_OBJECTS.add("banana");           // Banana
+        ENVIRONMENT_RELEVANT_OBJECTS.add("apple");            // Apple
+        ENVIRONMENT_RELEVANT_OBJECTS.add("orange");           // Orange
+        ENVIRONMENT_RELEVANT_OBJECTS.add("sandwich");         // Sandwich
+        ENVIRONMENT_RELEVANT_OBJECTS.add("pizza");            // Pizza
     }
     
-    // 穩定性增強參數
-    private static final int MAX_RETRY_ATTEMPTS = 4;  // 增加重試次數
-    private static final long RETRY_DELAY_MS = 50;   // 減少重試延遲
-    private static final int MAX_CONSECUTIVE_FAILURES = 5;  // 最大連續失敗次數
-    private static final long DETECTION_TIMEOUT_MS = 5000;  // 檢測超時時間
+    // Stability enhancement parameters
+    private static final int MAX_RETRY_ATTEMPTS = 4;  // Increased retry count
+    private static final long RETRY_DELAY_MS = 50;   // Reduced retry delay
+    private static final int MAX_CONSECUTIVE_FAILURES = 5;  // Maximum consecutive failures
+    private static final long DETECTION_TIMEOUT_MS = 5000;  // Detection timeout
     
-    private ObjectDetector objectDetector;  // TensorFlow Lite SSD 檢測器
-    private YoloDetector yoloDetector;     // YOLO 檢測器
-    private MLKitObjectDetector mlKitDetector;  // ML Kit 檢測器（暫時禁用）
+    private ObjectDetector objectDetector;  // TensorFlow Lite SSD detector
+    private YoloDetector yoloDetector;     // YOLO detector
+    private MLKitObjectDetector mlKitDetector;  // ML Kit detector (temporarily disabled)
     private Context context;
-    private boolean useYolo = false;  // 是否使用YOLO檢測器
-    private boolean useMLKit = false;  // 是否使用ML Kit檢測器（暫時禁用，避免網絡問題）
+    private boolean useYolo = false;  // Whether to use YOLO detector
+    private boolean useMLKit = false;  // Whether to use ML Kit detector (temporarily disabled to avoid network issues)
     
-    // 穩定性監控變量
+    // Stability monitoring variables
     private int consecutiveFailures = 0;
     private long lastSuccessfulDetection = 0;
     private int totalDetections = 0;
@@ -134,20 +134,20 @@ public class ObjectDetectorHelper {
     private List<DetectionResult> lastSuccessfulResults = new ArrayList<>();
     private long lastDetectionTime = 0;
     
-    // 多幀融合穩定性過濾（提高準確率）
-    private static final int STABILITY_FRAME_COUNT = 2;  // 需要連續2幀檢測到才認為穩定（降低以提高檢測率）
-    private final Map<String, Integer> detectionStability = new HashMap<>();  // 物體標籤 -> 連續檢測次數
-    private final Map<String, Float> detectionConfidenceSum = new HashMap<>();  // 物體標籤 -> 置信度累加
-    private final Map<String, android.graphics.RectF> detectionBoundingBox = new HashMap<>();  // 物體標籤 -> 邊界框
+    // Multi-frame fusion stability filtering (improves accuracy)
+    private static final int STABILITY_FRAME_COUNT = 2;  // Requires 2 consecutive frames to be considered stable (lowered to improve detection rate)
+    private final Map<String, Integer> detectionStability = new HashMap<>();  // Object label -> consecutive detection count
+    private final Map<String, Float> detectionConfidenceSum = new HashMap<>();  // Object label -> confidence sum
+    private final Map<String, android.graphics.RectF> detectionBoundingBox = new HashMap<>();  // Object label -> bounding box
     
     /**
-     * 物體優先級枚舉 - 用於智能語音播報優先級排序
+     * Object priority enum - used for intelligent voice announcement priority sorting
      */
     public enum ObjectPriority {
-        CRITICAL(0),   // 關鍵優先級：人、車、障礙物（安全相關）
-        HIGH(1),       // 高優先級：交通標誌、門、樓梯
-        MEDIUM(2),     // 中等優先級：家具、電子產品
-        LOW(3);        // 低優先級：裝飾品、小物件
+        CRITICAL(0),   // Critical priority: person, vehicle, obstacles (safety related)
+        HIGH(1),       // High priority: traffic signs, doors, stairs
+        MEDIUM(2),     // Medium priority: furniture, electronic products
+        LOW(3);        // Low priority: decorations, small items
         
         private final int value;
         ObjectPriority(int value) {
@@ -158,7 +158,7 @@ public class ObjectDetectorHelper {
         }
     }
     
-    // COCO類別中文映射
+    // COCO category Chinese mapping
     private static final Map<String, String> LABEL_MAP_ZH = new HashMap<>();
     
     static {
@@ -246,10 +246,10 @@ public class ObjectDetectorHelper {
     
     public ObjectDetectorHelper(Context context) {
         this.context = context;
-        // 暫時禁用ML Kit（避免網絡問題），優先使用TensorFlow Lite
-        // setupMLKitDetector();  // 優先初始化 ML Kit（免費開源，官方維護）
-        setupObjectDetector();  // TensorFlow Lite 作為主要檢測器
-        setupYoloDetector();    // YOLO 作為備用
+        // Temporarily disable ML Kit (to avoid network issues), prioritize TensorFlow Lite
+        // setupMLKitDetector();  // Priority initialization ML Kit (free open source, officially maintained)
+        setupObjectDetector();  // TensorFlow Lite as primary detector
+        setupYoloDetector();    // YOLO as backup
     }
     
     private void setupObjectDetector() {
@@ -266,27 +266,27 @@ public class ObjectDetectorHelper {
                     options
             );
             
-            Log.d(TAG, "✅ SSD物體檢測器初始化成功！");
+            Log.d(TAG, "✅ SSD object detector initialized successfully!");
         } catch (IOException e) {
-            Log.e(TAG, "❌ 初始化SSD物體檢測器失敗: " + e.getMessage());
+            Log.e(TAG, "❌ Failed to initialize SSD object detector: " + e.getMessage());
         }
     }
     
     /**
-     * 初始化 ML Kit 檢測器（優先使用）
+     * Initialize ML Kit detector (priority use)
      */
     private void setupMLKitDetector() {
         try {
             mlKitDetector = new MLKitObjectDetector(context);
             if (mlKitDetector.isInitialized()) {
                 useMLKit = true;
-                Log.d(TAG, "✅ ML Kit 檢測器初始化成功（優先使用）！");
+                Log.d(TAG, "✅ ML Kit detector initialized successfully (priority use)!");
             } else {
                 useMLKit = false;
-                Log.w(TAG, "⚠️ ML Kit 檢測器初始化失敗，將使用備用檢測器");
+                Log.w(TAG, "⚠️ ML Kit detector initialization failed, will use backup detector");
             }
         } catch (Exception e) {
-            Log.e(TAG, "❌ 初始化ML Kit檢測器失敗: " + e.getMessage());
+            Log.e(TAG, "❌ Failed to initialize ML Kit detector: " + e.getMessage());
             useMLKit = false;
         }
     }
@@ -294,30 +294,30 @@ public class ObjectDetectorHelper {
     private void setupYoloDetector() {
         try {
             yoloDetector = new YoloDetector(context);
-            // 環境識別主要使用ML Kit，YOLO作為最後備用
-            useYolo = false; // 默認禁用YOLO，專注於環境識別
-            Log.d(TAG, "✅ YOLO檢測器初始化成功（作為最後備用）！");
+            // Environment recognition mainly uses ML Kit, YOLO as final backup
+            useYolo = false; // Default disable YOLO, focus on environment recognition
+            Log.d(TAG, "✅ YOLO detector initialized successfully (as final backup)!");
         } catch (Exception e) {
-            Log.e(TAG, "❌ 初始化YOLO檢測器失敗: " + e.getMessage());
+            Log.e(TAG, "❌ Failed to initialize YOLO detector: " + e.getMessage());
             useYolo = false;
         }
     }
     
     /**
-     * 檢測圖像中的物體 - 使用雙檢測器融合提高準確率和穩定性
+     * Detect objects in image - uses dual detector fusion to improve accuracy and stability
      */
     public List<DetectionResult> detect(Bitmap bitmap) {
         List<DetectionResult> results = new ArrayList<>();
         long startTime = System.currentTimeMillis();
         
         if (bitmap == null || bitmap.isRecycled()) {
-            Log.w(TAG, "無效的bitmap");
+            Log.w(TAG, "Invalid bitmap");
             return getLastSuccessfulResults();
         }
         
-        // 檢查檢測頻率，避免過於頻繁
+        // Check detection frequency to avoid being too frequent
         if (System.currentTimeMillis() - lastDetectionTime < 100) {
-            Log.d(TAG, "檢測頻率過高，返回上次結果");
+            Log.d(TAG, "Detection frequency too high, returning last result");
             return getLastSuccessfulResults();
         }
         lastDetectionTime = System.currentTimeMillis();
@@ -325,53 +325,53 @@ public class ObjectDetectorHelper {
         totalDetections++;
         
         try {
-            // 檢查連續失敗次數
+            // Check consecutive failure count
             if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-                Log.w(TAG, "連續失敗次數過多，重置檢測器狀態");
+                Log.w(TAG, "Too many consecutive failures, resetting detector state");
                 resetDetectorState();
             }
             
-            // 使用重試機制進行檢測
+            // Use retry mechanism for detection
             results = detectWithRetry(bitmap);
             
             if (!results.isEmpty()) {
-                // 檢測成功
+                // Detection successful
                 consecutiveFailures = 0;
                 successfulDetections++;
                 lastSuccessfulDetection = System.currentTimeMillis();
                 lastSuccessfulResults = new ArrayList<>(results);
                 
-                // 應用後處理
+                // Apply post-processing
                 results = applyPostProcessing(results);
                 
-                Log.d(TAG, String.format("檢測成功: %d 個物體 (成功率: %.1f%%)", 
+                Log.d(TAG, String.format("Detection successful: %d objects (success rate: %.1f%%)", 
                     results.size(), (float)successfulDetections / totalDetections * 100));
             } else {
-                // 檢測失敗，返回上次成功結果
-                Log.w(TAG, "檢測失敗，返回上次成功結果");
+                // Detection failed, return last successful result
+                Log.w(TAG, "Detection failed, returning last successful result");
                 results = getLastSuccessfulResults();
                 consecutiveFailures++;
             }
             
         } catch (OutOfMemoryError e) {
-            Log.e(TAG, "記憶體不足，檢測失敗: " + e.getMessage());
+            Log.e(TAG, "Out of memory, detection failed: " + e.getMessage());
             System.gc();
             consecutiveFailures++;
             results = getLastSuccessfulResults();
         } catch (Exception e) {
-            Log.e(TAG, "檢測過程中發生錯誤: " + e.getMessage());
+            Log.e(TAG, "Error occurred during detection: " + e.getMessage());
             consecutiveFailures++;
             results = getLastSuccessfulResults();
         }
         
         long detectionTime = System.currentTimeMillis() - startTime;
         if (detectionTime > 1000) {
-            Log.w(TAG, "檢測時間過長: " + detectionTime + "ms");
+            Log.w(TAG, "Detection time too long: " + detectionTime + "ms");
         }
         
-        // 只返回置信度最高的2個物體
+        // Only return top 2 objects by confidence
         if (results.size() > 2) {
-            // 按置信度排序
+            // Sort by confidence
             Collections.sort(results, new Comparator<DetectionResult>() {
                 @Override
                 public int compare(DetectionResult a, DetectionResult b) {
@@ -379,63 +379,63 @@ public class ObjectDetectorHelper {
                 }
             });
             results = results.subList(0, 2);
-            Log.d(TAG, "限制檢測結果為2個物體");
+            Log.d(TAG, "Limited detection results to 2 objects");
         }
         
         return results;
     }
     
     /**
-     * 使用重試機制進行檢測
+     * Detect using retry mechanism
      */
     private List<DetectionResult> detectWithRetry(Bitmap bitmap) {
         List<DetectionResult> results = new ArrayList<>();
         
         for (int attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
             try {
-                // 優先使用 TensorFlow Lite SSD檢測器（主要檢測器，避免網絡問題）
+                // Priority: use TensorFlow Lite SSD detector (primary detector, avoids network issues)
                 if (objectDetector != null) {
                     results = detectWithSSD(bitmap);
                     if (!results.isEmpty()) {
-                        Log.d(TAG, String.format("SSD檢測成功 (嘗試 %d/%d): %d 個物體", 
+                        Log.d(TAG, String.format("SSD detection successful (attempt %d/%d): %d objects", 
                             attempt + 1, MAX_RETRY_ATTEMPTS, results.size()));
                         break;
                     }
                 }
                 
-                // 可選：ML Kit 檢測器（如果網絡可用，可以啟用）
+                // Optional: ML Kit detector (can be enabled if network is available)
                 // if (useMLKit && mlKitDetector != null && mlKitDetector.isInitialized()) {
                 //     results = detectWithMLKit(bitmap);
                 //     if (!results.isEmpty()) {
-                //         Log.d(TAG, String.format("ML Kit檢測成功 (嘗試 %d/%d): %d 個物體", 
+                //         Log.d(TAG, String.format("ML Kit detection successful (attempt %d/%d): %d objects", 
                 //             attempt + 1, MAX_RETRY_ATTEMPTS, results.size()));
                 //         break;
                 //     }
                 // }
                 
-                // SSD失敗時才嘗試YOLO（作為備用）
+                // Only try YOLO when SSD fails (as backup)
                 if (useYolo && yoloDetector != null && results.isEmpty()) {
                     results = detectWithYolo(bitmap);
                     if (!results.isEmpty()) {
-                        Log.d(TAG, String.format("YOLO檢測成功 (嘗試 %d/%d): %d 個物體", 
+                        Log.d(TAG, String.format("YOLO detection successful (attempt %d/%d): %d objects", 
                             attempt + 1, MAX_RETRY_ATTEMPTS, results.size()));
                         break;
                     }
                 }
                 
-                // 如果檢測失敗，等待後重試
+                // If detection fails, wait before retrying
                 if (attempt < MAX_RETRY_ATTEMPTS - 1) {
                     try {
                         Thread.sleep(RETRY_DELAY_MS);
                     } catch (InterruptedException ie) {
-                        Log.w(TAG, "重試延遲被中斷");
+                        Log.w(TAG, "Retry delay interrupted");
                         Thread.currentThread().interrupt();
                         break;
                     }
                 }
                 
             } catch (Exception e) {
-                Log.e(TAG, String.format("檢測嘗試 %d/%d 失敗: %s", 
+                Log.e(TAG, String.format("Detection attempt %d/%d failed: %s", 
                     attempt + 1, MAX_RETRY_ATTEMPTS, e.getMessage()));
                 if (attempt == MAX_RETRY_ATTEMPTS - 1) {
                     throw e;
@@ -447,35 +447,35 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 應用後處理
+     * Apply post-processing
      */
     private List<DetectionResult> applyPostProcessing(List<DetectionResult> results) {
-        // 過濾環境相關物體
+        // Filter environment relevant objects
         results = filterEnvironmentRelevantObjects(results);
         
-        // 應用非極大值抑制
+        // Apply non-maximum suppression
         results = applyNMS(results);
         
-        // 應用多幀融合穩定性過濾（提高準確率）
+        // Apply multi-frame fusion stability filtering (improves accuracy)
         results = applyStabilityFilter(results);
         
-        // 智能排序：先按優先級排序，再按置信度排序
-        // 這樣可以確保安全相關物體（人、車）優先播報
+        // Intelligent sorting: first by priority, then by confidence
+        // This ensures safety-related objects (person, vehicle) are announced first
         Collections.sort(results, (a, b) -> {
             ObjectPriority priorityA = getObjectPriority(a.getLabel());
             ObjectPriority priorityB = getObjectPriority(b.getLabel());
             
-            // 先比較優先級（數值越小優先級越高）
+            // First compare priority (smaller value = higher priority)
             int priorityCompare = Integer.compare(priorityA.getValue(), priorityB.getValue());
             if (priorityCompare != 0) {
                 return priorityCompare;
             }
             
-            // 優先級相同時，按置信度排序（置信度高的在前）
+            // When priority is the same, sort by confidence (higher confidence first)
             return Float.compare(b.getConfidence(), a.getConfidence());
         });
         
-        // 限制結果數量
+        // Limit result count
         if (results.size() > AppConstants.MAX_RESULTS) {
             results = results.subList(0, AppConstants.MAX_RESULTS);
         }
@@ -484,12 +484,12 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 應用多幀融合穩定性過濾 - 只保留在連續多幀中穩定出現的檢測結果
-     * 這可以顯著提高準確率，減少誤報和閃爍
+     * Apply multi-frame fusion stability filtering - only keep detection results that appear stably in consecutive frames
+     * This can significantly improve accuracy and reduce false positives and flickering
      */
     private List<DetectionResult> applyStabilityFilter(List<DetectionResult> results) {
         if (results.isEmpty()) {
-            // 如果當前幀沒有檢測結果，減少所有物體的穩定性計數
+            // If current frame has no detection results, decrease stability count for all objects
             List<String> toRemove = new ArrayList<>();
             for (Map.Entry<String, Integer> entry : detectionStability.entrySet()) {
                 int count = entry.getValue() - 1;
@@ -507,25 +507,25 @@ public class ObjectDetectorHelper {
             return new ArrayList<>();
         }
         
-        // 更新當前幀檢測到的物體
+        // Update objects detected in current frame
         Set<String> currentDetections = new HashSet<>();
         for (DetectionResult result : results) {
             String key = result.getLabel() + "_" + result.getLabelZh();
             currentDetections.add(key);
             
-            // 更新穩定性計數
+            // Update stability count
             int stabilityCount = detectionStability.getOrDefault(key, 0) + 1;
             detectionStability.put(key, Math.min(stabilityCount, STABILITY_FRAME_COUNT));
             
-            // 累加置信度（用於計算平均置信度）
+            // Accumulate confidence (for calculating average confidence)
             float currentSum = detectionConfidenceSum.getOrDefault(key, 0f);
             detectionConfidenceSum.put(key, currentSum + result.getConfidence());
             
-            // 更新邊界框（使用最新的）
+            // Update bounding box (use latest)
             detectionBoundingBox.put(key, result.getBoundingBox());
         }
         
-        // 減少未檢測到的物體的穩定性計數
+        // Decrease stability count for undetected objects
         List<String> toRemove = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : detectionStability.entrySet()) {
             String key = entry.getKey();
@@ -544,15 +544,15 @@ public class ObjectDetectorHelper {
             detectionBoundingBox.remove(key);
         }
         
-        // 只返回穩定性達到閾值的檢測結果
+        // Only return detection results that reach stability threshold
         List<DetectionResult> stableResults = new ArrayList<>();
         for (DetectionResult result : results) {
             String key = result.getLabel() + "_" + result.getLabelZh();
             int stability = detectionStability.getOrDefault(key, 0);
             
-            // 只有連續檢測到足夠次數的物體才被認為是穩定的
+            // Only objects detected consecutively enough times are considered stable
             if (stability >= STABILITY_FRAME_COUNT) {
-                // 使用平均置信度（更穩定）
+                // Use average confidence (more stable)
                 float avgConfidence = detectionConfidenceSum.getOrDefault(key, 0f) / stability;
                 android.graphics.RectF bbox = detectionBoundingBox.getOrDefault(key, result.getBoundingBox());
                 
@@ -563,21 +563,21 @@ public class ObjectDetectorHelper {
                     bbox
                 ));
                 
-                Log.d(TAG, String.format("穩定檢測: %s (穩定性: %d/%d, 平均置信度: %.2f)", 
+                Log.d(TAG, String.format("Stable detection: %s (stability: %d/%d, avg confidence: %.2f)", 
                     result.getLabelZh(), stability, STABILITY_FRAME_COUNT, avgConfidence));
             } else {
-                Log.d(TAG, String.format("不穩定檢測（跳過）: %s (穩定性: %d/%d)", 
+                Log.d(TAG, String.format("Unstable detection (skipped): %s (stability: %d/%d)", 
                     result.getLabelZh(), stability, STABILITY_FRAME_COUNT));
             }
         }
         
-        Log.d(TAG, String.format("穩定性過濾: %d -> %d", results.size(), stableResults.size()));
+        Log.d(TAG, String.format("Stability filter: %d -> %d", results.size(), stableResults.size()));
         return stableResults;
     }
     
     /**
-     * 過濾檢測結果（白名單 + 黑名單 + 基本驗證）
-     * 只保留對視障人士有用的常見物體，排除不常見或不相關的物體（如長頸鹿、斑馬等）
+     * Filter detection results (whitelist + blacklist + basic validation)
+     * Only keep common objects useful for visually impaired users, exclude uncommon or irrelevant objects (e.g., giraffe, zebra)
      */
     private List<DetectionResult> filterEnvironmentRelevantObjects(List<DetectionResult> results) {
         List<DetectionResult> filtered = new ArrayList<>();
@@ -585,44 +585,44 @@ public class ObjectDetectorHelper {
         for (DetectionResult result : results) {
             String label = result.getLabel().toLowerCase();
             
-            // 1. 檢查黑名單（優先排除不常見物體）
+            // 1. Check blacklist (prioritize excluding uncommon objects)
             if (EXCLUDED_OBJECTS.contains(label)) {
-                Log.d(TAG, "黑名單過濾: " + result.getLabelZh() + " (不常見物體)");
+                Log.d(TAG, "Blacklist filter: " + result.getLabelZh() + " (uncommon object)");
                 continue;
             }
             
-            // 2. 檢查邊界框合理性（過濾異常檢測）
+            // 2. Check bounding box validity (filter abnormal detections)
             if (!isValidBoundingBox(result.getBoundingBox())) {
-                Log.d(TAG, "過濾無效邊界框: " + result.getLabelZh());
+                Log.d(TAG, "Filter invalid bounding box: " + result.getLabelZh());
                 continue;
             }
 
-            // 3. 檢查置信度閾值
+            // 3. Check confidence threshold
             if (result.getConfidence() < AppConstants.SCORE_THRESHOLD) {
-                Log.d(TAG, "過濾低置信度物體: " + result.getLabelZh() + " (置信度: " + result.getConfidence() + ")");
+                Log.d(TAG, "Filter low confidence object: " + result.getLabelZh() + " (confidence: " + result.getConfidence() + ")");
                 continue;
             }
             
-            // 4. 白名單檢查：只保留環境識別相關的常見物體
+            // 4. Whitelist check: only keep environment recognition relevant common objects
             if (!ENVIRONMENT_RELEVANT_OBJECTS.contains(label)) {
-                Log.d(TAG, "白名單過濾: " + result.getLabelZh() + " (不在常見物體列表中)");
+                Log.d(TAG, "Whitelist filter: " + result.getLabelZh() + " (not in common objects list)");
                 continue;
             }
 
-            // 通過所有檢查，保留此物體
+            // Passed all checks, keep this object
             filtered.add(result);
-            Log.d(TAG, "保留物體: " + result.getLabelZh() + " (置信度: " + String.format("%.2f", result.getConfidence()) + ")");
+            Log.d(TAG, "Keep object: " + result.getLabelZh() + " (confidence: " + String.format("%.2f", result.getConfidence()) + ")");
         }
 
-        // 按置信度排序，優先顯示高置信度結果
+        // Sort by confidence, prioritize showing high confidence results
         filtered.sort((a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
 
-        Log.d(TAG, String.format("物體過濾: %d -> %d (白名單+黑名單過濾)", results.size(), filtered.size()));
+        Log.d(TAG, String.format("Object filter: %d -> %d (whitelist+blacklist filter)", results.size(), filtered.size()));
         return filtered;
     }
     
     /**
-     * 檢查邊界框是否合理 - 過濾異常檢測，提高準確率
+     * Check if bounding box is reasonable - filter abnormal detections, improve accuracy
      */
     private boolean isValidBoundingBox(android.graphics.RectF bbox) {
         if (bbox == null) {
@@ -632,27 +632,27 @@ public class ObjectDetectorHelper {
         float width = bbox.right - bbox.left;
         float height = bbox.bottom - bbox.top;
         
-        // 檢查邊界框尺寸是否合理（不能太小或太大）
+        // Check if bounding box size is reasonable (cannot be too small or too large)
         if (width <= 0 || height <= 0) {
             return false;
         }
         
-        // 檢查邊界框是否在有效範圍內（0-1）
+        // Check if bounding box is within valid range (0-1)
         if (bbox.left < 0 || bbox.top < 0 || bbox.right > 1.0f || bbox.bottom > 1.0f) {
             return false;
         }
         
-        // 檢查邊界框面積是否合理（不能太小，避免噪聲檢測）
-        // 降低最小面積要求，讓小型物體（如瓶子）更容易被檢測到
+        // Check if bounding box area is reasonable (cannot be too small, avoid noise detection)
+        // Lower minimum area requirement to make small objects (e.g., bottles) easier to detect
         float area = width * height;
-        if (area < 0.0005f) {  // 面積小於0.05%的檢測視為噪聲（降低閾值以提高檢測率）
+        if (area < 0.0005f) {  // Detections with area less than 0.05% are considered noise (lower threshold to improve detection rate)
             return false;
         }
         
-        // 檢查寬高比是否合理（避免極端比例）
-        // 放寬寬高比限制，讓細長物體（如瓶子）更容易被檢測到
+        // Check if aspect ratio is reasonable (avoid extreme ratios)
+        // Relax aspect ratio limits to make elongated objects (e.g., bottles) easier to detect
         float aspectRatio = width / height;
-        if (aspectRatio < 0.05f || aspectRatio > 20.0f) {  // 放寬限制（從0.1-10改為0.05-20）
+        if (aspectRatio < 0.05f || aspectRatio > 20.0f) {  // Relaxed limits (changed from 0.1-10 to 0.05-20)
             return false;
         }
         
@@ -660,35 +660,35 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 獲取上次成功的檢測結果
+     * Get last successful detection results
      */
     private List<DetectionResult> getLastSuccessfulResults() {
         if (lastSuccessfulResults.isEmpty()) {
-            Log.d(TAG, "沒有可用的歷史檢測結果");
+            Log.d(TAG, "No available historical detection results");
             return new ArrayList<>();
         }
         
-        // 檢查歷史結果是否過期
-        if (System.currentTimeMillis() - lastSuccessfulDetection > 10000) { // 10秒過期
-            Log.d(TAG, "歷史檢測結果已過期");
+        // Check if historical results are expired
+        if (System.currentTimeMillis() - lastSuccessfulDetection > 10000) { // Expires after 10 seconds
+            Log.d(TAG, "Historical detection results expired");
             return new ArrayList<>();
         }
         
-        Log.d(TAG, "返回歷史檢測結果: " + lastSuccessfulResults.size() + " 個物體");
+        Log.d(TAG, "Return historical detection results: " + lastSuccessfulResults.size() + " objects");
         return new ArrayList<>(lastSuccessfulResults);
     }
     
     /**
-     * 重置檢測器狀態
+     * Reset detector state
      */
     private void resetDetectorState() {
         consecutiveFailures = 0;
-        useYolo = true; // 重新啟用YOLO
-        Log.d(TAG, "檢測器狀態已重置");
+        useYolo = true; // Re-enable YOLO
+        Log.d(TAG, "Detector state reset");
     }
     
     /**
-     * 使用 ML Kit 檢測器檢測（優先使用）
+     * Detect using ML Kit detector (priority use)
      */
     private List<DetectionResult> detectWithMLKit(Bitmap bitmap) {
         if (mlKitDetector == null || !mlKitDetector.isInitialized()) {
@@ -698,13 +698,13 @@ public class ObjectDetectorHelper {
         try {
             return mlKitDetector.detect(bitmap);
         } catch (Exception e) {
-            Log.e(TAG, "ML Kit檢測失敗: " + e.getMessage());
+            Log.e(TAG, "ML Kit detection failed: " + e.getMessage());
             return new ArrayList<>();
         }
     }
     
     /**
-     * 使用SSD檢測器檢測
+     * Detect using SSD detector
      */
     private List<DetectionResult> detectWithSSD(Bitmap bitmap) {
         List<DetectionResult> results = new ArrayList<>();
@@ -740,7 +740,7 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 使用YOLO檢測器檢測
+     * Detect using YOLO detector
      */
     private List<DetectionResult> detectWithYolo(Bitmap bitmap) {
         List<DetectionResult> results = new ArrayList<>();
@@ -757,19 +757,19 @@ public class ObjectDetectorHelper {
                         labelZh = yoloResult.getLabel();
                     }
                     
-                    // 檢查邊界框是否為null
+                    // Check if bounding box is null
                     android.graphics.Rect rect = yoloResult.getBoundingBox();
                     if (rect != null && imageWidth > 0 && imageHeight > 0) {
-                        // YOLO返回的是像素座標，需要標準化為0-1範圍
-                        // 轉換為標準化的RectF（0.0-1.0）
+                        // YOLO returns pixel coordinates, need to normalize to 0-1 range
+                        // Convert to normalized RectF (0.0-1.0)
                         android.graphics.RectF rectF = new android.graphics.RectF(
-                                (float)rect.left / imageWidth,      // 標準化left
-                                (float)rect.top / imageHeight,      // 標準化top
-                                (float)rect.right / imageWidth,     // 標準化right
-                                (float)rect.bottom / imageHeight    // 標準化bottom
+                                (float)rect.left / imageWidth,      // Normalized left
+                                (float)rect.top / imageHeight,      // Normalized top
+                                (float)rect.right / imageWidth,     // Normalized right
+                                (float)rect.bottom / imageHeight    // Normalized bottom
                         );
                         
-                        // 確保座標在有效範圍內 (0-1)
+                        // Ensure coordinates are within valid range (0-1)
                         rectF.left = Math.max(0.0f, Math.min(1.0f, rectF.left));
                         rectF.top = Math.max(0.0f, Math.min(1.0f, rectF.top));
                         rectF.right = Math.max(rectF.left + 0.01f, Math.min(1.0f, rectF.right));
@@ -782,8 +782,8 @@ public class ObjectDetectorHelper {
                                 rectF
                         ));
                     } else {
-                        // 如果邊界框為null，創建一個默認邊界框
-                        Log.w(TAG, "YOLO檢測結果邊界框為null或圖像尺寸無效，使用默認邊界框");
+                        // If bounding box is null, create a default bounding box
+                        Log.w(TAG, "YOLO detection result bounding box is null or image size invalid, using default bounding box");
                         android.graphics.RectF defaultRect = new android.graphics.RectF(0.1f, 0.1f, 0.9f, 0.9f);
                         results.add(new DetectionResult(
                                 yoloResult.getLabel(),
@@ -795,9 +795,9 @@ public class ObjectDetectorHelper {
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "YOLO檢測失敗: " + e.getMessage());
-            // YOLO失敗時，嘗試使用SSD檢測器
-            Log.d(TAG, "YOLO檢測失敗，嘗試使用SSD檢測器");
+            Log.e(TAG, "YOLO detection failed: " + e.getMessage());
+            // When YOLO fails, try using SSD detector
+            Log.d(TAG, "YOLO detection failed, trying SSD detector");
             if (objectDetector != null) {
                 results = detectWithSSD(bitmap);
             }
@@ -807,7 +807,7 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 應用非極大值抑制 (NMS) 去除重複檢測
+     * Apply non-maximum suppression (NMS) to remove duplicate detections
      */
     private List<DetectionResult> applyNMS(List<DetectionResult> detections) {
         if (detections.size() <= 1) {
@@ -823,16 +823,16 @@ public class ObjectDetectorHelper {
             DetectionResult current = detections.get(i);
             filtered.add(current);
             
-            // 抑制與當前檢測重疊度高的其他檢測
+            // Suppress other detections with high overlap with current detection
             for (int j = i + 1; j < detections.size(); j++) {
                 if (suppressed[j]) continue;
                 
                 DetectionResult other = detections.get(j);
                 
-                // 計算IoU (Intersection over Union)
+                // Calculate IoU (Intersection over Union)
                 float iou = calculateIoU(current.getBoundingBox(), other.getBoundingBox());
                 
-                // 如果IoU超過閾值且是同類物體，抑制置信度較低的檢測
+                // If IoU exceeds threshold and is same class object, suppress detection with lower confidence
                 if (iou > AppConstants.NMS_THRESHOLD && current.getLabel().equals(other.getLabel())) {
                     if (other.getConfidence() < current.getConfidence()) {
                         suppressed[j] = true;
@@ -845,7 +845,7 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 計算兩個邊界框的IoU
+     * Calculate IoU of two bounding boxes
      */
     private float calculateIoU(android.graphics.RectF box1, android.graphics.RectF box2) {
         float x1 = Math.max(box1.left, box2.left);
@@ -866,8 +866,8 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 格式化檢測結果為語音文本 - 專為視障人士優化（包含位置描述）
-     * 播報物體名稱和位置信息（左/右/中央）
+     * Format detection results as speech text - optimized for visually impaired users (includes position description)
+     * Announce object name and position information (left/right/center)
      */
     public String formatResultsForSpeech(List<DetectionResult> results) {
         if (results.isEmpty()) {
@@ -877,43 +877,43 @@ public class ObjectDetectorHelper {
         StringBuilder sb = new StringBuilder();
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
         
-        Log.d(TAG, "🔊 開始格式化語音文本，當前語言: " + currentLang + ", 物體數量: " + results.size());
+        Log.d(TAG, "🔊 Start formatting speech text, current language: " + currentLang + ", object count: " + results.size());
         
-        // 簡潔的物體描述，最多2個物體
+        // Concise object description, maximum 2 objects
         int maxObjects = Math.min(results.size(), 2);
         
-        Log.d(TAG, "🔊 將播報 " + maxObjects + " 個物體");
+        Log.d(TAG, "🔊 Will announce " + maxObjects + " objects");
         
         for (int i = 0; i < maxObjects; i++) {
             DetectionResult result = results.get(i);
             
-            // 獲取物體名稱 - 根據當前語言選擇對應的標籤
+            // Get object name - select corresponding label based on current language
             String objectLabel = getObjectLabelForCurrentLanguage(result);
-            Log.d(TAG, "🔊 物體 " + (i + 1) + " 原始標籤 - 英文: [" + result.getLabel() + "], 中文: [" + result.getLabelZh() + "]");
-            Log.d(TAG, "🔊 物體 " + (i + 1) + " 當前語言標籤: [" + objectLabel + "]");
+            Log.d(TAG, "🔊 Object " + (i + 1) + " original label - English: [" + result.getLabel() + "], Chinese: [" + result.getLabelZh() + "]");
+            Log.d(TAG, "🔊 Object " + (i + 1) + " current language label: [" + objectLabel + "]");
             
             if (objectLabel == null || objectLabel.trim().isEmpty()) {
-                Log.w(TAG, "⚠️ 物體 " + (i + 1) + " 標籤為空，跳過");
+                Log.w(TAG, "⚠️ Object " + (i + 1) + " label is empty, skipping");
                 continue;
             }
             
             sb.append(objectLabel);
             
-            // 添加位置描述（左/右/中央）
+            // Add position description (left/right/center)
             android.graphics.RectF bbox = result.getBoundingBox();
             if (bbox != null) {
                 String positionDesc = getPositionDescription(bbox);
                 if (positionDesc != null && !positionDesc.isEmpty()) {
                     sb.append(positionDesc);
-                    Log.d(TAG, "🔊 物體 " + (i + 1) + " 添加位置描述: [" + positionDesc + "]");
+                    Log.d(TAG, "🔊 Object " + (i + 1) + " added position description: [" + positionDesc + "]");
                 } else {
-                    Log.w(TAG, "⚠️ 物體 " + (i + 1) + " 位置描述為空或null");
+                    Log.w(TAG, "⚠️ Object " + (i + 1) + " position description is empty or null");
                 }
             } else {
-                Log.w(TAG, "⚠️ 物體 " + (i + 1) + " 邊界框為null，無法添加位置描述");
+                Log.w(TAG, "⚠️ Object " + (i + 1) + " bounding box is null, cannot add position description");
             }
             
-            // 分隔符
+            // Separator
             if (i < maxObjects - 1) {
                 if (currentLang.equals("english")) {
                     sb.append(", ");
@@ -923,7 +923,7 @@ public class ObjectDetectorHelper {
             }
         }
         
-        // 如果物體超過2個，添加總數
+        // If objects exceed 2, add total count
         if (results.size() > 2) {
             if (currentLang.equals("english")) {
                 sb.append(" and ").append(results.size()).append(" more objects");
@@ -933,17 +933,17 @@ public class ObjectDetectorHelper {
         }
         
         String finalText = sb.toString().trim();
-        Log.d(TAG, "🔊 最終語音文本: [" + finalText + "]");
+        Log.d(TAG, "🔊 Final speech text: [" + finalText + "]");
         
         if (finalText.isEmpty()) {
-            Log.e(TAG, "❌ 最終語音文本為空！");
+            Log.e(TAG, "❌ Final speech text is empty!");
         }
         
         return finalText;
     }
     
     /**
-     * 獲取未檢測到物體的文本
+     * Get text when no objects detected
      */
     private String getNoObjectsDetectedText() {
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
@@ -959,7 +959,7 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 獲取檢測到物體數量的文本
+     * Get text for detected object count
      */
     private String getDetectedObjectsCountText(int count) {
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
@@ -975,7 +975,7 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 獲取物體序號文本
+     * Get object number text
      */
     private String getObjectNumberText(int number) {
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
@@ -991,7 +991,7 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 獲取置信度描述
+     * Get confidence description
      */
     private String getConfidenceDescription(float confidence) {
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
@@ -1010,65 +1010,65 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 根據當前語言獲取物體標籤
+     * Get object label based on current language
      */
     private String getObjectLabelForCurrentLanguage(DetectionResult result) {
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
         
-        Log.d(TAG, "🔊 getObjectLabelForCurrentLanguage - 當前語言: " + currentLang);
-        Log.d(TAG, "🔊 檢測結果 - 英文標籤: [" + result.getLabel() + "], 中文標籤: [" + result.getLabelZh() + "]");
+        Log.d(TAG, "🔊 getObjectLabelForCurrentLanguage - current language: " + currentLang);
+        Log.d(TAG, "🔊 Detection result - English label: [" + result.getLabel() + "], Chinese label: [" + result.getLabelZh() + "]");
         
         switch (currentLang) {
             case "english":
-                // 英文模式：優先使用英文標籤，如果為空或包含中文字符則從中文標籤映射回英文
+                // English mode: prioritize English label, if empty or contains Chinese characters then map from Chinese label back to English
                 String englishLabel = result.getLabel();
                 
-                // 檢查英文標籤是否包含中文字符（某些檢測器可能返回中文）
+                // Check if English label contains Chinese characters (some detectors may return Chinese)
                 boolean containsChinese = false;
                 if (englishLabel != null && !englishLabel.trim().isEmpty()) {
-                    // 檢查是否包含中文字符
+                    // Check if contains Chinese characters
                     for (char c : englishLabel.toCharArray()) {
-                        if (c >= 0x4E00 && c <= 0x9FFF) { // 中文字符範圍
+                        if (c >= 0x4E00 && c <= 0x9FFF) { // Chinese character range
                             containsChinese = true;
-                            Log.d(TAG, "⚠️ 英文標籤包含中文字符: " + englishLabel);
+                            Log.d(TAG, "⚠️ English label contains Chinese characters: " + englishLabel);
                             break;
                         }
                     }
                 }
                 
-                // 如果英文標籤有效且不包含中文，直接返回
+                // If English label is valid and doesn't contain Chinese, return directly
                 if (englishLabel != null && !englishLabel.trim().isEmpty() && !containsChinese) {
-                    Log.d(TAG, "✅ 使用英文標籤: " + englishLabel);
+                    Log.d(TAG, "✅ Using English label: " + englishLabel);
                     return englishLabel;
                 }
                 
-                // 如果英文標籤為空或包含中文，嘗試從中文標籤映射回英文
+                // If English label is empty or contains Chinese, try mapping from Chinese label back to English
                 String chineseLabel = result.getLabelZh();
                 if (chineseLabel != null && !chineseLabel.trim().isEmpty()) {
-                    Log.d(TAG, "🔍 嘗試從中文標籤映射回英文: " + chineseLabel);
-                    // 從中文映射回英文（反向查找）
+                    Log.d(TAG, "🔍 Attempting to map from Chinese label to English: " + chineseLabel);
+                    // Map from Chinese back to English (reverse lookup)
                     for (Map.Entry<String, String> entry : LABEL_MAP_ZH.entrySet()) {
                         if (entry.getValue().equals(chineseLabel)) {
-                            Log.d(TAG, "✅ 映射成功: " + chineseLabel + " -> " + entry.getKey());
+                            Log.d(TAG, "✅ Mapping successful: " + chineseLabel + " -> " + entry.getKey());
                             return entry.getKey();
                         }
                     }
-                    Log.w(TAG, "⚠️ 無法映射中文標籤到英文: " + chineseLabel);
+                    Log.w(TAG, "⚠️ Cannot map Chinese label to English: " + chineseLabel);
                 }
                 
-                // 如果都找不到，返回默認值
-                Log.w(TAG, "⚠️ 無法獲取英文標籤，返回默認值 'object'");
+                // If all else fails, return default value
+                Log.w(TAG, "⚠️ Cannot get English label, returning default 'object'");
                 return "object";
                 
             case "mandarin":
-                // 普通話模式：優先使用中文標籤
+                // Mandarin mode: prioritize Chinese label
                 return result.getLabelZh() != null && !result.getLabelZh().trim().isEmpty() 
                     ? result.getLabelZh() 
                     : (result.getLabel() != null ? result.getLabel() : "物體");
                     
             case "cantonese":
             default:
-                // 粵語模式：優先使用中文標籤
+                // Cantonese mode: prioritize Chinese label
                 return result.getLabelZh() != null && !result.getLabelZh().trim().isEmpty() 
                     ? result.getLabelZh() 
                     : (result.getLabel() != null ? result.getLabel() : "物體");
@@ -1076,45 +1076,45 @@ public class ObjectDetectorHelper {
     }
     
     /**
-     * 獲取位置描述（簡潔版 - 只描述水平位置：左/右/中央）
-     * 專為視障人士優化，提供清晰的位置指引
+     * Get position description (concise version - only describes horizontal position: left/right/center)
+     * Optimized for visually impaired users, provides clear position guidance
      */
     private String getPositionDescription(android.graphics.RectF boundingBox) {
         if (boundingBox == null) {
-            Log.w(TAG, "邊界框為null，無法獲取位置描述");
+            Log.w(TAG, "Bounding box is null, cannot get position description");
             return "";
         }
         
         String currentLang = LocaleManager.getInstance(context).getCurrentLanguage();
         
-        // 計算物體在畫面中的水平位置（相對於畫面中心）
-        // 邊界框座標是標準化的（0.0-1.0）
+        // Calculate object's horizontal position in frame (relative to frame center)
+        // Bounding box coordinates are normalized (0.0-1.0)
         float centerX = (boundingBox.left + boundingBox.right) / 2.0f;
         
         String horizontalPos;
         
-        // 水平位置分為三區：左側、中央、右側
-        // 使用更精確的閾值，避免邊界模糊
+        // Horizontal position divided into three zones: left, center, right
+        // Use more precise thresholds to avoid boundary blur
         if (centerX < 0.35f) {
-            // 左側（0-35%）
+            // Left side (0-35%)
             horizontalPos = currentLang.equals("english") ? " on the left" : "在左側";
-            Log.d(TAG, String.format("位置描述: 左側 (centerX=%.2f)", centerX));
+            Log.d(TAG, String.format("Position description: left (centerX=%.2f)", centerX));
         } else if (centerX > 0.65f) {
-            // 右側（65-100%）
+            // Right side (65-100%)
             horizontalPos = currentLang.equals("english") ? " on the right" : "在右側";
-            Log.d(TAG, String.format("位置描述: 右側 (centerX=%.2f)", centerX));
+            Log.d(TAG, String.format("Position description: right (centerX=%.2f)", centerX));
         } else {
-            // 中央（35-65%）
+            // Center (35-65%)
             horizontalPos = currentLang.equals("english") ? " in the center" : "在中央";
-            Log.d(TAG, String.format("位置描述: 中央 (centerX=%.2f)", centerX));
+            Log.d(TAG, String.format("Position description: center (centerX=%.2f)", centerX));
         }
         
         return horizontalPos;
     }
     
     /**
-     * 獲取物體優先級 - 用於智能語音播報優先級排序
-     * 安全相關物體（人、車）優先播報，靜態物體（家具）降低播報頻率
+     * Get object priority - used for intelligent voice announcement priority sorting
+     * Safety-related objects (person, vehicle) are announced first, static objects (furniture) have reduced announcement frequency
      */
     public ObjectPriority getObjectPriority(String label) {
         if (label == null) {
@@ -1123,7 +1123,7 @@ public class ObjectDetectorHelper {
         
         String labelLower = label.toLowerCase();
         
-        // CRITICAL 優先級：安全相關物體（人、車輛、障礙物）
+        // CRITICAL priority: safety-related objects (person, vehicles, obstacles)
         if (labelLower.equals("person") || 
             labelLower.equals("car") || 
             labelLower.equals("truck") || 
@@ -1133,7 +1133,7 @@ public class ObjectDetectorHelper {
             return ObjectPriority.CRITICAL;
         }
         
-        // HIGH 優先級：交通標誌、門、樓梯、重要設施
+        // HIGH priority: traffic signs, doors, stairs, important facilities
         if (labelLower.equals("traffic light") || 
             labelLower.equals("stop sign") ||
             labelLower.equals("toilet") ||
@@ -1141,7 +1141,7 @@ public class ObjectDetectorHelper {
             return ObjectPriority.HIGH;
         }
         
-        // MEDIUM 優先級：家具、電子產品、日常用品
+        // MEDIUM priority: furniture, electronic products, daily items
         if (labelLower.equals("chair") || 
             labelLower.equals("table") || 
             labelLower.equals("dining table") ||
@@ -1164,34 +1164,34 @@ public class ObjectDetectorHelper {
             return ObjectPriority.MEDIUM;
         }
         
-        // LOW 優先級：裝飾品、小物件、食物
+        // LOW priority: decorations, small items, food
         return ObjectPriority.LOW;
     }
     
     /**
-     * 獲取檢測器穩定性統計
+     * Get detector stability statistics
      */
     public String getStabilityStats() {
         float successRate = totalDetections > 0 ? (float)successfulDetections / totalDetections * 100 : 0;
         long timeSinceLastSuccess = System.currentTimeMillis() - lastSuccessfulDetection;
         
-        return String.format("檢測統計 - 總檢測: %d, 成功: %d, 成功率: %.1f%%, 連續失敗: %d, 上次成功: %d秒前", 
+        return String.format("Detection stats - Total: %d, Success: %d, Success rate: %.1f%%, Consecutive failures: %d, Last success: %d seconds ago", 
             totalDetections, successfulDetections, successRate, consecutiveFailures, timeSinceLastSuccess / 1000);
     }
     
     /**
-     * 檢查檢測器健康狀態
+     * Check detector health status
      */
     public boolean isHealthy() {
         return consecutiveFailures < MAX_CONSECUTIVE_FAILURES && 
-               (System.currentTimeMillis() - lastSuccessfulDetection) < 30000; // 30秒內有成功檢測
+               (System.currentTimeMillis() - lastSuccessfulDetection) < 30000; // Has successful detection within 30 seconds
     }
     
     /**
-     * 強制重置檢測器
+     * Force reset detector
      */
     public void forceReset() {
-        Log.d(TAG, "強制重置檢測器");
+        Log.d(TAG, "Force reset detector");
         consecutiveFailures = 0;
         useYolo = true;
         lastSuccessfulDetection = 0;
@@ -1201,23 +1201,23 @@ public class ObjectDetectorHelper {
     public void close() {
         if (mlKitDetector != null) {
             mlKitDetector.close();
-            Log.d(TAG, "ML Kit檢測器已關閉");
+            Log.d(TAG, "ML Kit detector closed");
         }
         if (objectDetector != null) {
             objectDetector.close();
-            Log.d(TAG, "SSD物體檢測器已關閉");
+            Log.d(TAG, "SSD object detector closed");
         }
         if (yoloDetector != null) {
             yoloDetector.close();
-            Log.d(TAG, "YOLO檢測器已關閉");
+            Log.d(TAG, "YOLO detector closed");
         }
         
-        // 輸出最終統計
+        // Output final statistics
         Log.d(TAG, getStabilityStats());
     }
     
     /**
-     * 檢測結果類
+     * Detection result class
      */
     public static class DetectionResult {
         private String label;
