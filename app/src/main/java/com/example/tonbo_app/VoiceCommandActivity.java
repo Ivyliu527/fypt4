@@ -66,10 +66,12 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             String cantoneseText = "語音助手頁面。你可以同我聊天，或者說出指令控制應用，例如：打開環境識別、讀文件、緊急求助等。" +
                     "你可以說「查看聊天記錄」來回顧之前的對話，說「上一句」或「下一句」來瀏覽記錄。" +
-                    "點擊中間的按鈕開始對話。長按按鈕可以切換到連續對話模式，無需每次點擊即可持續對話。";
+                    "點擊中間的按鈕開始對話。長按按鈕可以切換到連續對話模式，無需每次點擊即可持續對話。" +
+                    "在連續對話模式下，說「停止對話」或「退出」可以退出連續對話模式，或點擊按鈕退出。";
             String englishText = "Voice Assistant page. You can chat with me or speak commands to control the app, such as: open environment, read document, emergency help. " +
                     "You can say 'view chat history' to review previous conversations, say 'previous message' or 'next message' to navigate. " +
-                    "Tap the center button to start conversation. Long press the button to switch to continuous conversation mode for hands-free continuous dialogue.";
+                    "Tap the center button to start conversation. Long press the button to switch to continuous conversation mode for hands-free continuous dialogue. " +
+                    "In continuous mode, say 'stop conversation' or 'exit' to exit, or tap the button to exit.";
             ttsManager.speak(cantoneseText, englishText, true);
         }, 500);
     }
@@ -85,7 +87,12 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         // 設置監聽按鈕
         listenButton.setOnClickListener(v -> {
             vibrationManager.vibrateClick();
-            toggleListening();
+            // If in continuous conversation mode, clicking button will exit it
+            if (useStreamingMode && isListening) {
+                exitContinuousMode();
+            } else {
+                toggleListening();
+            }
         });
         
         // 長按切換連續對話模式
@@ -419,6 +426,50 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                     }
                 });
             }
+            
+            @Override
+            public void onSleepModeChanged(boolean isSleeping) {
+                runOnUiThread(() -> {
+                    // Update UI to show sleep mode status
+                    if (isSleeping) {
+                        String sleepText = "english".equals(currentLanguage) ? 
+                            "Sleep mode: Say 'start conversation' to wake up" :
+                            ("mandarin".equals(currentLanguage) ? "睡眠模式：说'开始对话'可以唤醒" : "睡眠模式：說'開始對話'可以喚醒");
+                        statusText.setText(sleepText);
+                    } else {
+                        statusText.setText(getLocalizedString("listening_active"));
+                    }
+                });
+            }
+            
+            @Override
+            public void onWakeUpDetected() {
+                runOnUiThread(() -> {
+                    // Wake-up detected - update UI
+                    String wakeText = "english".equals(currentLanguage) ? 
+                        "Wake up detected, conversation resumed" :
+                        ("mandarin".equals(currentLanguage) ? "检测到唤醒，对话已恢复" : "檢測到喚醒，對話已恢復");
+                    statusText.setText(wakeText);
+                    vibrationManager.vibrateSuccess();
+                });
+            }
+            
+            @Override
+            public void onStopRequested() {
+                runOnUiThread(() -> {
+                    // Stop requested - exit continuous conversation mode
+                    useStreamingMode = false;
+                    isListening = false;
+                    updateUI(false);
+                    
+                    String stopText = "english".equals(currentLanguage) ? 
+                        "Continuous conversation mode exited" :
+                        ("mandarin".equals(currentLanguage) ? "已退出连续对话模式" : "已退出連續對話模式");
+                    statusText.setText(stopText);
+                    announceInfo(stopText);
+                    vibrationManager.vibrateNotification();
+                });
+            }
         });
     }
     
@@ -497,6 +548,34 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         if (streamingAI != null) {
             streamingAI.stopConversation();
         }
+    }
+    
+    /**
+     * 退出連續對話模式（點擊按鈕或語音命令）
+     */
+    private void exitContinuousMode() {
+        if (!useStreamingMode) {
+            return;
+        }
+        
+        // Stop streaming conversation
+        stopStreamingConversation();
+        
+        // Update state
+        useStreamingMode = false;
+        isListening = false;
+        updateUI(false);
+        
+        // Announce exit
+        String exitText = "english".equals(currentLanguage) ? 
+            "Exited continuous conversation mode. Tap button to start normal mode." :
+            ("mandarin".equals(currentLanguage) ? "已退出连续对话模式。点击按钮开始普通模式。" : "已退出連續對話模式。點擊按鈕開始普通模式。");
+        statusText.setText(exitText);
+        announceInfo(exitText);
+        vibrationManager.vibrateNotification();
+        
+        // Update hint
+        updateModeHint();
     }
     
     /**

@@ -13,42 +13,91 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 流式語音AI對話系統
- * 支持連續對話、實時識別、即時響應
+ * Enhanced streaming voice AI conversation system for visually impaired users
+ * Supports continuous conversation, intelligent sleep mode, voice wake-up, and context management
  */
 public class StreamingVoiceAI {
     private static final String TAG = "StreamingVoiceAI";
+    
+    // Sleep mode configuration (for visually impaired users - longer timeout)
+    private static final long IDLE_SLEEP_TIMEOUT_MS = 30000; // 30 seconds of silence before sleep
+    private static final long WAKE_UP_CHECK_INTERVAL_MS = 5000; // Check for wake-up every 5 seconds when sleeping
+    private static final int MAX_RETRY_ATTEMPTS = 3; // Maximum retry attempts for errors
+    private static final long RETRY_DELAY_MS = 1000; // Delay before retry
     
     private Context context;
     private SpeechRecognizer speechRecognizer;
     private Intent recognizerIntent;
     private VoiceAIAssistant aiAssistant;
+    private ConversationManager conversationManager; // Use ConversationManager for better context
+    private ConversationResponseGenerator responseGenerator; // Use LLM-powered response generator
     private TTSManager ttsManager;
     private VibrationManager vibrationManager;
     
     private Handler mainHandler;
+    private Handler sleepHandler; // Handler for sleep mode
+    private Handler wakeUpHandler; // Handler for wake-up detection
+    
     private boolean isListening = false;
     private boolean isProcessing = false;
+    private boolean isSleeping = false; // Sleep mode state
     private String currentLanguage = "cantonese";
     
-    // 對話歷史
-    private List<String> conversationHistory = new ArrayList<>();
+    // Sleep mode tracking
+    private long lastActivityTime = 0;
+    private Runnable sleepRunnable;
+    private Runnable wakeUpCheckRunnable;
     
-    // 回調接口
+    // Error recovery
+    private int consecutiveErrors = 0;
+    private int retryAttempts = 0;
+    
+    // Callback interface
     public interface StreamingAICallback {
         void onPartialText(String partialText);
         void onFinalText(String finalText);
         void onAIResponse(String response);
         void onError(String error);
         void onListeningStateChanged(boolean isListening);
+        void onSleepModeChanged(boolean isSleeping); // New: sleep mode state change
+        void onWakeUpDetected(); // New: wake-up detected
+        void onStopRequested(); // New: stop requested by user
     }
     
     private StreamingAICallback callback;
     
+    // Wake-up commands (can be spoken to wake up from sleep mode)
+    private static final String[] WAKE_UP_COMMANDS_CANTONESE = {
+        "開始對話", "開始說話", "喚醒", "繼續對話", "開始", "你好"
+    };
+    private static final String[] WAKE_UP_COMMANDS_MANDARIN = {
+        "开始对话", "开始说话", "唤醒", "继续对话", "开始", "你好"
+    };
+    private static final String[] WAKE_UP_COMMANDS_ENGLISH = {
+        "start conversation", "wake up", "continue", "hello", "hey", "start"
+    };
+    
+    // Stop/exit commands (can be spoken to stop continuous conversation mode)
+    private static final String[] STOP_COMMANDS_CANTONESE = {
+        "停止對話", "停止說話", "退出連續對話", "結束對話", "停止", "取消", "退出", "關閉"
+    };
+    private static final String[] STOP_COMMANDS_MANDARIN = {
+        "停止对话", "停止说话", "退出连续对话", "结束对话", "停止", "取消", "退出", "关闭"
+    };
+    private static final String[] STOP_COMMANDS_ENGLISH = {
+        "stop conversation", "stop talking", "exit continuous mode", "end conversation", 
+        "stop", "cancel", "exit", "close", "quit"
+    };
+    
     public StreamingVoiceAI(Context context) {
         this.context = context;
         this.mainHandler = new Handler(Looper.getMainLooper());
+        this.sleepHandler = new Handler(Looper.getMainLooper());
+        this.wakeUpHandler = new Handler(Looper.getMainLooper());
         this.aiAssistant = new VoiceAIAssistant(context);
+        this.conversationManager = new ConversationManager();
+        this.responseGenerator = new ConversationResponseGenerator(context);
+        this.responseGenerator.setConversationManager(conversationManager);
         this.ttsManager = TTSManager.getInstance(context);
         this.vibrationManager = VibrationManager.getInstance(context);
         
@@ -81,18 +130,21 @@ public class StreamingVoiceAI {
     }
     
     /**
-     * 設置語言
+     * Set language
      */
     public void setLanguage(String language) {
         this.currentLanguage = language;
         if (aiAssistant != null) {
             aiAssistant.setLanguage(language);
         }
+        if (responseGenerator != null) {
+            responseGenerator.setLanguage(language);
+        }
         if (ttsManager != null) {
             ttsManager.changeLanguage(language);
         }
         
-        // 更新識別語言
+        // Update recognition language
         if (recognizerIntent != null) {
             String locale = getLocaleForLanguage(language);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale);
@@ -116,11 +168,11 @@ public class StreamingVoiceAI {
     }
     
     /**
-     * 開始連續對話
+     * Start continuous conversation (enhanced for visually impaired users)
      */
     public void startContinuousConversation() {
-        if (isListening) {
-            Log.w(TAG, "已經在對話中");
+        if (isListening && !isSleeping) {
+            Log.w(TAG, "Already in conversation");
             return;
         }
         
@@ -129,29 +181,58 @@ public class StreamingVoiceAI {
         }
         
         if (speechRecognizer == null) {
+            String errorMsg = getLocalizedError("speech_recognition_unavailable");
             if (callback != null) {
-                callback.onError("語音識別不可用");
+                callback.onError(errorMsg);
             }
+            announceError(errorMsg);
+            return;
+        }
+        
+        // Wake up from sleep mode if sleeping
+        if (isSleeping) {
+            wakeUpFromSleep();
             return;
         }
         
         isListening = true;
         isProcessing = false;
+        isSleeping = false;
+        consecutiveErrors = 0;
+        retryAttempts = 0;
+        lastActivityTime = System.currentTimeMillis();
+        
+        // Cancel any pending sleep
+        cancelSleepMode();
+        
+        // Announce start (for visually impaired users)
+        announceConversationStart();
         
         // 設置識別監聽器
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override
             public void onReadyForSpeech(Bundle params) {
-                Log.d(TAG, "準備接收語音");
+                Log.d(TAG, "Ready to receive speech");
+                lastActivityTime = System.currentTimeMillis();
+                cancelSleepMode(); // Cancel sleep when ready
+                
                 if (callback != null) {
                     callback.onListeningStateChanged(true);
                 }
+                
+                // Subtle vibration feedback for visually impaired users
+                vibrationManager.vibrateClick();
             }
             
             @Override
             public void onBeginningOfSpeech() {
-                Log.d(TAG, "開始說話");
+                Log.d(TAG, "Speech beginning detected");
                 isProcessing = true;
+                lastActivityTime = System.currentTimeMillis();
+                cancelSleepMode(); // Cancel sleep when user speaks
+                
+                // Vibration feedback for visually impaired users
+                vibrationManager.vibrateClick();
             }
             
             @Override
@@ -171,24 +252,46 @@ public class StreamingVoiceAI {
             
             @Override
             public void onError(int error) {
-                Log.e(TAG, "語音識別錯誤: " + getErrorText(error));
-                isListening = false;
+                Log.e(TAG, "Speech recognition error: " + getErrorText(error));
+                consecutiveErrors++;
                 isProcessing = false;
                 
-                if (callback != null) {
-                    callback.onError(getErrorText(error));
-                    callback.onListeningStateChanged(false);
-                }
+                // Don't stop listening for recoverable errors
+                boolean shouldRetry = shouldRetryError(error);
                 
-                // 自動重啟（某些錯誤可以重試）
-                if (error == SpeechRecognizer.ERROR_NO_MATCH || 
-                    error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
-                    // 延遲後重啟
+                if (shouldRetry && retryAttempts < MAX_RETRY_ATTEMPTS) {
+                    retryAttempts++;
+                    Log.d(TAG, "Retrying... Attempt " + retryAttempts + "/" + MAX_RETRY_ATTEMPTS);
+                    
+                    // Retry after delay
                     mainHandler.postDelayed(() -> {
-                        if (!isListening) {
-                            startContinuousConversation();
+                        if (isListening && speechRecognizer != null) {
+                            try {
+                                speechRecognizer.startListening(recognizerIntent);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Retry failed: " + e.getMessage());
+                                handleFatalError(getErrorText(error));
+                            }
                         }
-                    }, 1000);
+                    }, RETRY_DELAY_MS);
+                } else {
+                    // Too many errors or fatal error
+                    if (consecutiveErrors >= MAX_RETRY_ATTEMPTS) {
+                        handleFatalError(getErrorText(error));
+                    } else {
+                        // Continue listening for non-fatal errors
+                        if (isListening && speechRecognizer != null) {
+                            mainHandler.postDelayed(() -> {
+                                if (isListening && speechRecognizer != null) {
+                                    try {
+                                        speechRecognizer.startListening(recognizerIntent);
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Restart failed: " + e.getMessage());
+                                    }
+                                }
+                            }, RETRY_DELAY_MS);
+                        }
+                    }
                 }
             }
             
@@ -197,19 +300,31 @@ public class StreamingVoiceAI {
                 ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if (matches != null && !matches.isEmpty()) {
                     String recognizedText = matches.get(0);
-                    Log.d(TAG, "識別結果: " + recognizedText);
+                    Log.d(TAG, "Recognition result: " + recognizedText);
                     
-                    // 處理最終識別結果
+                    // Reset error counter on successful recognition
+                    consecutiveErrors = 0;
+                    retryAttempts = 0;
+                    lastActivityTime = System.currentTimeMillis();
+                    
+                    // Process recognized text
                     processRecognizedText(recognizedText);
+                } else {
+                    // No match - schedule sleep check
+                    scheduleSleepMode();
                 }
                 
                 isProcessing = false;
                 
-                // 自動繼續監聽（連續對話模式）
-                if (isListening) {
+                // Auto-continue listening (continuous conversation mode)
+                if (isListening && !isSleeping) {
                     mainHandler.postDelayed(() -> {
-                        if (isListening && speechRecognizer != null) {
-                            speechRecognizer.startListening(recognizerIntent);
+                        if (isListening && !isSleeping && speechRecognizer != null) {
+                            try {
+                                speechRecognizer.startListening(recognizerIntent);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Continue listening failed: " + e.getMessage());
+                            }
                         }
                     }, 500);
                 }
@@ -235,34 +350,41 @@ public class StreamingVoiceAI {
             }
         });
         
-        // 開始監聽
+        // Start listening
         speechRecognizer.startListening(recognizerIntent);
-        Log.d(TAG, "開始連續對話");
+        Log.d(TAG, "Continuous conversation started");
     }
     
     /**
-     * 停止對話
+     * Stop conversation
      */
     public void stopConversation() {
         isListening = false;
+        isSleeping = false;
+        cancelSleepMode();
         
         if (speechRecognizer != null) {
             try {
                 speechRecognizer.stopListening();
             } catch (Exception e) {
-                Log.e(TAG, "停止監聽失敗: " + e.getMessage());
+                Log.e(TAG, "Stop listening failed: " + e.getMessage());
             }
         }
         
         if (callback != null) {
             callback.onListeningStateChanged(false);
+            callback.onSleepModeChanged(false);
         }
         
-        Log.d(TAG, "停止連續對話");
+        // Announce stop (for visually impaired users)
+        String stopMsg = getLocalizedMessage("conversation_stopped");
+        announceInfo(stopMsg);
+        
+        Log.d(TAG, "Conversation stopped");
     }
     
     /**
-     * 處理識別到的文本
+     * Process recognized text (with wake-up detection and context management)
      */
     private void processRecognizedText(String text) {
         if (text == null || text.trim().isEmpty()) {
@@ -270,46 +392,102 @@ public class StreamingVoiceAI {
         }
         
         mainHandler.post(() -> {
-            // 更新UI顯示識別結果
+            // Check if this is a stop command (exit continuous conversation mode)
+            if (isStopCommand(text)) {
+                handleStopRequest();
+                return;
+            }
+            
+            // Check if this is a wake-up command (when in sleep mode)
+            if (isSleeping && isWakeUpCommand(text)) {
+                wakeUpFromSleep();
+                return;
+            }
+            
+            // Update UI with recognition result
             if (callback != null) {
                 callback.onFinalText(text);
             }
             
-            // 添加到對話歷史
-            conversationHistory.add("用戶: " + text);
+            // Update activity time
+            lastActivityTime = System.currentTimeMillis();
+            cancelSleepMode();
             
-            // 生成AI回應
+            // Generate AI response with conversation context
             generateAIResponse(text);
         });
     }
     
     /**
-     * 生成AI回應
+     * Generate AI response (using LLM with conversation context)
      */
     private void generateAIResponse(String userInput) {
-        if (aiAssistant == null) {
+        if (responseGenerator == null) {
+            Log.w(TAG, "Response generator not available");
             return;
         }
         
-        // 使用異步方式生成回應
-        aiAssistant.processInputAsync(userInput, new VoiceAIAssistant.AssistantResponseCallback() {
+        // Use ConversationResponseGenerator with LLM support
+        responseGenerator.generateResponseAsync(userInput, new ConversationResponseGenerator.ResponseCallback() {
             @Override
-            public void onResponse(VoiceAIAssistant.AssistantResponse response) {
-                String aiResponse = response.response;
-                if (aiResponse != null && !aiResponse.isEmpty()) {
-                    // 添加到對話歷史
-                    conversationHistory.add("AI: " + aiResponse);
+            public void onResponse(String response) {
+                if (response != null && !response.isEmpty()) {
+                    // Check if it's a command by checking if response contains command keywords
+                    boolean isCommand = isCommandResponse(response);
+                    String commandType = isCommand ? "command" : "chat";
                     
-                    // 通過回調返回回應
+                    // Add to conversation history using ConversationManager
+                    conversationManager.addTurn(userInput, response, isCommand, commandType);
+                    
+                    // Update activity time
+                    lastActivityTime = System.currentTimeMillis();
+                    
+                    // Return response via callback
                     if (callback != null) {
-                        callback.onAIResponse(aiResponse);
+                        callback.onAIResponse(response);
                     }
                     
-                    // 語音播報回應
-                    speakResponse(aiResponse);
+                    // Speak response (for visually impaired users)
+                    speakResponse(response);
+                    
+                    // Schedule sleep mode check after response
+                    scheduleSleepMode();
+                } else {
+                    // Empty response - handle error
+                    Log.w(TAG, "Empty response received");
+                    String errorMsg = getLocalizedError("response_generation_failed");
+                    if (callback != null) {
+                        callback.onError(errorMsg);
+                    }
+                    announceError(errorMsg);
                 }
             }
         });
+    }
+    
+    /**
+     * Check if response is a command (simple heuristic)
+     */
+    private boolean isCommandResponse(String response) {
+        if (response == null || response.isEmpty()) {
+            return false;
+        }
+        
+        String lowerResponse = response.toLowerCase();
+        // Check for common command indicators
+        String[] commandIndicators = {
+            "打開", "開啟", "開始", "停止", "關閉", "執行",
+            "open", "start", "stop", "close", "execute",
+            "已打開", "已開啟", "已開始", "已停止", "已關閉"
+        };
+        
+        for (String indicator : commandIndicators) {
+            if (lowerResponse.contains(indicator)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -371,24 +549,392 @@ public class StreamingVoiceAI {
     }
     
     /**
-     * 獲取對話歷史
+     * Get conversation history (from ConversationManager)
      */
-    public List<String> getConversationHistory() {
-        return new ArrayList<>(conversationHistory);
+    public List<ConversationManager.ConversationTurn> getConversationHistory() {
+        if (conversationManager != null) {
+            return conversationManager.getAllHistory();
+        }
+        return new ArrayList<>();
     }
     
     /**
-     * 清除對話歷史
+     * Clear conversation history
      */
     public void clearHistory() {
-        conversationHistory.clear();
+        if (conversationManager != null) {
+            conversationManager.clearHistory();
+        }
     }
     
     /**
-     * 釋放資源
+     * Check if text is a wake-up command
+     */
+    private boolean isWakeUpCommand(String text) {
+        if (text == null || text.isEmpty()) {
+            return false;
+        }
+        
+        String lowerText = text.toLowerCase().trim();
+        String[] wakeUpCommands;
+        
+        switch (currentLanguage) {
+            case "mandarin":
+                wakeUpCommands = WAKE_UP_COMMANDS_MANDARIN;
+                break;
+            case "english":
+                wakeUpCommands = WAKE_UP_COMMANDS_ENGLISH;
+                break;
+            case "cantonese":
+            default:
+                wakeUpCommands = WAKE_UP_COMMANDS_CANTONESE;
+                break;
+        }
+        
+        for (String command : wakeUpCommands) {
+            if (lowerText.contains(command.toLowerCase())) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if text is a stop command (exit continuous conversation)
+     */
+    private boolean isStopCommand(String text) {
+        if (text == null || text.isEmpty()) {
+            return false;
+        }
+        
+        String lowerText = text.toLowerCase().trim();
+        String[] stopCommands;
+        
+        switch (currentLanguage) {
+            case "mandarin":
+                stopCommands = STOP_COMMANDS_MANDARIN;
+                break;
+            case "english":
+                stopCommands = STOP_COMMANDS_ENGLISH;
+                break;
+            case "cantonese":
+            default:
+                stopCommands = STOP_COMMANDS_CANTONESE;
+                break;
+        }
+        
+        for (String command : stopCommands) {
+            if (lowerText.contains(command.toLowerCase())) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Handle stop request from user
+     */
+    private void handleStopRequest() {
+        Log.d(TAG, "Stop command detected, exiting continuous conversation mode");
+        
+        // Announce stop (for visually impaired users)
+        String stopMsg = getLocalizedMessage("stop_command_detected");
+        announceInfo(stopMsg);
+        vibrationManager.vibrateNotification();
+        
+        // Notify callback
+        if (callback != null) {
+            callback.onStopRequested();
+        }
+        
+        // Stop conversation
+        stopConversation();
+    }
+    
+    /**
+     * Schedule sleep mode (after idle timeout)
+     */
+    private void scheduleSleepMode() {
+        cancelSleepMode();
+        
+        sleepRunnable = () -> {
+            long timeSinceActivity = System.currentTimeMillis() - lastActivityTime;
+            if (timeSinceActivity >= IDLE_SLEEP_TIMEOUT_MS && isListening && !isProcessing) {
+                enterSleepMode();
+            } else {
+                // Reschedule check
+                scheduleSleepMode();
+            }
+        };
+        
+        sleepHandler.postDelayed(sleepRunnable, IDLE_SLEEP_TIMEOUT_MS);
+    }
+    
+    /**
+     * Cancel sleep mode scheduling
+     */
+    private void cancelSleepMode() {
+        if (sleepRunnable != null) {
+            sleepHandler.removeCallbacks(sleepRunnable);
+            sleepRunnable = null;
+        }
+    }
+    
+    /**
+     * Enter sleep mode (to save battery)
+     */
+    private void enterSleepMode() {
+        if (isSleeping) {
+            return;
+        }
+        
+        isSleeping = true;
+        Log.d(TAG, "Entering sleep mode (idle timeout)");
+        
+        if (speechRecognizer != null) {
+            try {
+                speechRecognizer.stopListening();
+            } catch (Exception e) {
+                Log.e(TAG, "Stop listening for sleep failed: " + e.getMessage());
+            }
+        }
+        
+        if (callback != null) {
+            callback.onSleepModeChanged(true);
+        }
+        
+        // Announce sleep mode (for visually impaired users)
+        String sleepMsg = getLocalizedMessage("sleep_mode_activated");
+        announceInfo(sleepMsg);
+        vibrationManager.vibrateNotification();
+        
+        // Start wake-up detection
+        startWakeUpDetection();
+    }
+    
+    /**
+     * Wake up from sleep mode
+     */
+    private void wakeUpFromSleep() {
+        if (!isSleeping) {
+            return;
+        }
+        
+        isSleeping = false;
+        Log.d(TAG, "Waking up from sleep mode");
+        
+        stopWakeUpDetection();
+        
+        if (callback != null) {
+            callback.onWakeUpDetected();
+            callback.onSleepModeChanged(false);
+        }
+        
+        // Announce wake-up (for visually impaired users)
+        String wakeMsg = getLocalizedMessage("wake_up_detected");
+        announceInfo(wakeMsg);
+        vibrationManager.vibrateSuccess();
+        
+        // Resume listening
+        if (speechRecognizer != null) {
+            try {
+                speechRecognizer.startListening(recognizerIntent);
+                lastActivityTime = System.currentTimeMillis();
+            } catch (Exception e) {
+                Log.e(TAG, "Wake-up listening failed: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Start wake-up detection (lightweight listening for wake-up commands)
+     */
+    private void startWakeUpDetection() {
+        stopWakeUpDetection();
+        
+        wakeUpCheckRunnable = () -> {
+            if (isSleeping && speechRecognizer != null) {
+                try {
+                    // Lightweight listening for wake-up
+                    speechRecognizer.startListening(recognizerIntent);
+                } catch (Exception e) {
+                    Log.e(TAG, "Wake-up detection failed: " + e.getMessage());
+                }
+                
+                // Schedule next check
+                wakeUpHandler.postDelayed(wakeUpCheckRunnable, WAKE_UP_CHECK_INTERVAL_MS);
+            }
+        };
+        
+        wakeUpHandler.postDelayed(wakeUpCheckRunnable, WAKE_UP_CHECK_INTERVAL_MS);
+    }
+    
+    /**
+     * Stop wake-up detection
+     */
+    private void stopWakeUpDetection() {
+        if (wakeUpCheckRunnable != null) {
+            wakeUpHandler.removeCallbacks(wakeUpCheckRunnable);
+            wakeUpCheckRunnable = null;
+        }
+    }
+    
+    /**
+     * Check if error should be retried
+     */
+    private boolean shouldRetryError(int error) {
+        switch (error) {
+            case SpeechRecognizer.ERROR_NO_MATCH:
+            case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
+            case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+                return true;
+            default:
+                return false;
+        }
+    }
+    
+    /**
+     * Handle fatal error
+     */
+    private void handleFatalError(String errorText) {
+        isListening = false;
+        isSleeping = false;
+        cancelSleepMode();
+        stopWakeUpDetection();
+        
+        if (callback != null) {
+            callback.onError(errorText);
+            callback.onListeningStateChanged(false);
+        }
+        
+        announceError(errorText);
+    }
+    
+    /**
+     * Announce conversation start (for visually impaired users)
+     */
+    private void announceConversationStart() {
+        String startMsg = getLocalizedMessage("conversation_started");
+        announceInfo(startMsg);
+        vibrationManager.vibrateSuccess();
+    }
+    
+    /**
+     * Announce info message
+     */
+    private void announceInfo(String message) {
+        if (ttsManager != null && message != null && !message.isEmpty()) {
+            ttsManager.speak(message, message, false);
+        }
+    }
+    
+    /**
+     * Announce error message
+     */
+    private void announceError(String message) {
+        if (ttsManager != null && message != null && !message.isEmpty()) {
+            ttsManager.speak(message, message, false);
+        }
+        vibrationManager.vibrateError();
+    }
+    
+    /**
+     * Get localized message
+     */
+    private String getLocalizedMessage(String key) {
+        switch (key) {
+            case "conversation_started":
+                if ("english".equals(currentLanguage)) {
+                    return "Continuous conversation mode started. You can speak freely. I will automatically pause after 30 seconds of silence. Say 'start conversation' to wake me up.";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "连续对话模式已启动。您可以自由说话。静音30秒后我会自动暂停。说'开始对话'可以唤醒我。";
+                } else {
+                    return "連續對話模式已啟動。您可以自由說話。靜音30秒後我會自動暫停。說'開始對話'可以喚醒我。";
+                }
+            case "conversation_stopped":
+                if ("english".equals(currentLanguage)) {
+                    return "Conversation stopped.";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "对话已停止。";
+                } else {
+                    return "對話已停止。";
+                }
+            case "sleep_mode_activated":
+                if ("english".equals(currentLanguage)) {
+                    return "Sleep mode activated. Say 'start conversation' to wake me up.";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "已进入睡眠模式。说'开始对话'可以唤醒我。";
+                } else {
+                    return "已進入睡眠模式。說'開始對話'可以喚醒我。";
+                }
+            case "wake_up_detected":
+                if ("english".equals(currentLanguage)) {
+                    return "Wake up detected. Conversation resumed.";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "检测到唤醒。对话已恢复。";
+                } else {
+                    return "檢測到喚醒。對話已恢復。";
+                }
+            case "stop_command_detected":
+                if ("english".equals(currentLanguage)) {
+                    return "Stop command detected. Exiting continuous conversation mode.";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "检测到停止命令。正在退出连续对话模式。";
+                } else {
+                    return "檢測到停止命令。正在退出連續對話模式。";
+                }
+            default:
+                return "";
+        }
+    }
+    
+    /**
+     * Get localized error message
+     */
+    private String getLocalizedError(String key) {
+        switch (key) {
+            case "speech_recognition_unavailable":
+                if ("english".equals(currentLanguage)) {
+                    return "Speech recognition is not available.";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "语音识别不可用。";
+                } else {
+                    return "語音識別不可用。";
+                }
+            case "response_generation_failed":
+                if ("english".equals(currentLanguage)) {
+                    return "Failed to generate response. Please try again.";
+                } else if ("mandarin".equals(currentLanguage)) {
+                    return "生成回應失敗。請重試。";
+                } else {
+                    return "生成回應失敗。請重試。";
+                }
+            default:
+                return getErrorText(0);
+        }
+    }
+    
+    /**
+     * Release resources
      */
     public void release() {
         stopConversation();
+        
+        // Cancel all handlers
+        cancelSleepMode();
+        stopWakeUpDetection();
+        
+        if (mainHandler != null) {
+            mainHandler.removeCallbacksAndMessages(null);
+        }
+        if (sleepHandler != null) {
+            sleepHandler.removeCallbacksAndMessages(null);
+        }
+        if (wakeUpHandler != null) {
+            wakeUpHandler.removeCallbacksAndMessages(null);
+        }
         
         if (speechRecognizer != null) {
             speechRecognizer.destroy();
