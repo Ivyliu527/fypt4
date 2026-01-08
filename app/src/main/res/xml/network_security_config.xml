@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- 允許 HTTP 連接（用於本地 Bailing 服務器） -->
-    <!-- 注意：生產環境建議使用 HTTPS -->
+    <!-- Allow HTTP connections for local servers (e.g., LLM API) -->
+    <!-- Note: HTTPS is recommended for production environments -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
