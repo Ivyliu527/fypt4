@@ -24,6 +24,14 @@ import androidx.core.content.ContextCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
+
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -66,6 +74,12 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     private ExecutorService cameraExecutor;
     private boolean isDetecting = false;
     
+    // Night mode optimizer for low-light environment detection
+    private NightModeOptimizer nightModeOptimizer;
+    private boolean nightModeAnnounced = false;  // Track if night mode has been announced
+    private int frameCount = 0;  // Frame counter for reducing lighting analysis frequency
+    private static final int LIGHTING_ANALYSIS_INTERVAL = 15;  // Analyze lighting every 15 frames (reduce overhead and avoid crashes)
+    
     // For deduplication, avoid repeating same recognition results
     private String lastAnnouncedObjects = "";
     private Set<String> lastAnnouncedLabels = new HashSet<>(); // For more precise comparison
@@ -93,6 +107,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         
         initViews();
         initDetector();
+        initNightModeOptimizer();
         checkCameraPermission();
         
         // Announce page title
@@ -193,6 +208,45 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             Log.e(TAG, "環境識別器初始化失敗: " + e.getMessage());
             updateStatusIndicator("error");
             Toast.makeText(this, "環境識別器初始化失敗", Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    /**
+     * Initialize night mode optimizer for low-light detection
+     */
+    private void initNightModeOptimizer() {
+        nightModeOptimizer = new NightModeOptimizer();
+        nightModeAnnounced = false;
+        Log.d(TAG, "Night mode optimizer initialized");
+    }
+    
+    /**
+     * Convert ImageProxy to Bitmap for lighting analysis
+     */
+    private Bitmap imageProxyToBitmap(ImageProxy image) {
+        try {
+            ImageProxy.PlaneProxy[] planes = image.getPlanes();
+            ByteBuffer yBuffer = planes[0].getBuffer();
+            ByteBuffer uBuffer = planes[1].getBuffer();
+            ByteBuffer vBuffer = planes[2].getBuffer();
+
+            int ySize = yBuffer.remaining();
+            int uSize = uBuffer.remaining();
+            int vSize = vBuffer.remaining();
+
+            byte[] nv21 = new byte[ySize + uSize + vSize];
+            yBuffer.get(nv21, 0, ySize);
+            vBuffer.get(nv21, ySize, vSize);
+            uBuffer.get(nv21, ySize + vSize, uSize);
+
+            YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            yuvImage.compressToJpeg(new Rect(0, 0, image.getWidth(), image.getHeight()), 85, out);
+            byte[] imageBytes = out.toByteArray();
+            return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+        } catch (Exception e) {
+            Log.e(TAG, "Image conversion failed: " + e.getMessage());
+            return null;
         }
     }
     
@@ -298,8 +352,65 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             
             Log.d(TAG, "Start analyzing image, width: " + image.getWidth() + ", height: " + image.getHeight());
             
-            // Execute AI detection
+            // Execute AI detection first (YoloDetector will handle ImageProxy conversion internally)
+            // This avoids reading ImageProxy buffer twice which causes crashes
             List<YoloDetector.DetectionResult> results = yoloDetector.detect(image);
+            
+            // Analyze lighting conditions using detection results (indirect method to avoid crashes)
+            // Only analyze every N frames to reduce overhead
+            frameCount++;
+            if (nightModeOptimizer != null && frameCount % LIGHTING_ANALYSIS_INTERVAL == 0) {
+                try {
+                    // Use detection confidence as a proxy for lighting conditions
+                    // Low confidence might indicate low light (though not always accurate)
+                    // This is safer than reading ImageProxy buffer twice
+                    float avgConfidence = 0.0f;
+                    int validResults = 0;
+                    
+                    if (results != null && !results.isEmpty()) {
+                        for (YoloDetector.DetectionResult result : results) {
+                            if (result != null && result.getConfidence() > 0) {
+                                avgConfidence += result.getConfidence();
+                                validResults++;
+                            }
+                        }
+                        if (validResults > 0) {
+                            avgConfidence /= validResults;
+                        }
+                    }
+                    
+                    // Heuristic: Very low average confidence might indicate low light
+                    // But we need to be conservative to avoid false positives
+                    boolean wasNightMode = nightModeOptimizer.isNightModeActive();
+                    boolean shouldActivateNightMode = false;
+                    
+                    if (validResults == 0 || (validResults > 0 && avgConfidence < 0.25f)) {
+                        // No detections or very low confidence - might be low light
+                        // But only activate if we've seen this pattern consistently
+                        shouldActivateNightMode = true;
+                        Log.d(TAG, String.format("Low confidence pattern detected (avg: %.2f, count: %d), considering night mode", 
+                            avgConfidence, validResults));
+                    } else if (avgConfidence >= 0.5f && wasNightMode) {
+                        // High confidence - likely normal light, deactivate night mode
+                        shouldActivateNightMode = false;
+                        Log.d(TAG, String.format("High confidence detected (avg: %.2f), deactivating night mode", avgConfidence));
+                    }
+                    
+                    // Update night mode based on heuristic (conservative approach)
+                    if (shouldActivateNightMode && !wasNightMode && !nightModeAnnounced) {
+                        // Activate night mode conservatively
+                        String lightingDesc = nightModeOptimizer.getLightingDescription(currentLanguage);
+                        announceInfo(lightingDesc);
+                        nightModeAnnounced = true;
+                        Log.d(TAG, "Night mode activated based on confidence heuristic");
+                    } else if (!shouldActivateNightMode && wasNightMode) {
+                        nightModeAnnounced = false;
+                        Log.d(TAG, "Night mode deactivated based on confidence heuristic");
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Lighting analysis failed: " + e.getMessage());
+                }
+            }
             
             Log.d(TAG, "Detection complete, result count: " + (results != null ? results.size() : 0));
             if (results != null && !results.isEmpty()) {
@@ -336,8 +447,19 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     Log.d(TAG, "Result count after coordinate adjustment: " + adjustedResults.size());
                     
                     // Filter out unreasonable detection results for indoor environments (e.g., surfboard, refrigerator)
-                    List<YoloDetector.DetectionResult> filteredResults = filterUnreasonableDetections(adjustedResults);
-                    Log.d(TAG, "Result count after filtering: " + filteredResults.size());
+                    // Use night mode adjusted thresholds if night mode is active
+                    float confidenceThreshold = nightModeOptimizer != null && nightModeOptimizer.isNightModeActive() 
+                        ? nightModeOptimizer.getAdjustedConfidenceThreshold() 
+                        : AppConstants.CONFIDENCE_THRESHOLD;
+                    float scoreThreshold = nightModeOptimizer != null && nightModeOptimizer.isNightModeActive()
+                        ? nightModeOptimizer.getAdjustedScoreThreshold()
+                        : AppConstants.SCORE_THRESHOLD;
+                    
+                    List<YoloDetector.DetectionResult> filteredResults = filterUnreasonableDetections(
+                        adjustedResults, confidenceThreshold, scoreThreshold);
+                    Log.d(TAG, "Result count after filtering: " + filteredResults.size() + 
+                        (nightModeOptimizer != null && nightModeOptimizer.isNightModeActive() 
+                            ? " (night mode thresholds applied)" : ""));
                     
                     // Uniformly limit to top 2 results, ensure display and voice announcement are completely synchronized
                     List<YoloDetector.DetectionResult> displayResults;
@@ -493,6 +615,12 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         // Clear detection result display
         if (detectionOverlay != null) {
             detectionOverlay.clearDetectionResults();
+        }
+        
+        // Reset night mode optimizer
+        if (nightModeOptimizer != null) {
+            nightModeOptimizer.reset();
+            nightModeAnnounced = false;
         }
         
         updateStatusIndicator("ready");
@@ -738,9 +866,14 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
     /**
      * Filter out unreasonable detection results for indoor environments
      * Remove items that shouldn't appear in indoor environments (e.g., surfboard, refrigerator)
+     * @param results Detection results to filter
+     * @param confidenceThreshold Minimum confidence threshold (adjusted for night mode)
+     * @param scoreThreshold Minimum score threshold (adjusted for night mode)
      */
     private List<YoloDetector.DetectionResult> filterUnreasonableDetections(
-            List<YoloDetector.DetectionResult> results) {
+            List<YoloDetector.DetectionResult> results, 
+            float confidenceThreshold, 
+            float scoreThreshold) {
         if (results == null || results.isEmpty()) {
             return results;
         }
@@ -809,7 +942,16 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
             String label = result.getLabel().toLowerCase();
             float confidence = result.getConfidence();
             
-            Log.d(TAG, "Check detection result: " + label + " (confidence: " + confidence + ")");
+            Log.d(TAG, "Check detection result: " + label + " (confidence: " + confidence + 
+                ", threshold: " + confidenceThreshold + ")");
+            
+            // Apply confidence threshold (adjusted for night mode)
+            if (confidence < confidenceThreshold) {
+                Log.d(TAG, "Filter out low confidence detection: " + label + " (confidence: " + confidence + 
+                    " < threshold: " + confidenceThreshold + ")");
+                filteredCount++;
+                continue;
+            }
             
             // Check if unreasonable item (items that shouldn't appear in indoor environments, filter directly)
             if (unreasonableItems.contains(label)) {
