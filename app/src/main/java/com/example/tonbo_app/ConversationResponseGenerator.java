@@ -21,6 +21,8 @@ public class ConversationResponseGenerator {
     private Random random = new Random();
     private Context context;
     private ConversationManager conversationManager; // Used to get conversation context
+    private LLMClient llmClient; // LLM client for intelligent responses
+    private boolean useLLM = true; // Whether to use LLM (default: true)
     
     // Keyword to response template mapping (Cantonese)
     private Map<String, String[]> cantoneseResponses = new HashMap<>();
@@ -39,6 +41,29 @@ public class ConversationResponseGenerator {
     public ConversationResponseGenerator(Context context) {
         this.context = context;
         initializeResponses();
+        // Initialize LLM client
+        if (context != null) {
+            llmClient = LLMClient.getInstance(context);
+            LLMConfig config = new LLMConfig(context);
+            useLLM = config.isEnabled();
+        }
+    }
+    
+    /**
+     * Enable or disable LLM
+     */
+    public void setUseLLM(boolean use) {
+        this.useLLM = use;
+        if (use && context != null && llmClient == null) {
+            llmClient = LLMClient.getInstance(context);
+        }
+    }
+    
+    /**
+     * Check if using LLM
+     */
+    public boolean isUsingLLM() {
+        return useLLM && llmClient != null && llmClient.isEnabled();
     }
     
     /**
@@ -293,10 +318,56 @@ public class ConversationResponseGenerator {
             return;
         }
         
-        // Use keyword matching to generate response
+        // Try LLM first if enabled
+        if (isUsingLLM()) {
+            Log.d(TAG, "Using LLM to generate response");
+            generateResponseWithLLM(userText, callback);
+            return;
+        }
+        
+        // Fallback to keyword matching
         Log.d(TAG, "Using keyword matching to generate response");
         String response = generateResponse(userText);
         callback.onResponse(response);
+    }
+    
+    /**
+     * Generate response using LLM
+     * @param userText User input text
+     * @param callback Response callback
+     */
+    private void generateResponseWithLLM(String userText, ResponseCallback callback) {
+        if (llmClient == null || !llmClient.isEnabled()) {
+            // Fallback to keyword matching
+            String response = generateResponse(userText);
+            callback.onResponse(response);
+            return;
+        }
+        
+        // Get conversation history
+        List<ConversationManager.ConversationTurn> history = null;
+        if (conversationManager != null) {
+            history = conversationManager.getRecentHistory(5);
+        }
+        
+        // Send request to LLM
+        llmClient.sendChatMessage(userText, history, new LLMClient.ChatCallback() {
+            @Override
+            public void onResponse(String response) {
+                // Post-process response
+                String processedResponse = postProcessResponse(response);
+                Log.d(TAG, "LLM response received: " + processedResponse);
+                callback.onResponse(processedResponse);
+            }
+            
+            @Override
+            public void onError(String error) {
+                Log.w(TAG, "LLM error: " + error + ", falling back to keyword matching");
+                // Fallback to keyword matching on error
+                String response = generateResponse(userText);
+                callback.onResponse(response);
+            }
+        });
     }
     
     /**

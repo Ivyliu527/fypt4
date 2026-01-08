@@ -174,6 +174,28 @@
 - **Firebase集成**: 雲端數據同步和用戶管理
 - **YOLOv8模型**: 更先進的YOLOv8模型集成
 
+## 🤖 智能語音對話 LLM 集成
+
+### **LLM 功能**
+- **智能對話**: 使用 DeepSeek 或 GLM-4-Flash 大模型進行自然對話
+- **對話記憶**: 支持多輪對話上下文理解
+- **自動回退**: 當 LLM 服務不可用時，自動回退到關鍵詞匹配模式
+- **多語言支持**: 根據當前語言設置自動調整回應語言
+
+### **已配置的 API**
+- **DeepSeek** ⭐ (默認): 每月 100 萬 tokens 免費額度
+- **GLM-4-Flash**: 完全免費，中文支持優秀
+
+### **使用方式**
+應用會自動使用 LLM 生成智能回應：
+- **啟用時**: 使用 LLM 生成高質量回應
+- **未啟用或連接失敗**: 自動回退到關鍵詞匹配模式
+
+### **技術實現**
+- `LLMClient`: LLM API 客戶端，支持 DeepSeek 和 GLM-4-Flash
+- `LLMConfig`: LLM 配置管理器，管理 API keys 和設置
+- 集成到 `ConversationResponseGenerator`，自動選擇最佳回應方式
+
 ## 🛠️ 技術架構
 
 ### **核心組件**
@@ -199,6 +221,8 @@
 - `InstantAssistanceActivity`: 即時協助功能
 - `GestureManagementActivity`: 手勢管理功能、功能綁定
 - `GestureRecognitionManager`: 手勢識別管理器
+- `LLMClient`: LLM API 客戶端，支持 DeepSeek 和 GLM-4-Flash
+- `LLMConfig`: LLM 配置管理器，管理 API keys 和設置
 
 ### **主要頁面**
 - `MainActivity`: 首頁功能選擇、固定頂部設計、界面簡化

@@ -1,0 +1,20 @@
+package com.example.tonbo_app;
+
+/**
+ * Local LLM API Keys Configuration
+ * 
+ * INSTRUCTIONS:
+ * 1. Copy this file to LLMConfigLocal.java
+ * 2. Replace the placeholder API keys with your actual keys
+ * 3. This file is in .gitignore and will NOT be committed to Git
+ * 
+ * IMPORTANT: Never commit this file with real API keys!
+ */
+public class LLMConfigLocal {
+    // DeepSeek API Key
+    public static final String DEEPSEEK_API_KEY = "YOUR_DEEPSEEK_API_KEY_HERE";
+    
+    // GLM-4-Flash (Zhipu) API Key
+    public static final String ZHIPU_API_KEY = "YOUR_ZHIPU_API_KEY_HERE";
+}
+

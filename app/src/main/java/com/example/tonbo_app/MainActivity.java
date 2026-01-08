@@ -58,6 +58,9 @@ public class MainActivity extends BaseAccessibleActivity {
         // 初始化緊急管理器
         emergencyManager = EmergencyManager.getInstance(this);
         
+        // 初始化 LLM 配置（啟用智能語音對話）
+        initializeLLM();
+        
         // 確保currentLanguage正確初始化
         if (currentLanguage == null) {
             currentLanguage = localeManager.getCurrentLanguage();
@@ -583,6 +586,50 @@ public class MainActivity extends BaseAccessibleActivity {
         if (languageButton != null) {
             String buttonText = getLanguageButtonText(currentLanguage);
             languageButton.setText(buttonText);
+        }
+    }
+    
+    /**
+     * Initialize LLM configuration
+     * Enable LLM for intelligent voice conversation
+     */
+    private void initializeLLM() {
+        try {
+            LLMConfig config = new LLMConfig(this);
+            LLMClient client = LLMClient.getInstance(this);
+            
+            // Force use GLM-4-Flash (free, no balance or authentication issues)
+            // If previously configured with DeepSeek, switch to GLM-4-Flash
+            if ("deepseek".equals(config.getProvider())) {
+                Log.d(TAG, "檢測到 DeepSeek 配置，切換到 GLM-4-Flash");
+                config.useGLM4Flash();
+            }
+            
+            // LLM is enabled by default with pre-configured API keys
+            // GLM-4-Flash is set as default provider (free, no balance issues)
+            if (config.isEnabled()) {
+                String providerName = "deepseek".equals(config.getProvider()) ? "DeepSeek" : "GLM-4-Flash";
+                Log.d(TAG, "LLM 已啟用，提供商: " + providerName + " (" + config.getProvider() + ")" + 
+                    " (API Key: " + config.getApiKey().substring(0, Math.min(10, config.getApiKey().length())) + "...)");
+                
+                // Test connection (async, non-blocking)
+                client.testConnection(new LLMClient.ConnectionCallback() {
+                    @Override
+                    public void onResult(boolean success, String message) {
+                        if (success) {
+                            Log.d(TAG, "✅ LLM 連接測試成功: " + message);
+                        } else {
+                            Log.w(TAG, "⚠️ LLM 連接測試失敗: " + message + 
+                                "，將使用關鍵詞匹配模式");
+                        }
+                    }
+                });
+            } else {
+                Log.d(TAG, "LLM 未啟用，使用關鍵詞匹配模式");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "初始化 LLM 失敗", e);
+            // 失敗不影響應用運行，會自動回退到關鍵詞匹配
         }
     }
     
