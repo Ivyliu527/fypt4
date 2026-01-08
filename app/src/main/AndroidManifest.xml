@@ -61,12 +61,6 @@
             android:label="@string/document_title"
             android:exported="false" />
             
-        <!-- Emergency Settings Activity - 緊急求助設置 -->
-        <activity
-            android:name=".EmergencySettingsActivity"
-            android:label="@string/emergency_settings_page_title"
-            android:exported="false" />
-            
         <!-- Settings Activity - 系統設定 -->
         <activity
             android:name=".SettingsActivity"
