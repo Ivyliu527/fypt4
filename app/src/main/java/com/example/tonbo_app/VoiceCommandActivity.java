@@ -91,7 +91,7 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
             if (useStreamingMode && isListening) {
                 exitContinuousMode();
             } else {
-                toggleListening();
+            toggleListening();
             }
         });
         
@@ -906,10 +906,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                     "Triggering emergency alert" :
                     ("mandarin".equals(currentLanguage) ? "触发紧急求助" : "觸發緊急求助");
                 announceInfo(emergencyText);
-                // 直接撥打999，不顯示選擇對話框
-                List<String> emergency999 = new java.util.ArrayList<>();
-                emergency999.add("999");
-                EmergencyManager.getInstance(this).triggerEmergencyAlert(emergency999);
+                // 直接撥打999（單一功能，無需選擇聯絡人）
+                EmergencyManager.getInstance(this).triggerEmergencyAlert();
                 break;
                 
             case "go_home":

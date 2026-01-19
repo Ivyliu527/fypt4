@@ -288,7 +288,7 @@ public class StreamingVoiceAI {
                                     } catch (Exception e) {
                                         Log.e(TAG, "Restart failed: " + e.getMessage());
                                     }
-                                }
+                        }
                             }, RETRY_DELAY_MS);
                         }
                     }
@@ -321,7 +321,7 @@ public class StreamingVoiceAI {
                     mainHandler.postDelayed(() -> {
                         if (isListening && !isSleeping && speechRecognizer != null) {
                             try {
-                                speechRecognizer.startListening(recognizerIntent);
+                            speechRecognizer.startListening(recognizerIntent);
                             } catch (Exception e) {
                                 Log.e(TAG, "Continue listening failed: " + e.getMessage());
                             }

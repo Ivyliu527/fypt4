@@ -178,8 +178,8 @@ public class MainActivity extends BaseAccessibleActivity {
                         if (pressDuration < AppConstants.EMERGENCY_LONG_PRESS_DURATION_MS) {
                             // 短按：提示用戶需要長按3秒
                             vibrationManager.vibrateClick();
-                            String cantoneseText = "這是緊急求助按鈕，請長按三秒發送求助信息。點擊右上角紅色緊急按鈕可配置緊急聯絡人";
-                            String englishText = "This is the emergency button. Please long press for 3 seconds to send help request. Tap the red emergency button on top right to configure emergency contacts";
+                            String cantoneseText = "這是緊急求助按鈕，請長按三秒撥打緊急服務電話999";
+                            String englishText = "This is the emergency button. Please long press for 3 seconds to call emergency service 999";
                             announceInfo(cantoneseText);
                         }
                     }
@@ -980,21 +980,14 @@ public class MainActivity extends BaseAccessibleActivity {
     }
     
     /**
-     * 直接觸發緊急求助，撥打999（適合視障用戶，無需選擇）
+     * 直接觸發緊急求助，撥打999（單一功能，無需選擇聯絡人）
      */
     private void triggerEmergencyCall() {
-        // 直接撥打999，不顯示選擇對話框
-        Log.d(TAG, "直接觸發緊急求助，撥打999");
+        // 直接撥打999
+        Log.d(TAG, "緊急按鈕長按3秒，觸發緊急求助，撥打999");
         
-        // 播報提示
-        String cantoneseText = "正在撥打緊急服務電話999";
-        String englishText = "Calling emergency service 999";
-            ttsManager.speak(cantoneseText, englishText, true);
-        
-        // 直接調用緊急管理器，傳入只包含999的列表
-        List<String> emergency999 = new java.util.ArrayList<>();
-        emergency999.add("999");
-        emergencyManager.triggerEmergencyAlert(emergency999);
+        // 調用緊急管理器（簡化版本，只撥打999）
+        emergencyManager.triggerEmergencyAlert();
     }
     
     @Override

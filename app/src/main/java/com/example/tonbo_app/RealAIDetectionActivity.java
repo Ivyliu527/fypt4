@@ -493,17 +493,17 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                             String displayLabel;
                             if ("english".equals(currentLanguage)) {
                                 displayLabel = result.getLabel();
-                            } else {
+                    } else {
                                 displayLabel = result.getLabelZh();
                             }
                             Log.d(TAG, String.format("Display result[%d]: %s (English: %s, Chinese: %s, confidence: %.2f)", 
                                 i, displayLabel, result.getLabel(), result.getLabelZh(), result.getConfidence()));
-                        }
-                        
+                    }
+                    
                         // Directly pass limited results, no longer limit in overlay
                         detectionOverlay.updateDetectionResults(displayResults);
                         Log.d(TAG, "Updated detection overlay, result count: " + displayResults.size());
-                    } else {
+                } else {
                         Log.e(TAG, "❌ detectionOverlay is null, cannot update detection results!");
                     }
                     
@@ -535,10 +535,10 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     }
                     
                     clearDetectionBoxRunnable = () -> {
-                        if (detectionOverlay != null) {
-                            detectionOverlay.clearDetectionResults();
+                    if (detectionOverlay != null) {
+                        detectionOverlay.clearDetectionResults();
                             Log.d(TAG, "Delayed clearing detection boxes complete");
-                        }
+                    }
                         clearDetectionBoxRunnable = null;
                     };
                     
@@ -798,7 +798,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 }
                 englishText = englishBuilder.toString();
                 Log.d(TAG, "Mandarin mode announcement - Chinese text: " + cantoneseText + " (consistent with display labels), English text: " + englishText);
-            } else {
+        } else {
                 // Cantonese mode: currentObjects contains Chinese labels
                 cantoneseText = currentObjects; // Use directly, completely consistent with display labels
                 // Get corresponding English labels for backup (ensure order consistent with display)
@@ -809,8 +809,8 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                     englishBuilder.append(result.getLabel());
                     if (i < results.size() - 1) {
                         englishBuilder.append(", ");
-                    }
                 }
+            }
                 englishText = englishBuilder.toString();
                 Log.d(TAG, "Cantonese mode announcement - Chinese text: " + cantoneseText + " (consistent with display labels), English text: " + englishText);
             }
@@ -1118,7 +1118,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         super.onResume();
         isEnvironmentActivityActive = true;
         if (cameraExecutor == null || cameraExecutor.isShutdown()) {
-            cameraExecutor = Executors.newSingleThreadExecutor();
+        cameraExecutor = Executors.newSingleThreadExecutor();
         }
     }
     
@@ -1157,7 +1157,7 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         // Close camera executor
         if (cameraExecutor != null) {
             try {
-                cameraExecutor.shutdown();
+            cameraExecutor.shutdown();
                 // Wait for tasks to complete, but don't force terminate
                 if (!cameraExecutor.awaitTermination(1, java.util.concurrent.TimeUnit.SECONDS)) {
                     Log.w(TAG, "onPause: Camera executor didn't close within 1 second, force shutdown");
@@ -1194,13 +1194,13 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
                 Log.d(TAG, "onDestroy: Image analyzer cleared");
             } catch (Exception e) {
                 Log.e(TAG, "onDestroy: Failed to clear image analyzer: " + e.getMessage());
-            }
+        }
         }
         
         // Unbind camera
         if (cameraProvider != null) {
             try {
-                cameraProvider.unbindAll();
+            cameraProvider.unbindAll();
                 cameraProvider = null;
                 Log.d(TAG, "onDestroy: Camera unbound");
             } catch (Exception e) {

@@ -18,8 +18,8 @@ public class EmergencyManager {
     private TTSManager ttsManager;
     private VibrationManager vibrationManager;
     
-    // 緊急聯絡人列表（可以從設置中配置）
-    private List<String> emergencyContacts = new ArrayList<>();
+    // 緊急服務電話號碼（固定為999）
+    private static final String EMERGENCY_NUMBER = "999";
     private String emergencyMessage = "緊急求助！我在使用瞳伴應用時遇到緊急情況，需要立即協助。請盡快聯繫我。";
     private String emergencyMessageEn = "Emergency! I'm using Tonbo app and need immediate assistance. Please contact me as soon as possible.";
     
@@ -27,9 +27,6 @@ public class EmergencyManager {
         this.context = context.getApplicationContext();
         ttsManager = TTSManager.getInstance(context);
         vibrationManager = VibrationManager.getInstance(context);
-        
-        // 初始化默認緊急聯絡人（可以從設置中讀取）
-        initializeEmergencyContacts();
     }
     
     public static synchronized EmergencyManager getInstance(Context context) {
@@ -39,130 +36,53 @@ public class EmergencyManager {
         return instance;
     }
     
-    private void initializeEmergencyContacts() {
-        // 添加默認緊急聯絡人（實際應用中應該從用戶設置中讀取）
-        emergencyContacts.add("999"); // 香港緊急服務
-        // 可以添加更多聯絡人
-    }
-    
-    public void triggerEmergencyAlert() {
-        triggerEmergencyAlert(null); // 發送給所有聯絡人
-    }
-    
     /**
-     * 觸發緊急求助（可選擇特定聯絡人）
-     * @param selectedContacts 要發送給的聯絡人列表，如果為null則發送給所有聯絡人
+     * 觸發緊急求助（單一功能：直接撥打999）
      */
-    public void triggerEmergencyAlert(List<String> selectedContacts) {
-        Log.d(TAG, "緊急求助觸發，選擇的聯絡人: " + (selectedContacts != null ? selectedContacts.toString() : "全部"));
-        
-        // 確定要發送的聯絡人列表
-        List<String> contactsToNotify = (selectedContacts != null && !selectedContacts.isEmpty()) 
-            ? selectedContacts 
-            : emergencyContacts;
+    public void triggerEmergencyAlert() {
+        Log.d(TAG, "緊急求助觸發，撥打999");
         
         // 播放緊急提示音
-        String cantoneseText = "緊急求助已發送！請保持冷靜，協助正在趕來。已通知" + contactsToNotify.size() + "個緊急聯絡人。";
-        String englishText = "Emergency alert sent! Please stay calm, assistance is on the way. " + contactsToNotify.size() + " emergency contacts have been notified.";
+        String cantoneseText = "正在撥打緊急服務電話999，請保持冷靜";
+        String englishText = "Calling emergency service 999, please stay calm";
         ttsManager.speak(cantoneseText, englishText, true);
         
         // 強烈震動提醒
         vibrationManager.vibrateEmergencyPattern();
         
-        // 發送緊急短信（只發送給選擇的聯絡人）
-        sendEmergencySMS(contactsToNotify);
+        // 發送緊急短信給999（如果支持）
+        sendEmergencySMS();
         
-        // 撥打緊急電話（撥打給選中的聯絡人，如果選擇了999則撥打999，否則撥打第一個選中的聯絡人）
-        callEmergencyService(contactsToNotify);
+        // 撥打緊急電話999
+        callEmergencyService();
         
         // 記錄緊急事件
         logEmergencyEvent();
     }
     
-    private void sendEmergencySMS() {
-        sendEmergencySMS(emergencyContacts); // 發送給所有聯絡人
-    }
-    
     /**
-     * 發送緊急短信給指定聯絡人
-     * @param contactsToNotify 要發送給的聯絡人列表
+     * 發送緊急短信給999（如果支持短信報警）
+     * 注意：999通常不支持短信，此功能主要用於記錄
      */
-    private void sendEmergencySMS(List<String> contactsToNotify) {
+    private void sendEmergencySMS() {
         try {
-            SmsManager smsManager = SmsManager.getDefault();
-            String message = emergencyMessage;
-            if (ttsManager.getCurrentLanguage().equals("english")) {
-                message = emergencyMessageEn;
-            }
+            // 注意：999緊急服務通常不支持短信，此處僅作為記錄功能
+            // 實際應用中，可以考慮發送給其他緊急聯絡人（如果未來需要）
+            Log.d(TAG, "緊急短信功能：999緊急服務通常不支持短信報警");
             
-            int sentCount = 0;
-            for (String contact : contactsToNotify) {
-                // 清理電話號碼（移除空格、連字符等）
-                String cleanContact = contact.replaceAll("[\\s\\-()]", "");
-                if (cleanContact.matches("^[+]?\\d+$")) { // 只發送給有效的電話號碼
-                    try {
-                        smsManager.sendTextMessage(cleanContact, null, message, null, null);
-                        Log.d(TAG, "緊急短信已發送給: " + cleanContact);
-                        sentCount++;
-                    } catch (Exception e) {
-                        Log.e(TAG, "發送給 " + cleanContact + " 失敗: " + e.getMessage());
-                    }
-                } else {
-                    Log.w(TAG, "跳過無效的聯絡人號碼: " + contact);
-                }
-            }
-            
-            if (sentCount == 0) {
-                Log.w(TAG, "沒有成功發送任何緊急短信");
-                ttsManager.speakError("緊急短信發送失敗，請手動聯繫緊急服務");
-            } else {
-                Log.d(TAG, "成功發送 " + sentCount + " 條緊急短信");
-            }
+            // 如果需要發送短信給其他號碼，可以在這裡實現
+            // 目前簡化為單一功能，只撥打999
         } catch (Exception e) {
-            Log.e(TAG, "發送緊急短信失敗: " + e.getMessage());
-            ttsManager.speakError("緊急短信發送失敗，請手動聯繫緊急服務");
+            Log.e(TAG, "緊急短信處理失敗: " + e.getMessage());
         }
     }
     
-    private void callEmergencyService() {
-        callEmergencyService(null); // 默認撥打999
-    }
-    
     /**
-     * 撥打緊急電話給指定聯絡人
-     * @param contactsToCall 要撥打的聯絡人列表，如果為null或空則撥打999
+     * 撥打緊急電話999
      */
-    private void callEmergencyService(List<String> contactsToCall) {
+    private void callEmergencyService() {
         try {
-            String phoneNumber = null;
-            
-            // 確定要撥打的電話號碼
-            if (contactsToCall != null && !contactsToCall.isEmpty()) {
-                // 優先查找999（緊急服務）
-                for (String contact : contactsToCall) {
-                    String cleanContact = contact.replaceAll("[\\s\\-()]", "");
-                    if (cleanContact.equals("999") || cleanContact.equals("+852999") || cleanContact.equals("852999")) {
-                        phoneNumber = "999";
-                        break;
-                    }
-                }
-                
-                // 如果沒有999，使用第一個有效的電話號碼
-                if (phoneNumber == null) {
-                    for (String contact : contactsToCall) {
-                        String cleanContact = contact.replaceAll("[\\s\\-()]", "");
-                        if (cleanContact.matches("^[+]?\\d+$")) {
-                            phoneNumber = cleanContact;
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            // 如果沒有找到有效的電話號碼，使用默認的999
-            if (phoneNumber == null) {
-                phoneNumber = "999";
-            }
+            String phoneNumber = EMERGENCY_NUMBER; // 固定撥打999
             
             String phoneUri = "tel:" + phoneNumber;
             Log.d(TAG, "準備直接撥打緊急電話: " + phoneNumber);
@@ -246,26 +166,7 @@ public class EmergencyManager {
         // - 發送給家人朋友
     }
     
-    // 添加緊急聯絡人
-    public void addEmergencyContact(String contact) {
-        if (!emergencyContacts.contains(contact)) {
-            emergencyContacts.add(contact);
-            Log.d(TAG, "已添加緊急聯絡人: " + contact);
-        }
-    }
-    
-    // 移除緊急聯絡人
-    public void removeEmergencyContact(String contact) {
-        emergencyContacts.remove(contact);
-        Log.d(TAG, "已移除緊急聯絡人: " + contact);
-    }
-    
-    // 獲取緊急聯絡人列表
-    public List<String> getEmergencyContacts() {
-        return new ArrayList<>(emergencyContacts);
-    }
-    
-    // 設置緊急訊息
+    // 設置緊急訊息（可選功能，用於未來擴展）
     public void setEmergencyMessage(String message, String messageEn) {
         this.emergencyMessage = message;
         this.emergencyMessageEn = messageEn;

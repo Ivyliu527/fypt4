@@ -595,8 +595,8 @@ public class ObjectDetectorHelper {
             if (!isValidBoundingBox(result.getBoundingBox())) {
                 Log.d(TAG, "Filter invalid bounding box: " + result.getLabelZh());
                 continue;
-            }
-
+        }
+        
             // 3. Check confidence threshold
             if (result.getConfidence() < AppConstants.SCORE_THRESHOLD) {
                 Log.d(TAG, "Filter low confidence object: " + result.getLabelZh() + " (confidence: " + result.getConfidence() + ")");
@@ -616,7 +616,7 @@ public class ObjectDetectorHelper {
 
         // Sort by confidence, prioritize showing high confidence results
         filtered.sort((a, b) -> Float.compare(b.getConfidence(), a.getConfidence()));
-
+        
         Log.d(TAG, String.format("Object filter: %d -> %d (whitelist+blacklist filter)", results.size(), filtered.size()));
         return filtered;
     }
@@ -929,7 +929,7 @@ public class ObjectDetectorHelper {
                 sb.append(" and ").append(results.size()).append(" more objects");
             } else {
                 sb.append("等").append(results.size()).append("個");
-            }
+        }
         }
         
         String finalText = sb.toString().trim();
