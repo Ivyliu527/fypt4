@@ -201,6 +201,74 @@ This interim report documents the current state of the Tonbo App project, includ
   6. System provides audio feedback
 - **Postcondition**: Command is executed
 
+#### UC5: Find Items
+- **Actor**: Visually Impaired User
+- **Precondition**: App is running, camera permission granted
+- **Main Flow**:
+  1. User opens find items feature
+  2. User chooses to mark an item or find a marked item
+  3. If marking: User captures item image and adds description
+  4. If finding: System analyzes camera feed to match item features
+  5. System provides location guidance and announces when item is found
+- **Postcondition**: Item is marked or found
+
+#### UC6: Travel Assistant
+- **Actor**: Visually Impaired User
+- **Precondition**: App is running, location permission granted (optional)
+- **Main Flow**:
+  1. User opens travel assistant feature
+  2. User selects function (navigation, traffic info, weather, location share)
+  3. System processes request and provides information
+  4. System announces information via voice
+- **Postcondition**: Travel information is provided to user
+- **Note**: Some features require third-party API integration (future enhancement)
+
+#### UC7: Instant Assistance
+- **Actor**: Visually Impaired User
+- **Precondition**: App is running, phone permission granted
+- **Main Flow**:
+  1. User opens instant assistance feature
+  2. User selects assistance type (call volunteer, send message, video call)
+  3. System processes request and connects user with volunteer
+  4. System provides voice feedback on connection status
+- **Postcondition**: User is connected with volunteer assistance
+
+#### UC8: Gesture Management
+- **Actor**: Visually Impaired User
+- **Precondition**: App is running
+- **Main Flow**:
+  1. User opens gesture management feature
+  2. User chooses to create gesture or manage existing gestures
+  3. If creating: User draws gesture pattern on screen
+  4. User binds gesture to a function
+  5. System saves gesture pattern and binding
+  6. System recognizes gesture when drawn and executes bound function
+- **Postcondition**: Gesture is created and bound to function
+
+#### UC9: User Login/Register
+- **Actor**: Visually Impaired User, Guest User
+- **Precondition**: App is launched
+- **Main Flow**:
+  1. User opens app and sees login screen
+  2. User chooses to login, register, or use guest mode
+  3. If login: User enters credentials, system validates and logs in
+  4. If register: User enters information, system creates account and logs in
+  5. If guest: User skips registration and enters app
+  6. System navigates to main screen
+- **Postcondition**: User is logged in or in guest mode, main screen is displayed
+
+#### UC10: System Settings
+- **Actor**: Visually Impaired User
+- **Precondition**: App is running
+- **Main Flow**:
+  1. User opens system settings
+  2. User adjusts speech parameters (rate, pitch, volume)
+  3. User configures accessibility options (vibration, screen reader)
+  4. User switches language (Cantonese, Mandarin, English)
+  5. System saves settings and applies changes immediately
+  6. System provides voice confirmation of changes
+- **Postcondition**: Settings are saved and applied
+
 ### 4.2 Use Case Diagrams
 *(Diagrams to be included: Overall System Use Cases, Environment Recognition Use Cases, Emergency Assistance Use Cases)*
 
