@@ -75,6 +75,35 @@ public class VoiceCommandBuilder {
             .addCommands("next_message", "下一句", "下一條", "下一條消息", "後一句")
             .addCommands("repeat_last_message", "重複上一句", "再說上一句", "重複剛才的話")
             .addCommands("clear_chat_history", "清除聊天記錄", "清空記錄", "清除記錄")
+            // 幫助和指導命令
+            .addCommands("help", "幫助", "幫我", "使用說明", "操作指南", "點用", "點樣用", "教學")
+            .addCommands("what_can_i_say", "我可以講咩", "有咩指令", "可用指令", "命令列表", "指令列表", "有咩命令")
+            .addCommands("list_commands", "列出指令", "顯示指令", "所有指令", "指令清單")
+            // 狀態查詢
+            .addCommands("what_page", "我在邊頁", "現在邊頁", "當前頁面", "呢頁係咩", "咩頁面")
+            .addCommands("where_am_i", "我在邊度", "現在位置", "當前位置", "邊度")
+            .addCommands("current_function", "當前功能", "現在功能", "呢個功能", "功能係咩")
+            // 屏幕閱讀增強
+            .addCommands("read_screen", "讀屏幕", "讀畫面", "讀內容", "讀出屏幕", "屏幕內容")
+            .addCommands("read_focused_item", "讀焦點", "讀選中", "讀當前", "讀呢個", "焦點內容")
+            .addCommands("read_all_items", "讀全部", "讀所有", "讀晒", "全部內容", "所有項目")
+            // 導航增強
+            .addCommands("next_item", "下一個", "下項", "下一個項目", "下一個選項", "下一個功能")
+            .addCommands("previous_item", "上一個", "上項", "上一個項目", "上一個選項", "上一個功能")
+            .addCommands("select_item", "選擇", "選呢個", "確認選擇", "選中", "確定")
+            // 確認和取消
+            .addCommands("confirm", "確認", "確定", "係", "好", "OK", "同意")
+            .addCommands("cancel", "取消", "唔要", "唔好", "唔使", "不要", "否")
+            .addCommands("yes", "係", "好", "對", "正確", "同意", "要")
+            .addCommands("no", "唔係", "唔好", "唔要", "不對", "不要", "否")
+            // 手勢管理
+            .addCommands("open_gesture", "打開手勢", "手勢管理", "手勢設定", "手勢", "管理手勢")
+            // 檢測控制增強
+            .addCommands("pause_detection", "暫停檢測", "暫停識別", "暫停掃描", "暫停")
+            .addCommands("resume_detection", "繼續檢測", "繼續識別", "繼續掃描", "恢復檢測", "繼續")
+            .addCommands("toggle_detection", "切換檢測", "開關檢測", "檢測開關")
+            // 快捷操作
+            .addCommands("quick_help", "快速幫助", "快捷幫助", "快速說明", "快速指南")
             .build();
     }
     
@@ -117,6 +146,35 @@ public class VoiceCommandBuilder {
             .addCommands("next_message", "next message", "next", "go forward")
             .addCommands("repeat_last_message", "repeat last message", "say last message again", "repeat previous")
             .addCommands("clear_chat_history", "clear chat history", "clear history", "delete history")
+            // Help and guidance commands
+            .addCommands("help", "help", "help me", "user guide", "how to use", "instructions", "tutorial")
+            .addCommands("what_can_i_say", "what can I say", "available commands", "what commands", "command list", "list commands", "show commands")
+            .addCommands("list_commands", "list commands", "show commands", "all commands", "command list")
+            // Status queries
+            .addCommands("what_page", "what page", "current page", "where am I", "which page", "page name")
+            .addCommands("where_am_i", "where am I", "current location", "my location", "where")
+            .addCommands("current_function", "current function", "what function", "which function", "function name")
+            // Screen reading enhancement
+            .addCommands("read_screen", "read screen", "read content", "read page", "read all", "screen content")
+            .addCommands("read_focused_item", "read focused", "read selected", "read current", "read this", "focused item")
+            .addCommands("read_all_items", "read all", "read everything", "read all items", "all content", "all items")
+            // Navigation enhancement
+            .addCommands("next_item", "next", "next item", "next option", "next function", "move forward")
+            .addCommands("previous_item", "previous", "previous item", "previous option", "previous function", "move back")
+            .addCommands("select_item", "select", "choose", "select this", "confirm selection", "activate")
+            // Confirmation and cancellation
+            .addCommands("confirm", "confirm", "yes", "ok", "okay", "agree", "accept")
+            .addCommands("cancel", "cancel", "no", "don't", "abort", "decline", "reject")
+            .addCommands("yes", "yes", "yeah", "yep", "correct", "right", "agree")
+            .addCommands("no", "no", "nope", "wrong", "disagree", "not", "decline")
+            // Gesture management
+            .addCommands("open_gesture", "open gesture", "gesture management", "gesture settings", "gestures", "manage gestures")
+            // Detection control enhancement
+            .addCommands("pause_detection", "pause detection", "pause scanning", "pause", "stop temporarily")
+            .addCommands("resume_detection", "resume detection", "continue detection", "resume scanning", "continue", "resume")
+            .addCommands("toggle_detection", "toggle detection", "switch detection", "detection toggle")
+            // Quick operations
+            .addCommands("quick_help", "quick help", "fast help", "quick guide", "quick instructions")
             .build();
     }
     
@@ -159,6 +217,35 @@ public class VoiceCommandBuilder {
             .addCommands("next_message", "下一句", "下一條", "下一條消息", "後一句")
             .addCommands("repeat_last_message", "重複上一句", "再說上一句", "重複剛才的話")
             .addCommands("clear_chat_history", "清除聊天記錄", "清空記錄", "清除記錄")
+            // 幫助和指導命令
+            .addCommands("help", "幫助", "幫我", "使用說明", "操作指南", "怎麼用", "如何使用")
+            .addCommands("what_can_i_say", "我可以說什麼", "有什麼指令", "可用指令", "命令列表", "指令列表", "有什麼命令")
+            .addCommands("list_commands", "列出指令", "顯示指令", "所有指令", "指令清單")
+            // 狀態查詢
+            .addCommands("what_page", "我在哪頁", "現在哪頁", "當前頁面", "這頁是什麼", "什麼頁面")
+            .addCommands("where_am_i", "我在哪裡", "現在位置", "當前位置", "哪裡")
+            .addCommands("current_function", "當前功能", "現在功能", "這個功能", "功能是什麼")
+            // 屏幕閱讀增強
+            .addCommands("read_screen", "讀屏幕", "讀畫面", "讀內容", "讀出屏幕", "屏幕內容")
+            .addCommands("read_focused_item", "讀焦點", "讀選中", "讀當前", "讀這個", "焦點內容")
+            .addCommands("read_all_items", "讀全部", "讀所有", "讀所有內容", "全部內容", "所有項目")
+            // 導航增強
+            .addCommands("next_item", "下一個", "下一項", "下一個項目", "下一個選項", "下一個功能")
+            .addCommands("previous_item", "上一個", "上一項", "上一個項目", "上一個選項", "上一個功能")
+            .addCommands("select_item", "選擇", "選這個", "確認選擇", "選中", "確定")
+            // 確認和取消
+            .addCommands("confirm", "確認", "確定", "是", "好", "OK", "同意")
+            .addCommands("cancel", "取消", "不要", "不好", "不用", "不要", "否")
+            .addCommands("yes", "是", "好", "對", "正確", "同意", "要")
+            .addCommands("no", "不是", "不好", "不要", "不對", "不要", "否")
+            // 手勢管理
+            .addCommands("open_gesture", "打開手勢", "手勢管理", "手勢設置", "手勢", "管理手勢")
+            // 檢測控制增強
+            .addCommands("pause_detection", "暫停檢測", "暫停識別", "暫停掃描", "暫停")
+            .addCommands("resume_detection", "繼續檢測", "繼續識別", "繼續掃描", "恢復檢測", "繼續")
+            .addCommands("toggle_detection", "切換檢測", "開關檢測", "檢測開關")
+            // 快捷操作
+            .addCommands("quick_help", "快速幫助", "快捷幫助", "快速說明", "快速指南")
             .build();
     }
 }

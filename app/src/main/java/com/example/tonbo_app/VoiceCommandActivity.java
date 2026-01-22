@@ -1044,6 +1044,83 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
                 clearChatHistory();
                 break;
                 
+            // 幫助和指導命令
+            case "help":
+                showHelp();
+                break;
+                
+            case "what_can_i_say":
+            case "list_commands":
+                listAvailableCommands();
+                break;
+                
+            // 狀態查詢
+            case "what_page":
+            case "where_am_i":
+            case "current_function":
+                announceCurrentPage();
+                break;
+                
+            // 屏幕閱讀增強
+            case "read_screen":
+                readScreenContent();
+                break;
+                
+            case "read_focused_item":
+                readFocusedItem();
+                break;
+                
+            case "read_all_items":
+                readAllItems();
+                break;
+                
+            // 導航增強
+            case "next_item":
+                navigateToNextItem();
+                break;
+                
+            case "previous_item":
+                navigateToPreviousItem();
+                break;
+                
+            case "select_item":
+                selectCurrentItem();
+                break;
+                
+            // 確認和取消
+            case "confirm":
+            case "yes":
+                handleConfirm();
+                break;
+                
+            case "cancel":
+            case "no":
+                handleCancel();
+                break;
+                
+            // 手勢管理
+            case "open_gesture":
+                openGestureManagement();
+                break;
+                
+            // 檢測控制增強
+            case "pause_detection":
+                pauseDetection();
+                break;
+                
+            case "resume_detection":
+                resumeDetection();
+                break;
+                
+            case "toggle_detection":
+                toggleDetection();
+                break;
+                
+            // 快捷操作
+            case "quick_help":
+                showQuickHelp();
+                break;
+                
             default:
                 announceError("未知命令: " + command);
                 suggestSimilarCommands(originalText);
@@ -1396,5 +1473,402 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         if (isListening) {
             stopListening();
         }
+    }
+    
+    // ========== 新增的視障人士友好指令處理方法 ==========
+    
+    /**
+     * 顯示幫助信息
+     */
+    private void showHelp() {
+        String helpText;
+        if ("english".equals(currentLanguage)) {
+            helpText = "You can use voice commands to control the app. " +
+                      "Say 'what can I say' to hear all available commands. " +
+                      "Say 'read screen' to hear the current page content. " +
+                      "Say 'next item' or 'previous item' to navigate. " +
+                      "Say 'help' anytime for assistance.";
+        } else if ("mandarin".equals(currentLanguage)) {
+            helpText = "您可以使用语音命令控制应用。 " +
+                      "说「我可以说什么」来听取所有可用命令。 " +
+                      "说「读屏幕」来听取当前页面内容。 " +
+                      "说「下一个」或「上一个」来导航。 " +
+                      "随时说「帮助」获取协助。";
+        } else {
+            helpText = "你可以使用語音指令控制應用。 " +
+                      "說「我可以講咩」來聽取所有可用指令。 " +
+                      "說「讀屏幕」來聽取當前頁面內容。 " +
+                      "說「下一個」或「上一個」來導航。 " +
+                      "隨時說「幫助」獲取協助。";
+        }
+        announceInfo(helpText);
+    }
+    
+    /**
+     * 列出所有可用指令
+     */
+    private void listAvailableCommands() {
+        String commandsText;
+        if ("english".equals(currentLanguage)) {
+            commandsText = "Available commands: " +
+                         "Open environment, Open document, Find items, Live assistance, Emergency, " +
+                         "Go home, Go back, Switch language, Settings, Tell time, " +
+                         "Read screen, Read focused, Next item, Previous item, Select, " +
+                         "Help, What can I say, Where am I, Confirm, Cancel, " +
+                         "Volume up, Volume down, Repeat, Stop listening.";
+        } else if ("mandarin".equals(currentLanguage)) {
+            commandsText = "可用指令： " +
+                         "打开环境识别、打开阅读助手、寻找物品、即时协助、紧急求助、 " +
+                         "返回主页、返回、切换语言、设置、现在几点、 " +
+                         "读屏幕、读焦点、下一个、上一个、选择、 " +
+                         "帮助、我可以说什么、我在哪里、确认、取消、 " +
+                         "增大音量、减小音量、重复、停止监听。";
+        } else {
+            commandsText = "可用指令： " +
+                         "打開環境識別、打開閱讀助手、尋找物品、即時協助、緊急求助、 " +
+                         "返回主頁、返回、切換語言、設定、現在幾點、 " +
+                         "讀屏幕、讀焦點、下一個、上一個、選擇、 " +
+                         "幫助、我可以講咩、我在邊度、確認、取消、 " +
+                         "增大音量、減小音量、重複、停止監聽。";
+        }
+        announceInfo(commandsText);
+    }
+    
+    /**
+     * 播報當前頁面信息
+     */
+    private void announceCurrentPage() {
+        String pageName = getClass().getSimpleName();
+        String pageText;
+        
+        if ("english".equals(currentLanguage)) {
+            switch (pageName) {
+                case "VoiceCommandActivity":
+                    pageText = "You are on the Voice Assistant page";
+                    break;
+                case "MainActivity":
+                    pageText = "You are on the Main page";
+                    break;
+                case "RealAIDetectionActivity":
+                    pageText = "You are on the Environment Recognition page";
+                    break;
+                case "DocumentCurrencyActivity":
+                    pageText = "You are on the Document Assistant page";
+                    break;
+                case "FindItemsActivity":
+                    pageText = "You are on the Find Items page";
+                    break;
+                case "InstantAssistanceActivity":
+                    pageText = "You are on the Live Assistance page";
+                    break;
+                case "SettingsActivity":
+                    pageText = "You are on the Settings page";
+                    break;
+                default:
+                    pageText = "You are on the " + pageName + " page";
+            }
+        } else if ("mandarin".equals(currentLanguage)) {
+            switch (pageName) {
+                case "VoiceCommandActivity":
+                    pageText = "您在语音助手页面";
+                    break;
+                case "MainActivity":
+                    pageText = "您在主页";
+                    break;
+                case "RealAIDetectionActivity":
+                    pageText = "您在环境识别页面";
+                    break;
+                case "DocumentCurrencyActivity":
+                    pageText = "您在阅读助手页面";
+                    break;
+                case "FindItemsActivity":
+                    pageText = "您在寻找物品页面";
+                    break;
+                case "InstantAssistanceActivity":
+                    pageText = "您在即时协助页面";
+                    break;
+                case "SettingsActivity":
+                    pageText = "您在设置页面";
+                    break;
+                default:
+                    pageText = "您在" + pageName + "页面";
+            }
+        } else {
+            switch (pageName) {
+                case "VoiceCommandActivity":
+                    pageText = "你在語音助手頁面";
+                    break;
+                case "MainActivity":
+                    pageText = "你在主頁";
+                    break;
+                case "RealAIDetectionActivity":
+                    pageText = "你在環境識別頁面";
+                    break;
+                case "DocumentCurrencyActivity":
+                    pageText = "你在閱讀助手頁面";
+                    break;
+                case "FindItemsActivity":
+                    pageText = "你在尋找物品頁面";
+                    break;
+                case "InstantAssistanceActivity":
+                    pageText = "你在即時協助頁面";
+                    break;
+                case "SettingsActivity":
+                    pageText = "你在設定頁面";
+                    break;
+                default:
+                    pageText = "你在" + pageName + "頁面";
+            }
+        }
+        announceInfo(pageText);
+    }
+    
+    /**
+     * 讀取屏幕內容
+     */
+    private void readScreenContent() {
+        // 播報頁面標題
+        announcePageTitle();
+        
+        // 延遲播報頁面描述
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            String readText;
+            if ("english".equals(currentLanguage)) {
+                readText = "To navigate, say 'next item' or 'previous item'. " +
+                          "Say 'select' to activate the focused item.";
+            } else if ("mandarin".equals(currentLanguage)) {
+                readText = "要导航，说「下一个」或「上一个」。 " +
+                          "说「选择」来激活焦点项目。";
+            } else {
+                readText = "要導航，說「下一個」或「上一個」。 " +
+                          "說「選擇」來激活焦點項目。";
+            }
+            announceInfo(readText);
+        }, 2000);
+    }
+    
+    /**
+     * 讀取焦點項目
+     */
+    private void readFocusedItem() {
+        View focusedView = getCurrentFocus();
+        if (focusedView != null) {
+            CharSequence contentDesc = focusedView.getContentDescription();
+            if (contentDesc != null && contentDesc.length() > 0) {
+                announceInfo(contentDesc.toString());
+            } else {
+                String noFocusText = "english".equals(currentLanguage) ? 
+                    "No focused item" :
+                    ("mandarin".equals(currentLanguage) ? "没有焦点项目" : "沒有焦點項目");
+                announceInfo(noFocusText);
+            }
+        } else {
+            String noFocusText = "english".equals(currentLanguage) ? 
+                "No focused item" :
+                ("mandarin".equals(currentLanguage) ? "没有焦点项目" : "沒有焦點項目");
+            announceInfo(noFocusText);
+        }
+    }
+    
+    /**
+     * 讀取所有項目
+     */
+    private void readAllItems() {
+        // 簡單實現：播報頁面標題和主要功能
+        announcePageTitle();
+        String allItemsText;
+        if ("english".equals(currentLanguage)) {
+            allItemsText = "Use 'next item' or 'previous item' to navigate through all items on this page.";
+        } else if ("mandarin".equals(currentLanguage)) {
+            allItemsText = "使用「下一个」或「上一个」来浏览此页面上的所有项目。";
+        } else {
+            allItemsText = "使用「下一個」或「上一個」來瀏覽此頁面上的所有項目。";
+        }
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            announceInfo(allItemsText);
+        }, 2000);
+    }
+    
+    /**
+     * 導航到下一個項目
+     */
+    private void navigateToNextItem() {
+        View focusedView = getCurrentFocus();
+        if (focusedView != null) {
+            focusedView.requestFocus(View.FOCUS_FORWARD);
+            readFocusedItem();
+        } else {
+            // 嘗試找到第一個可聚焦的視圖
+            View rootView = getWindow().getDecorView().getRootView();
+            View nextFocus = rootView.focusSearch(rootView, View.FOCUS_FORWARD);
+            if (nextFocus != null) {
+                nextFocus.requestFocus();
+                readFocusedItem();
+            } else {
+                String noNextText = "english".equals(currentLanguage) ? 
+                    "No next item" :
+                    ("mandarin".equals(currentLanguage) ? "没有下一个项目" : "沒有下一個項目");
+                announceInfo(noNextText);
+            }
+        }
+    }
+    
+    /**
+     * 導航到上一個項目
+     */
+    private void navigateToPreviousItem() {
+        View focusedView = getCurrentFocus();
+        if (focusedView != null) {
+            focusedView.requestFocus(View.FOCUS_BACKWARD);
+            readFocusedItem();
+        } else {
+            // 嘗試找到最後一個可聚焦的視圖
+            View rootView = getWindow().getDecorView().getRootView();
+            View prevFocus = rootView.focusSearch(rootView, View.FOCUS_BACKWARD);
+            if (prevFocus != null) {
+                prevFocus.requestFocus();
+                readFocusedItem();
+            } else {
+                String noPrevText = "english".equals(currentLanguage) ? 
+                    "No previous item" :
+                    ("mandarin".equals(currentLanguage) ? "没有上一个项目" : "沒有上一個項目");
+                announceInfo(noPrevText);
+            }
+        }
+    }
+    
+    /**
+     * 選擇當前項目
+     */
+    private void selectCurrentItem() {
+        View focusedView = getCurrentFocus();
+        if (focusedView != null && focusedView.isClickable()) {
+            focusedView.performClick();
+            String selectedText = "english".equals(currentLanguage) ? 
+                "Selected" :
+                ("mandarin".equals(currentLanguage) ? "已选择" : "已選擇");
+            announceInfo(selectedText);
+        } else {
+            String noSelectText = "english".equals(currentLanguage) ? 
+                "Cannot select this item" :
+                ("mandarin".equals(currentLanguage) ? "无法选择此项目" : "無法選擇此項目");
+            announceInfo(noSelectText);
+        }
+    }
+    
+    /**
+     * 處理確認
+     */
+    private void handleConfirm() {
+        String confirmText = "english".equals(currentLanguage) ? 
+            "Confirmed" :
+            ("mandarin".equals(currentLanguage) ? "已确认" : "已確認");
+        announceInfo(confirmText);
+        vibrationManager.vibrateSuccess();
+    }
+    
+    /**
+     * 處理取消
+     */
+    private void handleCancel() {
+        String cancelText = "english".equals(currentLanguage) ? 
+            "Cancelled" :
+            ("mandarin".equals(currentLanguage) ? "已取消" : "已取消");
+        announceInfo(cancelText);
+    }
+    
+    /**
+     * 打開手勢管理
+     */
+    private void openGestureManagement() {
+        String gestureNav = "english".equals(currentLanguage) ? 
+            "Opening gesture management" :
+            ("mandarin".equals(currentLanguage) ? "正在打开手势管理" : "正在打開手勢管理");
+        announceNavigation(gestureNav);
+        startActivity(new Intent(this, GestureManagementActivity.class).putExtra("language", currentLanguage));
+    }
+    
+    /**
+     * 暫停檢測
+     */
+    private void pauseDetection() {
+        if (isInEnvironmentActivity()) {
+            sendBroadcastToEnvironment("pause_detection");
+            String pauseText = "english".equals(currentLanguage) ? 
+                "Detection paused" :
+                ("mandarin".equals(currentLanguage) ? "检测已暂停" : "檢測已暫停");
+            announceInfo(pauseText);
+        } else {
+            String needOpenText = "english".equals(currentLanguage) ? 
+                "Please open environment recognition first" :
+                ("mandarin".equals(currentLanguage) ? "请先打开环境识别功能" : "請先打開環境識別功能");
+            announceInfo(needOpenText);
+        }
+    }
+    
+    /**
+     * 恢復檢測
+     */
+    private void resumeDetection() {
+        if (isInEnvironmentActivity()) {
+            sendBroadcastToEnvironment("resume_detection");
+            String resumeText = "english".equals(currentLanguage) ? 
+                "Detection resumed" :
+                ("mandarin".equals(currentLanguage) ? "检测已恢复" : "檢測已恢復");
+            announceInfo(resumeText);
+        } else {
+            String needOpenText = "english".equals(currentLanguage) ? 
+                "Please open environment recognition first" :
+                ("mandarin".equals(currentLanguage) ? "请先打开环境识别功能" : "請先打開環境識別功能");
+            announceInfo(needOpenText);
+        }
+    }
+    
+    /**
+     * 切換檢測開關
+     */
+    private void toggleDetection() {
+        if (isInEnvironmentActivity()) {
+            sendBroadcastToEnvironment("toggle_detection");
+            String toggleText = "english".equals(currentLanguage) ? 
+                "Detection toggled" :
+                ("mandarin".equals(currentLanguage) ? "检测已切换" : "檢測已切換");
+            announceInfo(toggleText);
+        } else {
+            String needOpenText = "english".equals(currentLanguage) ? 
+                "Please open environment recognition first" :
+                ("mandarin".equals(currentLanguage) ? "请先打开环境识别功能" : "請先打開環境識別功能");
+            announceInfo(needOpenText);
+        }
+    }
+    
+    /**
+     * 顯示快速幫助
+     */
+    private void showQuickHelp() {
+        String quickHelpText;
+        if ("english".equals(currentLanguage)) {
+            quickHelpText = "Quick help: " +
+                          "Say 'help' for full help, " +
+                          "'what can I say' for commands, " +
+                          "'read screen' to hear page content, " +
+                          "'where am I' to know current page, " +
+                          "'emergency' for emergency help.";
+        } else if ("mandarin".equals(currentLanguage)) {
+            quickHelpText = "快速帮助： " +
+                          "说「帮助」获取完整帮助， " +
+                          "「我可以说什么」查看命令， " +
+                          "「读屏幕」听取页面内容， " +
+                          "「我在哪里」了解当前页面， " +
+                          "「紧急求助」获取紧急帮助。";
+        } else {
+            quickHelpText = "快速幫助： " +
+                          "說「幫助」獲取完整幫助， " +
+                          "「我可以講咩」查看指令， " +
+                          "「讀屏幕」聽取頁面內容， " +
+                          "「我在邊度」了解當前頁面， " +
+                          "「緊急求助」獲取緊急幫助。";
+        }
+        announceInfo(quickHelpText);
     }
 }
