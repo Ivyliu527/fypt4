@@ -66,6 +66,9 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.0")
     implementation("com.google.mlkit:text-recognition-chinese:16.0.0")
     
+    // Google ML Kit Image Labeling (本地模型)
+    implementation("com.google.mlkit:image-labeling:17.0.7")
+    
     // Google ML Kit Object Detection (免費開源，官方維護，長期支持)
     // 注意：如果網絡無法訪問，可以暫時註釋掉這兩行
     // implementation("com.google.mlkit:object-detection:17.0.1")

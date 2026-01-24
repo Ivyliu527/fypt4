@@ -91,16 +91,22 @@
     <string name="travel_assistant_instruction_desc">出行協助使用說明</string>
     
     <!-- Travel Assistant Features -->
-    <string name="navigation">導航</string>
-    <string name="navigation_desc">導航功能按鈕</string>
-    <string name="route_planning">路線規劃</string>
-    <string name="route_planning_desc">路線規劃功能按鈕</string>
-    <string name="traffic_info">交通信息</string>
-    <string name="traffic_info_desc">交通信息功能按鈕</string>
-    <string name="weather_info">天氣信息</string>
-    <string name="weather_info_desc">天氣信息功能按鈕</string>
-    <string name="emergency_location">緊急位置分享</string>
-    <string name="emergency_location_desc">緊急位置分享功能按鈕</string>
+    <string name="start_travel_voice">開始出行（語音）</string>
+    <string name="start_travel_voice_desc">開始出行語音功能按鈕</string>
+    <string name="environment_recognition">前方環境識別</string>
+    <string name="environment_recognition_desc">前方環境識別功能按鈕</string>
+    <string name="emergency_assistance">緊急求助</string>
+    <string name="emergency_assistance_desc">緊急求助功能按鈕</string>
+    
+    <!-- Voice Status -->
+    <string name="voice_status_title">語音狀態</string>
+    <string name="voice_status_title_desc">語音狀態標題</string>
+    <string name="voice_status_desc">語音狀態提示區域</string>
+    <string name="voice_status_text_desc">語音狀態內容</string>
+    <string name="voice_status_ready">就緒</string>
+    <string name="voice_status_listening">正在聆聽...</string>
+    <string name="voice_status_processing">處理中...</string>
+    <string name="voice_status_emergency">緊急模式</string>
     
     <!-- Feature Status Messages -->
     <string name="navigation_feature_coming_soon">導航功能開發中</string>
@@ -247,7 +253,6 @@
     <string name="recognition_result">Recognition Result</string>
     
     <!-- Bottom Navigation -->
-    <string name="environment_recognition_desc">Environment Recognition</string>
     <string name="document_currency_desc">Document and Currency Assistant</string>
     <string name="find_items_desc">Find Items</string>
     <string name="travel_assistant_desc">Travel Assistant</string>

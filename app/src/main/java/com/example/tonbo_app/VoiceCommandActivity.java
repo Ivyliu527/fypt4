@@ -1700,7 +1700,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         } else {
             // 嘗試找到第一個可聚焦的視圖
             View rootView = getWindow().getDecorView().getRootView();
-            View nextFocus = rootView.focusSearch(rootView, View.FOCUS_FORWARD);
+//            View nextFocus = rootView.focusSearch(rootView, View.FOCUS_FORWARD);
+            View nextFocus = rootView.focusSearch(View.FOCUS_FORWARD);
             if (nextFocus != null) {
                 nextFocus.requestFocus();
                 readFocusedItem();
@@ -1724,7 +1725,8 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         } else {
             // 嘗試找到最後一個可聚焦的視圖
             View rootView = getWindow().getDecorView().getRootView();
-            View prevFocus = rootView.focusSearch(rootView, View.FOCUS_BACKWARD);
+//            View prevFocus = rootView.focusSearch(rootView, View.FOCUS_BACKWARD);
+            View prevFocus = rootView.focusSearch(View.FOCUS_BACKWARD);
             if (prevFocus != null) {
                 prevFocus.requestFocus();
                 readFocusedItem();
