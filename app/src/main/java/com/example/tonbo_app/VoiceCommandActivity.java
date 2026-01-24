@@ -1695,12 +1695,27 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     private void navigateToNextItem() {
         View focusedView = getCurrentFocus();
         if (focusedView != null) {
-            focusedView.requestFocus(View.FOCUS_FORWARD);
-            readFocusedItem();
+            // 嘗試向下查找，如果沒有則向右查找
+            View nextFocus = focusedView.focusSearch(View.FOCUS_DOWN);
+            if (nextFocus == null || nextFocus == focusedView) {
+                nextFocus = focusedView.focusSearch(View.FOCUS_RIGHT);
+            }
+            if (nextFocus != null && nextFocus != focusedView) {
+                nextFocus.requestFocus();
+                readFocusedItem();
+            } else {
+                String noNextText = "english".equals(currentLanguage) ? 
+                    "No next item" :
+                    ("mandarin".equals(currentLanguage) ? "没有下一个项目" : "沒有下一個項目");
+                announceInfo(noNextText);
+            }
         } else {
             // 嘗試找到第一個可聚焦的視圖
             View rootView = getWindow().getDecorView().getRootView();
-            View nextFocus = rootView.focusSearch(rootView, View.FOCUS_FORWARD);
+            View nextFocus = rootView.focusSearch(View.FOCUS_DOWN);
+            if (nextFocus == null) {
+                nextFocus = rootView.focusSearch(View.FOCUS_RIGHT);
+            }
             if (nextFocus != null) {
                 nextFocus.requestFocus();
                 readFocusedItem();
@@ -1719,12 +1734,27 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
     private void navigateToPreviousItem() {
         View focusedView = getCurrentFocus();
         if (focusedView != null) {
-            focusedView.requestFocus(View.FOCUS_BACKWARD);
-            readFocusedItem();
+            // 嘗試向上查找，如果沒有則向左查找
+            View prevFocus = focusedView.focusSearch(View.FOCUS_UP);
+            if (prevFocus == null || prevFocus == focusedView) {
+                prevFocus = focusedView.focusSearch(View.FOCUS_LEFT);
+            }
+            if (prevFocus != null && prevFocus != focusedView) {
+                prevFocus.requestFocus();
+                readFocusedItem();
+            } else {
+                String noPrevText = "english".equals(currentLanguage) ? 
+                    "No previous item" :
+                    ("mandarin".equals(currentLanguage) ? "没有上一个项目" : "沒有上一個項目");
+                announceInfo(noPrevText);
+            }
         } else {
             // 嘗試找到最後一個可聚焦的視圖
             View rootView = getWindow().getDecorView().getRootView();
-            View prevFocus = rootView.focusSearch(rootView, View.FOCUS_BACKWARD);
+            View prevFocus = rootView.focusSearch(View.FOCUS_UP);
+            if (prevFocus == null) {
+                prevFocus = rootView.focusSearch(View.FOCUS_LEFT);
+            }
             if (prevFocus != null) {
                 prevFocus.requestFocus();
                 readFocusedItem();
