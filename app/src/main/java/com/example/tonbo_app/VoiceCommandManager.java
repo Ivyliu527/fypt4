@@ -617,12 +617,31 @@ public class VoiceCommandManager {
         String processedText = preprocessText(text);
         String lowerText = processedText.toLowerCase().trim();
         
+        // 對於長句子（超過5個字符），需要更嚴格的匹配條件
+        // 避免將普通對話誤識別為命令（如"香港有咩地方好去"中的"好"不應該匹配為"yes"）
+        boolean isLongSentence = lowerText.length() > 5;
+        
         // 1. 精確匹配（優先）
         for (Map.Entry<String, String> entry : commandMap.entrySet()) {
             String key = entry.getKey().toLowerCase();
-            if (lowerText.contains(key)) {
-                Log.d(TAG, "精確匹配: " + key + " -> " + entry.getValue());
-                return entry.getValue();
+            
+            // 對於長句子，要求命令關鍵詞佔文本的較大比例，或者完全匹配
+            if (isLongSentence) {
+                // 長句子：要求命令關鍵詞長度至少是文本長度的30%，或者完全匹配
+                double keyRatio = (double) key.length() / lowerText.length();
+                boolean isExactMatch = lowerText.equals(key);
+                boolean isHighRatio = keyRatio >= 0.3;
+                
+                if (isExactMatch || (lowerText.contains(key) && isHighRatio)) {
+                    Log.d(TAG, "精確匹配（長句子）: " + key + " -> " + entry.getValue() + " (比例: " + String.format("%.2f", keyRatio) + ")");
+                    return entry.getValue();
+                }
+            } else {
+                // 短句子：使用原來的包含匹配邏輯
+                if (lowerText.contains(key)) {
+                    Log.d(TAG, "精確匹配: " + key + " -> " + entry.getValue());
+                    return entry.getValue();
+                }
             }
         }
         
@@ -664,14 +683,19 @@ public class VoiceCommandManager {
             return bestMatch;
         }
         
-        // 3. 部分匹配（最後嘗試）
-        for (Map.Entry<String, String> entry : commandMap.entrySet()) {
-            String key = entry.getKey().toLowerCase();
-            // 檢查是否包含關鍵詞（至少3個字符）
-            if (key.length() >= 3 && lowerText.contains(key.substring(0, Math.min(3, key.length())))) {
-                Log.d(TAG, "部分匹配: " + key + " -> " + entry.getValue());
-                return entry.getValue();
+        // 3. 部分匹配（最後嘗試）- 僅對短句子使用，避免長句子誤匹配
+        if (!isLongSentence) {
+            for (Map.Entry<String, String> entry : commandMap.entrySet()) {
+                String key = entry.getKey().toLowerCase();
+                // 檢查是否包含關鍵詞（至少3個字符）
+                if (key.length() >= 3 && lowerText.contains(key.substring(0, Math.min(3, key.length())))) {
+                    Log.d(TAG, "部分匹配: " + key + " -> " + entry.getValue());
+                    return entry.getValue();
+                }
             }
+        } else {
+            // 長句子不進行部分匹配，避免誤識別，應該使用 LLM 處理
+            Log.d(TAG, "長句子未匹配到命令，建議使用 LLM 處理: " + lowerText);
         }
         
         return null;
