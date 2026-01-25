@@ -392,46 +392,135 @@ public class VoiceCommandManager {
      * 處理命令 - 支持連續命令和AI助手模式
      */
     private void processCommand(String recognizedText) {
+        // 優先使用 LLM 處理，只有在非常明確的命令時才執行命令
         // 檢查是否包含連續命令（連接詞）
         List<String> commands = splitContinuousCommands(recognizedText);
         
         if (commands.size() > 1) {
-            // 多個命令，按順序執行
+            // 多個命令，按順序執行（連續命令通常是明確的）
             Log.d(TAG, "檢測到連續命令，共 " + commands.size() + " 個: " + commands);
             executeContinuousCommands(commands, recognizedText);
-        } else if (commands.size() == 1) {
-            // 單個命令
-            String command = matchCommand(commands.get(0).toLowerCase());
-            
-            if (command != null) {
-                Log.d(TAG, "匹配到命令: " + command + " (原始文本: " + recognizedText + ")");
-                if (commandListener != null) {
-                    commandListener.onCommandRecognized(command, recognizedText);
-                }
-            } else {
-                // 未匹配到命令，但識別到了文本，作為普通語音處理（AI助手模式）
-                Log.d(TAG, "未匹配到命令，但識別到文本: " + recognizedText);
-                if (commandListener != null) {
-                    commandListener.onTextRecognized(recognizedText);
-                }
-            }
         } else {
-            // 無法分割，嘗試整體匹配
-            String command = matchCommand(recognizedText.toLowerCase());
+            // 單個文本，優先使用 LLM 處理
+            // 只有在非常明確匹配時才執行命令（使用嚴格匹配）
+            String command = matchCommandStrict(recognizedText.toLowerCase());
             
             if (command != null) {
-                Log.d(TAG, "匹配到命令: " + command + " (原始文本: " + recognizedText + ")");
+                // 明確匹配到命令，執行命令
+                Log.d(TAG, "明確匹配到命令: " + command + " (原始文本: " + recognizedText + ")");
                 if (commandListener != null) {
                     commandListener.onCommandRecognized(command, recognizedText);
                 }
             } else {
-                // 未匹配到命令，但識別到了文本，作為普通語音處理（AI助手模式）
-                Log.d(TAG, "未匹配到命令，但識別到文本: " + recognizedText);
+                // 未明確匹配到命令，優先使用 LLM 處理
+                Log.d(TAG, "未明確匹配到命令，使用 LLM 處理: " + recognizedText);
                 if (commandListener != null) {
                     commandListener.onTextRecognized(recognizedText);
                 }
             }
         }
+    }
+    
+    /**
+     * 嚴格匹配命令（僅在非常明確時才匹配）
+     * 優先使用 LLM 處理，只有明確的命令才執行
+     */
+    private String matchCommandStrict(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return null;
+        }
+        
+        // 獲取當前語言的命令映射
+        Map<String, String> commandMap;
+        switch (currentLanguage) {
+            case "english":
+                commandMap = englishCommands;
+                break;
+            case "mandarin":
+                commandMap = mandarinCommands;
+                break;
+            case "cantonese":
+            default:
+                commandMap = cantoneseCommands;
+                break;
+        }
+        
+        // 預處理：移除常見的語音識別干擾詞
+        String processedText = preprocessText(text);
+        String lowerText = processedText.toLowerCase().trim();
+        
+        // 對於長句子（超過3個字符），要求完全匹配或高相似度
+        boolean isLongSentence = lowerText.length() > 3;
+        
+        // 1. 完全匹配（最高優先級）
+        for (Map.Entry<String, String> entry : commandMap.entrySet()) {
+            String key = entry.getKey().toLowerCase();
+            if (lowerText.equals(key)) {
+                Log.d(TAG, "完全匹配: " + key + " -> " + entry.getValue());
+                return entry.getValue();
+            }
+        }
+        
+        // 2. 對於長句子，要求更高的匹配度（相似度 > 0.8）
+        if (isLongSentence) {
+            double threshold = 0.8; // 提高閾值，只匹配非常相似的
+            
+            String bestMatch = null;
+            double bestScore = 0.0;
+            
+            for (Map.Entry<String, String> entry : commandMap.entrySet()) {
+                String key = entry.getKey().toLowerCase();
+                double similarity = calculateSimilarity(lowerText, key);
+                
+                if (similarity > bestScore && similarity >= threshold) {
+                    bestScore = similarity;
+                    bestMatch = entry.getValue();
+                }
+            }
+            
+            if (bestMatch != null) {
+                Log.d(TAG, "嚴格匹配（長句子）: " + bestMatch + " (相似度: " + String.format("%.2f", bestScore) + ")");
+                return bestMatch;
+            }
+            
+            // 長句子未找到高相似度匹配，返回 null（使用 LLM）
+            Log.d(TAG, "長句子未找到高相似度匹配，使用 LLM 處理");
+            return null;
+        } else {
+            // 短句子：使用原來的匹配邏輯，但要求完全匹配或高相似度
+            // 1. 精確匹配（包含，但要求命令關鍵詞佔文本的80%以上）
+            for (Map.Entry<String, String> entry : commandMap.entrySet()) {
+                String key = entry.getKey().toLowerCase();
+                if (lowerText.contains(key) && key.length() >= lowerText.length() * 0.8) {
+                    // 命令關鍵詞佔文本的80%以上，認為是明確匹配
+                    Log.d(TAG, "嚴格匹配（短句子）: " + key + " -> " + entry.getValue());
+                    return entry.getValue();
+                }
+            }
+            
+            // 2. 高相似度匹配（> 0.75）
+            double threshold = 0.75;
+            String bestMatch = null;
+            double bestScore = 0.0;
+            
+            for (Map.Entry<String, String> entry : commandMap.entrySet()) {
+                String key = entry.getKey().toLowerCase();
+                double similarity = calculateSimilarity(lowerText, key);
+                
+                if (similarity > bestScore && similarity >= threshold) {
+                    bestScore = similarity;
+                    bestMatch = entry.getValue();
+                }
+            }
+            
+            if (bestMatch != null) {
+                Log.d(TAG, "嚴格匹配（高相似度）: " + bestMatch + " (相似度: " + String.format("%.2f", bestScore) + ")");
+                return bestMatch;
+            }
+        }
+        
+        // 未找到明確匹配，返回 null（使用 LLM）
+        return null;
     }
     
     /**
