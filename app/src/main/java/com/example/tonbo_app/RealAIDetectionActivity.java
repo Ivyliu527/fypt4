@@ -49,6 +49,9 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
 
     // Static flag to track if in environment recognition page (for voice commands)
     private static boolean isEnvironmentActivityActive = false;
+    
+    // 是否自動開始檢測
+    private boolean shouldAutoStart = false;
 
     /**
      * Check if in environment recognition page (for other Activities to call)
@@ -99,6 +102,11 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
         // Get language settings
         if (getIntent() != null && getIntent().hasExtra("language")) {
             currentLanguage = getIntent().getStringExtra("language");
+        }
+        
+        // 檢查是否需要自動開始檢測
+        if (getIntent() != null && getIntent().hasExtra("auto_start")) {
+            shouldAutoStart = getIntent().getBooleanExtra("auto_start", false);
         }
 
         // Initialize TTS
@@ -329,6 +337,20 @@ public class RealAIDetectionActivity extends BaseAccessibleActivity {
 
             updateStatusIndicator("ready");
             startButton.setEnabled(true);
+            
+            // 如果需要自動開始檢測，在相機設置完成後自動啟動
+            if (shouldAutoStart && yoloDetector != null && !isDetecting) {
+                // 延遲一小段時間確保相機完全準備好
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (yoloDetector != null && !isDetecting && !isFinishing()) {
+                            Log.d(TAG, "自動開始環境識別檢測");
+                            startDetection();
+                        }
+                    }
+                }, 1500); // 延遲1.5秒確保相機完全準備好
+            }
 
         } catch (Exception e) {
             Log.e(TAG, "Camera setup failed: " + e.getMessage());

@@ -23,6 +23,7 @@ public class NavigationController {
     private FusedLocationProviderClient fusedLocationClient;
     private TTSManager ttsManager;
     private NavigationListener listener;
+    private RoutePlanner routePlanner;
     
     // 導航狀態
     private NavigationState currentState = NavigationState.IDLE;
@@ -59,6 +60,9 @@ public class NavigationController {
         this.context = context.getApplicationContext();
         this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(this.context);
         this.ttsManager = TTSManager.getInstance(this.context);
+        this.routePlanner = new RoutePlanner();
+        // 設置使用高德地圖 API（中國大陸地區推薦）
+        routePlanner.setApiProvider("amap");
     }
     
     /**
@@ -86,14 +90,14 @@ public class NavigationController {
         this.destination = destination.trim();
         Log.d(TAG, "開始導航到: " + this.destination);
         
-        // 更新狀態
+        // 更新狀態：開始獲取位置
         setState(NavigationState.GETTING_LOCATION);
         
         // 播報開始獲取位置
         String statusMsg = getLocalizedString("navigation_getting_location");
         announceStatus(statusMsg);
         
-        // 獲取當前位置
+        // 獲取當前位置（真實 API 需要起點位置）
         getCurrentLocation();
     }
     
@@ -166,54 +170,75 @@ public class NavigationController {
     }
     
     /**
-     * 規劃路線（模擬實現）
+     * 規劃路線（使用真實 API）
      */
     private void planRoute() {
+        if (currentLocation == null) {
+            String errorMsg = getLocalizedString("navigation_error_location_unavailable");
+            Log.e(TAG, errorMsg);
+            setState(NavigationState.ERROR);
+            announceStatus(errorMsg);
+            if (listener != null) {
+                listener.onError(errorMsg);
+            }
+            return;
+        }
+        
+        // 更新狀態：正在規劃路線
         setState(NavigationState.PLANNING_ROUTE);
         
-        // 播報正在規劃路線
+        // 播報開始規劃路線
         String statusMsg = getLocalizedString("navigation_planning_route");
         announceStatus(statusMsg);
         
-        // 模擬路線規劃（實際應用中可以調用 Google Maps API 或其他路線規劃服務）
-        // 這裡使用延遲來模擬規劃過程
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {
+        // 使用真實 API 規劃路線
+        routePlanner.planRoute(currentLocation, destination, new RoutePlanner.RoutePlanningCallback() {
             @Override
-            public void run() {
-                // 生成模擬路線信息
-                String routeInfo = generateMockRouteInfo();
-                Log.d(TAG, "路線規劃完成: " + routeInfo);
-                
-                // 通知監聽器
-                if (listener != null) {
-                    listener.onRoutePlanned(routeInfo);
+            public void onRoutePlanned(RoutePlanner.RouteResult result) {
+                if (result.success) {
+                    // 生成路線信息
+                    String routeInfo = String.format(
+                        getLocalizedString("navigation_route_info"),
+                        destination,
+                        String.format("%.4f", currentLocation.getLatitude()),
+                        String.format("%.4f", currentLocation.getLongitude()),
+                        result.distance,
+                        result.duration
+                    );
+                    
+                    Log.d(TAG, "路線規劃完成: " + routeInfo);
+                    
+                    // 通知監聽器
+                    if (listener != null) {
+                        listener.onRoutePlanned(routeInfo);
+                    }
+                    
+                    // 播報路線信息
+                    announceStatus(result.fullRouteInfo);
+                    
+                    // 開始導航
+                    startNavigating();
+                } else {
+                    String errorMsg = result.errorMessage != null ? result.errorMessage : "路線規劃失敗";
+                    Log.e(TAG, errorMsg);
+                    setState(NavigationState.ERROR);
+                    announceStatus(errorMsg);
+                    if (listener != null) {
+                        listener.onError(errorMsg);
+                    }
                 }
-                
-                // 開始導航
-                startNavigating();
             }
-        }, 2000); // 延遲2秒模擬規劃過程
-    }
-    
-    /**
-     * 生成模擬路線信息
-     */
-    private String generateMockRouteInfo() {
-        if (currentLocation == null) {
-            return "路線規劃完成";
-        }
-        
-        // 模擬路線信息
-        String routeInfo = String.format(
-            getLocalizedString("navigation_route_info"),
-            destination,
-            String.format("%.2f", currentLocation.getLatitude()),
-            String.format("%.2f", currentLocation.getLongitude()),
-            "5.2", // 模擬距離（公里）
-            "15"   // 模擬時間（分鐘）
-        );
-        
-        return routeInfo;
+            
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "路線規劃錯誤: " + error);
+                setState(NavigationState.ERROR);
+                announceStatus(error);
+                if (listener != null) {
+                    listener.onError(error);
+                }
+            }
+        });
     }
     
     /**
@@ -388,5 +413,29 @@ public class NavigationController {
             default:
                 return "";
         }
+    }
+    
+    /**
+     * 設置路線規劃 API 提供商
+     * @param provider "google" 或 "amap"
+     */
+    public void setRouteApiProvider(String provider) {
+        if (routePlanner != null) {
+            routePlanner.setApiProvider(provider);
+            Log.d(TAG, "路線規劃 API 提供商設置為: " + provider);
+        }
+    }
+    
+    /**
+     * 清理資源
+     * 在 Activity 銷毀時調用
+     */
+    public void cleanup() {
+        if (routePlanner != null) {
+            routePlanner.cleanup();
+            routePlanner = null;
+        }
+        listener = null;
+        Log.d(TAG, "導航控制器資源已清理");
     }
 }

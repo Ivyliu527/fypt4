@@ -280,6 +280,9 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
                 Log.d(TAG, "導航已開始");
                 updateVoiceStatus(getLocalizedString("voice_status_navigating"));
                 // 導航開始的播報由 NavigationController 內部處理
+                
+                // 自動打開攝像頭進行環境識別
+                startEnvironmentRecognition();
             }
             
             @Override
@@ -661,6 +664,14 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
                 } else {
                     return "已到達";
                 }
+            case "environment_recognition_starting":
+                if ("english".equals(currentLang)) {
+                    return "Starting environment recognition, please point camera forward";
+                } else if ("mandarin".equals(currentLang)) {
+                    return "正在启动环境识别，请将摄像头对准前方路段";
+                } else {
+                    return "正在啟動環境識別，請將攝像頭對準前方路段";
+                }
             case "voice_status_error_not_available":
                 if ("english".equals(currentLang)) {
                     return "Not Available";
@@ -846,6 +857,24 @@ public class TravelAssistantActivity extends BaseAccessibleActivity {
     @Override
     protected void startEnvironmentActivity() {
         // 重寫父類方法，避免語音命令衝突
+        startEnvironmentRecognition();
+    }
+    
+    /**
+     * 啟動環境識別（自動開始檢測）
+     */
+    private void startEnvironmentRecognition() {
+        Log.d(TAG, "啟動環境識別，自動開始檢測");
+        
+        // 播報提示
+        String announcement = getLocalizedString("environment_recognition_starting");
+        announceInfo(announcement);
+        
+        // 啟動環境識別 Activity，並傳遞自動開始標記
+        Intent intent = new Intent(this, RealAIDetectionActivity.class);
+        intent.putExtra("language", currentLanguage);
+        intent.putExtra("auto_start", true); // 標記自動開始檢測
+        startActivity(intent);
     }
     
     @Override
