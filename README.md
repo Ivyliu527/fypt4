@@ -504,10 +504,42 @@
 - Android SDK API 21+
 - Gradle 8.0+
 
+### 首次設置（重要）
+
+**在不同電腦上使用時，需要配置 Android SDK 路徑：**
+
+1. **方法一：創建 `local.properties` 文件（推薦）**
+   ```bash
+   # 複製模板文件
+   cp local.properties.template local.properties
+   
+   # 編輯 local.properties，設置你的 Android SDK 路徑
+   # macOS: sdk.dir=/Users/YOUR_USERNAME/Library/Android/sdk
+   # Linux: sdk.dir=/home/YOUR_USERNAME/Android/Sdk
+   # Windows: sdk.dir=C:\\Users\\YOUR_USERNAME\\AppData\\Local\\Android\\Sdk
+   ```
+
+2. **方法二：設置環境變量**
+   ```bash
+   # macOS/Linux
+   export ANDROID_HOME=/path/to/your/android/sdk
+   
+   # Windows (PowerShell)
+   $env:ANDROID_HOME="C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk"
+   ```
+
+**注意**：`local.properties` 文件已被 `.gitignore` 排除，不會提交到 Git，每個開發者需要在自己的電腦上創建。
+
 ### 編譯步驟
 ```bash
 git clone https://github.com/Charlieppy2/Tonbo_App.git
-cd Tonbo_App/Tonbo_App/Tonbo_App
+cd Tonbo_App3
+
+# 首次使用：創建 local.properties 文件
+cp local.properties.template local.properties
+# 編輯 local.properties，設置你的 Android SDK 路徑
+
+# 編譯項目
 ./gradlew assembleDebug
 ```
 
