@@ -392,7 +392,15 @@ public class VoiceCommandManager {
      * 處理命令 - 支持連續命令和AI助手模式
      */
     private void processCommand(String recognizedText) {
-        // 優先使用 LLM 處理，只有在非常明確的命令時才執行命令
+        // 優先檢查是否為出行/導航目的地語句（我要去X、Go to X 等）
+        TravelParseResult parseResult = parseDestinationFromTravelPhrase(recognizedText);
+        if (parseResult != null && parseResult.hasDestination()) {
+            Log.d(TAG, "識別到出行目的地: " + parseResult.destination);
+            if (commandListener instanceof ExtendedVoiceCommandListener) {
+                ((ExtendedVoiceCommandListener) commandListener).onTravelDestinationRecognized(parseResult);
+            }
+            return;
+        }
         // 檢查是否包含連續命令（連接詞）
         List<String> commands = splitContinuousCommands(recognizedText);
         
@@ -677,10 +685,43 @@ public class VoiceCommandManager {
     }
     
     /**
-     * 擴展的命令監聽器接口（支持連續命令）
+     * 解析出行目的地語句，如「我要去天水围」「Go to Central」
+     * @return TravelParseResult，若非出行語句則返回 null
+     */
+    public TravelParseResult parseDestinationFromTravelPhrase(String text) {
+        if (text == null || text.trim().isEmpty()) return null;
+        String t = text.trim();
+        // 中文：我要去X、去X、导航到X、带我去X、到X
+        java.util.regex.Pattern[] cnPatterns = {
+            java.util.regex.Pattern.compile("(?:我要去|去|導航到|导航到|带我去|帶我去|到)\\s*([^，。？！]+)")
+        };
+        for (java.util.regex.Pattern p : cnPatterns) {
+            java.util.regex.Matcher m = p.matcher(t);
+            if (m.find()) {
+                String dest = m.group(1).trim();
+                if (!dest.isEmpty()) return TravelParseResult.simple(dest);
+            }
+        }
+        // 英文：Go to X, Navigate to X, Take me to X
+        java.util.regex.Pattern enPattern = java.util.regex.Pattern.compile(
+            "(?:go to|navigate to|take me to|drive to|walk to)\\s+([^,?!.]+)",
+            java.util.regex.Pattern.CASE_INSENSITIVE
+        );
+        java.util.regex.Matcher enM = enPattern.matcher(t);
+        if (enM.find()) {
+            String dest = enM.group(1).trim();
+            if (!dest.isEmpty()) return TravelParseResult.simple(dest);
+        }
+        return null;
+    }
+
+    /**
+     * 擴展的命令監聽器接口（支持連續命令與出行目的地）
      */
     public interface ExtendedVoiceCommandListener extends VoiceCommandListener {
         void onContinuousCommandsRecognized(List<CommandPair> commands, String originalText);
+        /** 識別到出行目的地時調用，由 TravelVoiceAssistantActivity 啟動 StartTravelActivity */
+        default void onTravelDestinationRecognized(TravelParseResult parseResult) {}
     }
     
     /**

@@ -80,6 +80,9 @@ dependencies {
     // Google Location Services (僅用於緊急求助時發送位置)
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
+    // 高德 Android 導航 SDK（3D 地圖），版本格式為 X.Y.Z_3dmapX.Y.Z，從 Maven Central 解析
+    implementation("com.amap.api:navi-3dmap:10.0.800_3dmap10.0.800")
+
     // Agora RTC SDK for video calling
     implementation("io.agora.rtc:full-sdk:4.3.0")
     

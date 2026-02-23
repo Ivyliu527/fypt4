@@ -91,12 +91,23 @@
     <string name="travel_assistant_instruction_desc">出行協助使用說明</string>
     
     <!-- Travel Assistant Features -->
-    <string name="start_travel_voice">開始出行（語音）</string>
-    <string name="start_travel_voice_desc">開始出行語音功能按鈕</string>
+    <string name="start_travel_voice">开始出行</string>
+    <string name="start_travel_voice_desc">开始出行按钮</string>
+    <string name="say_destination_prompt">请说出你要去的位置</string>
+    <string name="say_destination_prompt_desc">说出目的地提示</string>
+    <string name="start_speaking">开始说话</string>
+    <string name="start_speaking_desc">开始说话按钮，点击后说出目的地</string>
+    <string name="end_speaking">结束说话</string>
+    <string name="end_speaking_desc">结束说话按钮</string>
+    <string name="recognition_result_label">识别结果</string>
+    <string name="recognition_result_hint">语音识别结果将显示在此，可编辑</string>
+    <string name="confirm_depart">确认出发</string>
     <string name="environment_recognition">前方環境識別</string>
     <string name="environment_recognition_desc">前方環境識別功能按鈕</string>
     <string name="emergency_assistance">緊急求助</string>
     <string name="emergency_assistance_desc">緊急求助功能按鈕</string>
+    <string name="contact_volunteer">联系志愿者</string>
+    <string name="contact_volunteer_desc">联系志愿者按钮</string>
     
     <!-- Voice Status -->
     <string name="voice_status_title">語音狀態</string>

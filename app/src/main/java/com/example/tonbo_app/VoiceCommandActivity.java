@@ -52,13 +52,23 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         if (intent != null && intent.hasExtra("language")) {
             currentLanguage = intent.getStringExtra("language");
         }
-        
+        boolean isTravelMode = intent != null && "travel".equals(intent.getStringExtra("mode"));
+
         initViews();
         initVoiceCommandManager();
         checkPermissions();
-        
-        // 頁面標題播報
-        announcePageTitle();
+
+        if (isTravelMode) {
+            String hint = "english".equals(currentLanguage) ?
+                "Say your destination, for example: Go to Central" :
+                ("mandarin".equals(currentLanguage) ? "请说出目的地，例如：我要去天水围" : "請說出目的地，例如：我要去天水圍");
+            if (hintText != null) hintText.setText(hint);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (ttsManager != null) ttsManager.speak(hint, hint, true);
+            }, 800);
+        } else {
+            announcePageTitle();
+        }
     }
     
     @Override
@@ -237,6 +247,24 @@ public class VoiceCommandActivity extends BaseAccessibleActivity {
         setupASRManager();
         
         voiceCommandManager.setCommandListener(new VoiceCommandManager.ExtendedVoiceCommandListener() {
+            @Override
+            public void onTravelDestinationRecognized(TravelParseResult parseResult) {
+                runOnUiThread(() -> {
+                    if (parseResult == null || !parseResult.hasDestination()) return;
+                    vibrationManager.vibrateSuccess();
+                    String destination = parseResult.destination;
+                    String recognizedText = "english".equals(currentLanguage) ?
+                        "Destination: " + destination :
+                        ("mandarin".equals(currentLanguage) ? "目的地：" : "目的地：") + destination;
+                    commandText.setText(recognizedText);
+                    Intent intent = new Intent(VoiceCommandActivity.this, StartTravelActivity.class);
+                    intent.putExtra("language", currentLanguage);
+                    intent.putExtra("destination", destination);
+                    startActivity(intent);
+                    finish();
+                });
+            }
+
             @Override
             public void onCommandRecognized(String command, String originalText) {
                 runOnUiThread(() -> {

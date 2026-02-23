@@ -12,7 +12,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class TTSManager {
     private static final String TAG = "TTSManager";
     private static TTSManager instance;
-    
+
+    /** 播報完成回調（供 NavigationActivity 等使用 utteranceId 的場景） */
+    public interface OnSpeechCompleteListener {
+        void onSpeechComplete(String utteranceId);
+    }
+
     private TextToSpeech textToSpeech;
     private Context context;
     private String currentLanguage = "english";
@@ -20,10 +25,23 @@ public class TTSManager {
     private boolean isInitialized = false;
     private boolean isSpeaking = false;
     private boolean isInitializing = false;
-    
+
+    private OnSpeechCompleteListener speechCompleteListener;
+
     // Speech queue management
     private ConcurrentLinkedQueue<String> speechQueue = new ConcurrentLinkedQueue<>();
     private Handler handler = new Handler(Looper.getMainLooper());
+
+    // 節流與重複過濾
+    private String lastSpokenText = null;
+    private long lastSpeakTime = 0L;
+    private static final long MIN_SPEAK_INTERVAL = 1500L;
+    private static final long DUPLICATE_INTERVAL = 3000L;
+    private String lastSetLanguage = null;
+
+    public void setOnSpeechCompleteListener(OnSpeechCompleteListener listener) {
+        this.speechCompleteListener = listener;
+    }
     
     private TTSManager(Context context) {
         this.context = context.getApplicationContext();
@@ -74,6 +92,22 @@ public class TTSManager {
             if (status == TextToSpeech.SUCCESS) {
                 setLanguage(currentLanguage);
                 isInitialized = true;
+                textToSpeech.setOnUtteranceProgressListener(new android.speech.tts.UtteranceProgressListener() {
+                    @Override
+                    public void onStart(String utteranceId) {}
+
+                    @Override
+                    public void onDone(String utteranceId) {
+                        if (speechCompleteListener != null) {
+                            new Handler(Looper.getMainLooper()).post(() ->
+                                speechCompleteListener.onSpeechComplete(utteranceId)
+                            );
+                        }
+                    }
+
+                    @Override
+                    public void onError(String utteranceId) {}
+                });
                 Log.d(TAG, "✅ TTS初始化成功，語言: " + currentLanguage);
             } else {
                 Log.e(TAG, "❌ TTS初始化失敗，狀態: " + status);
@@ -83,6 +117,7 @@ public class TTSManager {
     }
     
     private void setLanguage(String language) {
+        if (language.equals(lastSetLanguage)) return;
         if (textToSpeech == null) {
             Log.w(TAG, "❌ textToSpeech為空，無法設置語言");
             return;
@@ -134,6 +169,7 @@ public class TTSManager {
             Log.e(TAG, "❌ Language not supported: " + language);
         } else {
             Log.d(TAG, "✅ TTS language set successfully: " + language);
+            lastSetLanguage = language;
         }
     }
     
@@ -244,7 +280,20 @@ public class TTSManager {
             }, 2000); // Increased to 2 seconds
             return;
         }
-        
+
+        long now = System.currentTimeMillis();
+        // 節流控制（非優先級）
+        if (!priority && now - lastSpeakTime < MIN_SPEAK_INTERVAL) {
+            return;
+        }
+        // 重複內容過濾
+        if (!priority
+                && lastSpokenText != null
+                && lastSpokenText.equals(textToSpeak)
+                && now - lastSpeakTime < DUPLICATE_INTERVAL) {
+            return;
+        }
+
         if (textToSpeak != null && !textToSpeak.trim().isEmpty()) {
             if (priority) {
                 // Priority playback, stop current speech and play immediately
@@ -258,6 +307,8 @@ public class TTSManager {
                     Log.e(TAG, "❌ TTS playback failed!");
                 } else if (result == TextToSpeech.SUCCESS) {
                     Log.d(TAG, "✅ TTS playback successful");
+                    lastSpokenText = textToSpeak;
+                    lastSpeakTime = now;
                 } else {
                     Log.w(TAG, "⚠️ TTS playback result unknown: " + result);
                 }
@@ -274,6 +325,47 @@ public class TTSManager {
         }
     }
     
+    /**
+     * 帶 utteranceId 的播報，播報完成後會回調 OnSpeechCompleteListener.onSpeechComplete(utteranceId)。
+     * 供 NavigationActivity 等需要「播完再執行」的場景使用。
+     */
+    public void speakWithId(String cantoneseText,
+                           String englishText,
+                           boolean priority,
+                           String utteranceId) {
+        ensureTTSInitialized();
+
+        if (!isInitialized || textToSpeech == null) {
+            handler.postDelayed(() ->
+                speakWithId(cantoneseText, englishText, priority, utteranceId),
+                1000
+            );
+            return;
+        }
+
+        String textToSpeak;
+        if ("english".equals(currentLanguage)) {
+            textToSpeak = englishText != null ? englishText : cantoneseText;
+        } else {
+            textToSpeak = cantoneseText != null ? cantoneseText : englishText;
+        }
+
+        if (textToSpeak == null || textToSpeak.trim().isEmpty()) return;
+
+        if (priority) {
+            textToSpeech.stop();
+            textToSpeech.speak(textToSpeak,
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    utteranceId);
+        } else {
+            textToSpeech.speak(textToSpeak,
+                    TextToSpeech.QUEUE_ADD,
+                    null,
+                    utteranceId);
+        }
+    }
+
     private void playNextInQueue() {
         if (speechQueue.isEmpty()) {
             isSpeaking = false;
@@ -284,7 +376,9 @@ public class TTSManager {
         if (textToSpeak != null) {
             isSpeaking = true;
             textToSpeech.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "queue_speech");
-            
+            lastSpokenText = textToSpeak;
+            lastSpeakTime = System.currentTimeMillis();
+
             // Estimate playback time and schedule next speech
             int estimatedDuration = Math.max(textToSpeak.length() * 100, 2000); // At least 2 seconds
             handler.postDelayed(() -> playNextInQueue(), estimatedDuration);
