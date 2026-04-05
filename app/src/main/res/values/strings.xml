@@ -81,43 +81,44 @@
     <string name="selected_item">Selected item: %1$s</string>
     <string name="going_back_to_home">Going back to home</string>
     
-    <!-- Travel Assistant / 出行協助 -->
-    <string name="travel_assistant_title">出行協助</string>
-    <string name="travel_assistant_title_desc">出行協助頁面標題</string>
-    <string name="travel_assistant_description">提供導航、路線規劃、交通信息、天氣更新和緊急位置分享服務</string>
-    <string name="travel_assistant_status">出行協助功能準備就緒</string>
-    <string name="travel_assistant_status_desc">出行協助狀態信息</string>
-    <string name="travel_assistant_instruction">點擊下方按鈕使用各項出行協助功能</string>
-    <string name="travel_assistant_instruction_desc">出行協助使用說明</string>
+    <!-- Travel Assistant -->
+    <string name="travel_assistant_title">Travel Assistant</string>
+    <string name="travel_assistant_title_desc">Travel Assistant page title</string>
+    <string name="travel_assistant_description">Navigation, route planning, traffic, weather, and emergency location sharing</string>
+    <string name="travel_assistant_status">Travel assistance is ready</string>
+    <string name="travel_assistant_status_desc">Travel assistant status</string>
+    <string name="travel_assistant_instruction">Use the buttons below for travel assistance</string>
+    <string name="travel_assistant_instruction_desc">Travel assistant instructions</string>
     
     <!-- Travel Assistant Features -->
-    <string name="start_travel_voice">开始出行</string>
-    <string name="start_travel_voice_desc">开始出行按钮</string>
-    <string name="say_destination_prompt">请说出你要去的位置</string>
-    <string name="say_destination_prompt_desc">说出目的地提示</string>
-    <string name="start_speaking">开始说话</string>
-    <string name="start_speaking_desc">开始说话按钮，点击后说出目的地</string>
-    <string name="end_speaking">结束说话</string>
-    <string name="end_speaking_desc">结束说话按钮</string>
-    <string name="recognition_result_label">识别结果</string>
-    <string name="recognition_result_hint">语音识别结果将显示在此，可编辑</string>
-    <string name="confirm_depart">确认出发</string>
-    <string name="environment_recognition">前方環境識別</string>
-    <string name="environment_recognition_desc">前方環境識別功能按鈕</string>
-    <string name="emergency_assistance">緊急求助</string>
-    <string name="emergency_assistance_desc">緊急求助功能按鈕</string>
-    <string name="contact_volunteer">联系志愿者</string>
-    <string name="contact_volunteer_desc">联系志愿者按钮</string>
+    <string name="start_travel_voice">Start travel</string>
+    <string name="start_travel_voice_desc">Start travel button</string>
+    <string name="say_destination_prompt">Say where you want to go</string>
+    <string name="say_destination_prompt_desc">Prompt to say your destination</string>
+    <string name="start_speaking">Start speaking</string>
+    <string name="start_speaking_desc">Start speaking button; tap and say your destination</string>
+    <string name="end_speaking">End speaking</string>
+    <string name="end_speaking_desc">End speaking button</string>
+    <string name="recognition_result_label">Recognition result</string>
+    <string name="recognition_result_hint">Voice result appears here; you can edit it</string>
+    <string name="confirm_depart">Confirm and start</string>
+    <string name="environment_recognition_starting">Starting environment recognition. Point the camera forward along your path.</string>
+    <string name="environment_recognition">Environment ahead</string>
+    <string name="environment_recognition_desc">Environment recognition button</string>
+    <string name="emergency_assistance">Emergency help</string>
+    <string name="emergency_assistance_desc">Emergency help button</string>
+    <string name="contact_volunteer">Contact volunteer</string>
+    <string name="contact_volunteer_desc">Contact volunteer button</string>
     
     <!-- Voice Status -->
-    <string name="voice_status_title">語音狀態</string>
-    <string name="voice_status_title_desc">語音狀態標題</string>
-    <string name="voice_status_desc">語音狀態提示區域</string>
-    <string name="voice_status_text_desc">語音狀態內容</string>
-    <string name="voice_status_ready">就緒</string>
-    <string name="voice_status_listening">正在聆聽...</string>
-    <string name="voice_status_processing">處理中...</string>
-    <string name="voice_status_emergency">緊急模式</string>
+    <string name="voice_status_title">Voice status</string>
+    <string name="voice_status_title_desc">Voice status title</string>
+    <string name="voice_status_desc">Voice status area</string>
+    <string name="voice_status_text_desc">Voice status content</string>
+    <string name="voice_status_ready">Ready</string>
+    <string name="voice_status_listening">Listening…</string>
+    <string name="voice_status_processing">Processing…</string>
+    <string name="voice_status_emergency">Emergency mode</string>
     
     <!-- Feature Status Messages -->
     <string name="navigation_feature_coming_soon">導航功能開發中</string>
@@ -456,4 +457,47 @@
     
     <!-- 志工訊息 -->
     <string name="volunteer_message">您好，我是視障人士，需要即時協助。</string>
+    
+    <!-- Navigation screen (locale via values / zh-rCN / zh-rHK) -->
+    <string name="nav_title_navigating">Navigating</string>
+    <string name="nav_title_planning">Planning route</string>
+    <string name="nav_steps_planning">Planning route…</string>
+    <string name="nav_title_arrived">Arrived</string>
+    <string name="nav_title_default">Navigation</string>
+    <string name="nav_title_assist">Navigating (assist only)</string>
+    <string name="nav_steps_loading">Navigating, getting location…</string>
+    <string name="nav_location_slow_body">Location is slow; assist mode only.\nObstacle alerts only, no route planning.</string>
+    <string name="nav_repeat_step">Repeat step</string>
+    <string name="nav_next_step">Next step</string>
+    <string name="nav_repeat_step_desc">Repeat current route step</string>
+    <string name="nav_next_step_desc">Announce next route segment</string>
+    <string name="nav_destination_label">To: %1$s</string>
+    <string name="nav_no_destination_tts">No destination set</string>
+    <string name="nav_page_tts">Navigation page. Destination %1$s</string>
+    <string name="route_summary_planned">Route to %1$s is planned.</string>
+    <string name="start_travel_tts_intro">Start travel. Say your destination, for example: I want to go to Central.</string>
+    <string name="navigating_to_tts">Navigating to %1$s.</string>
+    <string name="start_travel_recognition_ok">Recognized</string>
+    <string name="start_travel_retry_dest">Could not hear the destination. Please say it again.</string>
+    <string name="start_travel_need_mic_permission">Please allow microphone permission first.</string>
+    <string name="start_travel_cross_region">Your location and destination are not in the same area. Cross-border navigation is not supported.</string>
+    <string name="start_travel_cross_region_status">Cross-region navigation not supported</string>
+    <string name="start_travel_nav_nearest">Navigating to the nearest %1$s.</string>
+    <string name="start_travel_dest_recognized">Destination recognized: %1$s</string>
+    <string name="recognizing_partial">Recognizing: %1$s</string>
+    <string name="mic_stop_listening">Stop listening</string>
+    <string name="mic_start_speaking">Start speaking</string>
+    <string name="nav_last_segment">Last segment. Almost at destination.</string>
+    <string name="nav_align_turn_left">Turn a little to the left.</string>
+    <string name="nav_align_turn_right">Turn a little to the right.</string>
+    <string name="nav_obstacle_live_on">Starting real-time obstacle detection. Please begin walking.</string>
+    <string name="nav_route_straight_segment">Ahead is a straight segment, about %1$s. I will remind you when to turn.</string>
+    <string name="nav_route_straight_simple_en">The next part of your route is mostly straight. I will remind you before each turn.</string>
+    <string name="nav_direction_ok_prefix">Direction correct. </string>
+    <string name="nav_continue_about_meters">Continue about %1$d meters along the route.</string>
+    <string name="nav_follow_route_generic">Continue following the route.</string>
+    <string name="toast_getting_location">Getting current location, please wait…</string>
+    <string name="please_enter_destination">Please enter a destination</string>
+    <string name="location_permission_denied_nav">Location permission denied. Navigation cannot start.</string>
+    <string name="nav_location_denied_obstacle_only">Location permission denied. Only forward obstacle alerts are available.</string>
 </resources>

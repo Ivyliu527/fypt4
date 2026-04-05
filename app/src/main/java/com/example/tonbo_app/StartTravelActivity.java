@@ -69,7 +69,7 @@ public class StartTravelActivity extends BaseAccessibleActivity {
         if (!TextUtils.isEmpty(destination)) {
             recognitionEdit.setText(destination);
             recognitionEdit.setSelection(destination.length());
-            statusText.setText(getLocalizedString("voice_status_recognized"));
+            statusText.setText(getString(R.string.start_travel_recognition_ok));
         }
 
         micButton.setOnClickListener(v -> {
@@ -87,10 +87,15 @@ public class StartTravelActivity extends BaseAccessibleActivity {
             vibrationManager.vibrateClick();
             String dest = recognitionEdit != null ? recognitionEdit.getText().toString().trim() : "";
             if (TextUtils.isEmpty(dest)) {
-                announceInfo(getLocalizedString("please_enter_destination"));
+                String msg = getString(R.string.please_enter_destination);
+                if (ttsManager != null) ttsManager.speak(msg, msg, true);
+                vibrationManager.vibrateError();
                 return;
             }
-            if (ttsManager != null) ttsManager.speak("现在为您导航去 " + dest, "现在为您导航去 " + dest, true);
+            if (ttsManager != null) {
+                String navMsg = getString(R.string.navigating_to_tts, dest);
+                ttsManager.speak(navMsg, navMsg, true);
+            }
             performNavigationWithGuards(dest);
         });
     }
@@ -115,7 +120,8 @@ public class StartTravelActivity extends BaseAccessibleActivity {
     protected void announcePageTitle() {
         if (!hasAnnouncedPageTitle && ttsManager != null) {
             hasAnnouncedPageTitle = true;
-            ttsManager.speak("开始出行，请说出目的地，例如：我要去天水围", "开始出行，请说出目的地，例如：我要去天水围", true);
+            String intro = getString(R.string.start_travel_tts_intro);
+            ttsManager.speak(intro, intro, true);
             new Handler(Looper.getMainLooper()).postDelayed(this::startListening, 2500);
         }
     }
@@ -135,10 +141,10 @@ public class StartTravelActivity extends BaseAccessibleActivity {
                     isListening = false;
                     updateMicUI(false);
                     String raw = parseResult.destination;
-                    statusText.setText("識別成功");
+                    statusText.setText(getString(R.string.start_travel_recognition_ok));
                     recognitionEdit.setText(raw);
                     recognitionEdit.setSelection(raw.length());
-                    ttsSpeak("目的地已识别：" + raw);
+                    ttsSpeak(getString(R.string.start_travel_dest_recognized, raw));
                 });
             }
 
@@ -147,7 +153,7 @@ public class StartTravelActivity extends BaseAccessibleActivity {
                 runOnUiThread(() -> {
                     isListening = false;
                     updateMicUI(false);
-                    ttsSpeak("未听清目的地，请再说一次");
+                    ttsSpeak(getString(R.string.start_travel_retry_dest));
                 });
             }
 
@@ -161,7 +167,7 @@ public class StartTravelActivity extends BaseAccessibleActivity {
                     }
                     isListening = false;
                     updateMicUI(false);
-                    ttsSpeak("未听清目的地，请再说一次");
+                    ttsSpeak(getString(R.string.start_travel_retry_dest));
                 });
             }
 
@@ -170,7 +176,7 @@ public class StartTravelActivity extends BaseAccessibleActivity {
                 runOnUiThread(() -> {
                     isListening = true;
                     updateMicUI(true);
-                    statusText.setText("正在聆聽...");
+                    statusText.setText(getString(R.string.voice_status_listening));
                 });
             }
 
@@ -187,13 +193,13 @@ public class StartTravelActivity extends BaseAccessibleActivity {
                 runOnUiThread(() -> {
                     isListening = false;
                     updateMicUI(false);
-                    ttsSpeak("未听清目的地，请再说一次");
+                    ttsSpeak(getString(R.string.start_travel_retry_dest));
                 });
             }
 
             @Override
             public void onPartialResult(String partialText) {
-                runOnUiThread(() -> statusText.setText("識別中: " + partialText));
+                runOnUiThread(() -> statusText.setText(getString(R.string.recognizing_partial, partialText)));
             }
 
             @Override
@@ -201,7 +207,7 @@ public class StartTravelActivity extends BaseAccessibleActivity {
                 runOnUiThread(() -> {
                     isListening = false;
                     updateMicUI(false);
-                    ttsSpeak("未听清目的地，请再说一次");
+                    ttsSpeak(getString(R.string.start_travel_retry_dest));
                 });
             }
         });
@@ -209,7 +215,7 @@ public class StartTravelActivity extends BaseAccessibleActivity {
 
     private void startListening() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ttsSpeak("请先授予录音权限");
+            ttsSpeak(getString(R.string.start_travel_need_mic_permission));
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSION_REQUEST_RECORD_AUDIO);
             return;
         }
@@ -221,10 +227,10 @@ public class StartTravelActivity extends BaseAccessibleActivity {
         if (micButton == null) return;
         if (listening) {
             micButton.setText("⏸️");
-            micButton.setContentDescription("停止聆聽");
+            micButton.setContentDescription(getString(R.string.mic_stop_listening));
         } else {
             micButton.setText("🎤");
-            micButton.setContentDescription("開始說話");
+            micButton.setContentDescription(getString(R.string.mic_start_speaking));
         }
     }
 
@@ -251,8 +257,8 @@ public class StartTravelActivity extends BaseAccessibleActivity {
                     return;
                 }
                 if (isCrossRegion) {
-                    ttsSpeak("当前位置与目的地不在同一地区，暂不支持跨境导航");
-                    statusText.setText("暫不支持跨境導航");
+                    ttsSpeak(getString(R.string.start_travel_cross_region));
+                    statusText.setText(getString(R.string.start_travel_cross_region_status));
                     return;
                 }
 
@@ -265,7 +271,7 @@ public class StartTravelActivity extends BaseAccessibleActivity {
                         LocationService.POICandidate nearest = pois.get(0);
                         String resolved = nearest.name + (nearest.address != null && !nearest.address.isEmpty() ? " " + nearest.address : "");
                         if (pois.size() > 1) {
-                            ttsSpeak("将为您导航到最近的 " + destination);
+                            ttsSpeak(getString(R.string.start_travel_nav_nearest, destination));
                         }
                         doStartNavigation(resolved);
                     });
@@ -295,7 +301,9 @@ public class StartTravelActivity extends BaseAccessibleActivity {
                 pendingDestination = null;
             } else if (!granted) {
                 pendingDestination = null;
-                announceInfo(getLocalizedString("location_permission_denied"));
+                String denied = getString(R.string.location_permission_denied_nav);
+                if (ttsManager != null) ttsManager.speak(denied, denied, true);
+                vibrationManager.vibrateError();
             }
         }
     }
@@ -305,35 +313,15 @@ public class StartTravelActivity extends BaseAccessibleActivity {
     }
 
     private void updateLanguageUI() {
-        promptText.setText(getLocalizedString("say_destination_prompt"));
-        statusText.setText(getLocalizedString("voice_status_ready"));
-    }
-
-    private String getLocalizedString(String key) {
-        String lang = LocaleManager.getInstance(this).getCurrentLanguage();
-        switch (key) {
-            case "say_destination_prompt":
-                return "mandarin".equals(lang) ? "请说出你要去的位置" : "請說出你要去的位置";
-            case "voice_status_ready":
-                return "mandarin".equals(lang) ? "就绪" : "就緒";
-            case "voice_status_recognized":
-                return "mandarin".equals(lang) ? "已识别" : "已識別";
-            case "confirm_depart":
-                return "mandarin".equals(lang) ? "确认出发" : "確認出發";
-            case "please_enter_destination":
-                return "mandarin".equals(lang) ? "请输入目的地" : "請輸入目的地";
-            case "location_permission_denied":
-                return "mandarin".equals(lang) ? "位置权限被拒绝，无法开始导航" : "位置權限被拒絕，無法開始導航";
-            case "voice_status_getting_location":
-                return "mandarin".equals(lang) ? "正在获取位置..." : "正在獲取位置...";
-            case "voice_status_planning_route":
-                return "mandarin".equals(lang) ? "正在规划路线..." : "正在規劃路線...";
-            case "voice_status_navigating":
-                return "mandarin".equals(lang) ? "导航中..." : "導航中...";
-            case "voice_status_route_planned":
-                return "mandarin".equals(lang) ? "路线已规划" : "路線已規劃";
-            default:
-                return getString(R.string.app_name);
+        promptText.setText(getString(R.string.say_destination_prompt));
+        statusText.setText(getString(R.string.voice_status_ready));
+        TextView pageTitle = findViewById(R.id.page_title);
+        if (pageTitle != null) {
+            pageTitle.setText(getString(R.string.start_travel_voice));
         }
+        if (confirmButton != null) {
+            confirmButton.setText(getString(R.string.confirm_depart));
+        }
+        updateMicUI(isListening);
     }
 }

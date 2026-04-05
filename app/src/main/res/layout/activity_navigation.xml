@@ -24,7 +24,7 @@
             android:background="@drawable/button_square_background"
             android:backgroundTint="@color/menu_blue"
             android:src="@drawable/ic_back_arrow_white"
-            android:contentDescription="返回" />
+            android:contentDescription="@string/back_button_desc" />
 
         <TextView
             android:id="@+id/nav_title"
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="16dp"
-            android:text="導航中"
+            android:text="@string/nav_title_navigating"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -97,7 +97,7 @@
                 android:textColor="#FFFFFF"
                 android:textSize="15sp"
                 android:lineSpacingExtra="4dp"
-                android:text="導航中，正在獲取位置…" />
+                android:text="@string/nav_steps_loading" />
 
             <LinearLayout
                 android:id="@+id/step_buttons_layout"
@@ -115,8 +115,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    android:text="重報本段"
-                    android:contentDescription="重报当前路段" />
+                    android:text="@string/nav_repeat_step"
+                    android:contentDescription="@string/nav_repeat_step_desc" />
 
                 <Button
                     android:id="@+id/btn_next_step"
@@ -124,8 +124,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:text="下一段"
-                    android:contentDescription="播报下一段路线" />
+                    android:text="@string/nav_next_step"
+                    android:contentDescription="@string/nav_next_step_desc" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

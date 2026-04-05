@@ -44,10 +44,6 @@
     <string name="desc_find_items">查找标记的个人物品</string>
     <string name="desc_live_assistance">与志愿者视频通话</string>
     
-    <!-- Travel Assistant -->
-    <string name="travel_assistant_title">出行协助</string>
-    <string name="travel_assistant_description">提供导航、路线规划、交通信息、天气更新和紧急位置分享服务</string>
-    
     <!-- Settings Activity Strings -->
     <string name="testing_voice">正在测试语音设置</string>
     <string name="screen_reader_enabled">屏幕阅读器支持已启用</string>
@@ -124,4 +120,76 @@
     <!-- Content Descriptions -->
     <string name="camera_preview_desc">相机预览画面</string>
     <string name="object_detection_overlay_desc">物体检测结果覆盖层，显示检测框和标签</string>
+    
+    <!-- Travel Assistant（普通话资源） -->
+    <string name="travel_assistant_title">出行协助</string>
+    <string name="travel_assistant_title_desc">出行协助页面标题</string>
+    <string name="travel_assistant_description">提供导航、路线规划、交通信息、天气更新和紧急位置分享服务</string>
+    <string name="travel_assistant_status">出行协助功能准备就绪</string>
+    <string name="travel_assistant_status_desc">出行协助状态信息</string>
+    <string name="travel_assistant_instruction">点击下方按钮使用各项出行协助功能</string>
+    <string name="travel_assistant_instruction_desc">出行协助使用说明</string>
+    <string name="start_travel_voice">开始出行</string>
+    <string name="start_travel_voice_desc">开始出行按钮</string>
+    <string name="say_destination_prompt">请说出你要去的位置</string>
+    <string name="say_destination_prompt_desc">说出目的地提示</string>
+    <string name="start_speaking">开始说话</string>
+    <string name="start_speaking_desc">开始说话按钮，点击后说出目的地</string>
+    <string name="end_speaking">结束说话</string>
+    <string name="end_speaking_desc">结束说话按钮</string>
+    <string name="recognition_result_label">识别结果</string>
+    <string name="recognition_result_hint">语音识别结果将显示在此，可编辑</string>
+    <string name="confirm_depart">确认出发</string>
+    <string name="contact_volunteer">联系志愿者</string>
+    <string name="contact_volunteer_desc">联系志愿者按钮</string>
+    <string name="voice_status_title">语音状态</string>
+    <string name="voice_status_title_desc">语音状态标题</string>
+    <string name="voice_status_desc">语音状态提示区域</string>
+    <string name="voice_status_text_desc">语音状态内容</string>
+    <string name="voice_status_ready">就绪</string>
+    <string name="voice_status_listening">正在聆听…</string>
+    <string name="voice_status_processing">处理中…</string>
+    <string name="voice_status_emergency">紧急模式</string>
+    
+    <string name="nav_title_navigating">导航中</string>
+    <string name="nav_title_planning">规划路线中</string>
+    <string name="nav_steps_planning">正在规划路线…</string>
+    <string name="nav_title_arrived">已到达</string>
+    <string name="nav_title_default">导航</string>
+    <string name="nav_title_assist">导航中（辅助）</string>
+    <string name="nav_steps_loading">导航中，正在获取位置…</string>
+    <string name="nav_location_slow_body">定位较慢，已进入辅助模式。\n当前仅提供前方障碍播报，无路线规划。</string>
+    <string name="nav_repeat_step">重报本段</string>
+    <string name="nav_next_step">下一段</string>
+    <string name="nav_repeat_step_desc">重报当前路段</string>
+    <string name="nav_next_step_desc">播报下一段路线</string>
+    <string name="nav_destination_label">前往：%1$s</string>
+    <string name="nav_no_destination_tts">未设定目的地</string>
+    <string name="nav_page_tts">导航页，目的地 %1$s</string>
+    <string name="route_summary_planned">前往 %1$s 的路线已规划。</string>
+    <string name="start_travel_tts_intro">开始出行。请说出目的地，例如：我要去天安门。</string>
+    <string name="navigating_to_tts">现在为您导航去 %1$s。</string>
+    <string name="start_travel_recognition_ok">识别成功</string>
+    <string name="start_travel_retry_dest">未听清目的地，请再说一次</string>
+    <string name="start_travel_need_mic_permission">请先授予录音权限</string>
+    <string name="start_travel_cross_region">当前位置与目的地不在同一地区，暂不支持跨境导航</string>
+    <string name="start_travel_cross_region_status">暂不支持跨境导航</string>
+    <string name="start_travel_nav_nearest">将为您导航到最近的 %1$s。</string>
+    <string name="start_travel_dest_recognized">目的地已识别：%1$s</string>
+    <string name="recognizing_partial">识别中：%1$s</string>
+    <string name="mic_stop_listening">停止聆听</string>
+    <string name="mic_start_speaking">开始说话</string>
+    <string name="nav_last_segment">已是最后一段，即将到达目的地</string>
+    <string name="nav_align_turn_left">请向左调整方向。</string>
+    <string name="nav_align_turn_right">请向右调整方向。</string>
+    <string name="nav_obstacle_live_on">现在为您开启实时障碍识别。请开始行走。</string>
+    <string name="nav_route_straight_segment">前方是一段直路，大约 %1$s。我会在需要转弯时提醒您。</string>
+    <string name="nav_direction_ok_prefix">当前方向正确。</string>
+    <string name="nav_continue_about_meters">请沿路线继续步行约 %1$d 米。</string>
+    <string name="nav_follow_route_generic">请继续沿路线前行。</string>
+    <string name="toast_getting_location">正在获取当前位置，请稍候…</string>
+    <string name="please_enter_destination">请输入目的地</string>
+    <string name="location_permission_denied_nav">位置权限被拒绝，无法开始导航</string>
+    <string name="nav_location_denied_obstacle_only">未取得位置权限，当前仅提供前方障碍播报</string>
+    <string name="environment_recognition_starting">正在启动环境识别，请将摄像头对准前方路段</string>
 </resources>

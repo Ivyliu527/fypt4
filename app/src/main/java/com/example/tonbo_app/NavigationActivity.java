@@ -46,6 +46,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * 導航頁：規劃好路線後跳轉到此頁，播報「前行100米/左转/右转」+ 路面障礙檢測。
@@ -54,7 +55,6 @@ import java.util.List;
 public class NavigationActivity extends BaseAccessibleActivity {
     private static final String TAG = "NavigationActivity";
     private static final String EXTRA_DESTINATION = "destination";
-    private static final String EXTRA_LANGUAGE = "language";
     private static final int REQUEST_LOCATION_FOR_NAV = 200;
     private static final int REQUEST_EMERGENCY_PERMISSIONS = 0xE001;
 
@@ -70,7 +70,6 @@ public class NavigationActivity extends BaseAccessibleActivity {
     private NavigationController navigationController;
     private TravelDetectionController travelDetectionController;
     private String destination;
-    private String currentLanguage;
     /** 當前路線步驟（完成一段再播下一段，適合視障用戶） */
     private List<RoutePlanner.RouteStep> routeSteps = new ArrayList<>();
     private int currentStepIndex = 0;
@@ -141,11 +140,12 @@ public class NavigationActivity extends BaseAccessibleActivity {
 //        }
 
         destination = getIntent() != null ? getIntent().getStringExtra(EXTRA_DESTINATION) : null;
-        currentLanguage = getIntent() != null ? getIntent().getStringExtra(EXTRA_LANGUAGE) : null;
-        if (currentLanguage == null) currentLanguage = LocaleManager.getInstance(this).getCurrentLanguage();
 
         if (TextUtils.isEmpty(destination)) {
-            if (ttsManager != null) ttsManager.speak("未設定目的地", "No destination", true);
+            if (ttsManager != null) {
+                String msg = getString(R.string.nav_no_destination_tts);
+                ttsManager.speak(msg, msg, true);
+            }
             finish();
             return;
         }
@@ -231,7 +231,7 @@ public class NavigationActivity extends BaseAccessibleActivity {
             }
         }
 
-        navDestination.setText("目的地：" + destination);
+        navDestination.setText(getString(R.string.nav_destination_label, destination));
 
         if (btnRepeatStep != null) {
             btnRepeatStep.setOnClickListener(v -> {
@@ -262,7 +262,19 @@ public class NavigationActivity extends BaseAccessibleActivity {
         }
 
         overlayView = findViewById(R.id.nav_overlay_view);
-        tts = new TextToSpeech(this, status -> {});
+        tts = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS && tts != null) {
+                Locale loc;
+                if ("english".equals(currentLanguage)) {
+                    loc = Locale.ENGLISH;
+                } else if ("mandarin".equals(currentLanguage)) {
+                    loc = Locale.SIMPLIFIED_CHINESE;
+                } else {
+                    loc = new Locale("zh", "HK");
+                }
+                tts.setLanguage(loc);
+            }
+        });
         walkAssistManager = new WalkAssistManager(tts);
         try {
             yoloDetector = new YoloDetector(this);
@@ -321,8 +333,8 @@ public class NavigationActivity extends BaseAccessibleActivity {
                 }
 
                 // 1️⃣ 先播报路线规划总结
-                String summary = "前往" + destination + "的路线已规划。";
                 if (ttsManager != null) {
+                    String summary = getString(R.string.route_summary_planned, destination);
                     ttsManager.speak(summary, summary, true);
                 }
 
@@ -347,8 +359,8 @@ public class NavigationActivity extends BaseAccessibleActivity {
 
             @Override
             public void onLocationTimeout() {
-                if (stepsText != null) stepsText.setText("定位较慢，已进入辅助模式。\n当前仅提供前方障碍播报，无路线规划。");
-                if (navTitle != null) navTitle.setText("導航中（輔助）");
+                if (stepsText != null) stepsText.setText(getString(R.string.nav_location_slow_body));
+                if (navTitle != null) navTitle.setText(getString(R.string.nav_title_assist));
             }
 
             @Override
@@ -358,13 +370,13 @@ public class NavigationActivity extends BaseAccessibleActivity {
                 }
                 if (navTitle != null) {
                     switch (state) {
-                        case NAVIGATING: navTitle.setText("導航中"); break;
+                        case NAVIGATING: navTitle.setText(getString(R.string.nav_title_navigating)); break;
                         case PLANNING_ROUTE:
-                            navTitle.setText("規劃路線中");
-                            if (stepsText != null) stepsText.setText("正在規劃路線…");
+                            navTitle.setText(getString(R.string.nav_title_planning));
+                            if (stepsText != null) stepsText.setText(getString(R.string.nav_steps_planning));
                             break;
-                        case ARRIVED: navTitle.setText("已到達"); break;
-                        default: navTitle.setText("導航"); break;
+                        case ARRIVED: navTitle.setText(getString(R.string.nav_title_arrived)); break;
+                        default: navTitle.setText(getString(R.string.nav_title_default)); break;
                     }
                 }
             }
@@ -397,12 +409,8 @@ public class NavigationActivity extends BaseAccessibleActivity {
 
                     case "FIRST_ROUTE":
                         routeSpeakStartTime = System.currentTimeMillis();
-                        ttsManager.speakWithId(
-                                "现在为您开启实时障碍识别。请开始行走。",
-                                "Starting real-time obstacle detection. Please begin walking.",
-                                true,
-                                "FIRST_ROUTE_FULL"
-                        );
+                        String obstacleOn = getString(R.string.nav_obstacle_live_on);
+                        ttsManager.speakWithId(obstacleOn, obstacleOn, true, "FIRST_ROUTE_FULL");
                         break;
 
                     case "FIRST_ROUTE_FULL":
@@ -429,7 +437,7 @@ public class NavigationActivity extends BaseAccessibleActivity {
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (navigationStartTriggered || navigationController == null || destination == null) return;
                 if (currentLatLng == null) {
-                    Toast.makeText(this, "正在获取当前位置，请稍候...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.toast_getting_location), Toast.LENGTH_SHORT).show();
                 }
                 navigationStartTriggered = true;
                 navigationController.startNavigation(destination);
@@ -489,7 +497,7 @@ public class NavigationActivity extends BaseAccessibleActivity {
                         overlayView.getWidth(),
                         overlayView.getHeight()
                 );
-                walkAssistManager.speak(state);
+                walkAssistManager.speakForLanguage(state, currentLanguage);
             });
         } catch (Exception e) {
             image.close();
@@ -650,9 +658,8 @@ public class NavigationActivity extends BaseAccessibleActivity {
                     && grantResults[0] != PackageManager.PERMISSION_GRANTED
                     && (grantResults.length <= 1 || grantResults[1] != PackageManager.PERMISSION_GRANTED)
                     && ttsManager != null) {
-                ttsManager.speak("未取得位置權限，當前僅提供前方障礙播報",
-                        "Location permission denied, only obstacle announcement is available",
-                        true);
+                String obstacleOnly = getString(R.string.nav_location_denied_obstacle_only);
+                ttsManager.speak(obstacleOnly, obstacleOnly, true);
             }
             return;
         }
@@ -677,7 +684,10 @@ public class NavigationActivity extends BaseAccessibleActivity {
 
     @Override
     protected void announcePageTitle() {
-        if (ttsManager != null) ttsManager.speak("導航頁，目的地 " + destination, "Navigation, destination " + destination, true);
+        if (ttsManager != null) {
+            String title = getString(R.string.nav_page_tts, destination);
+            ttsManager.speak(title, title, true);
+        }
     }
 
     // ======== 緊急位置分享：UI 初始化與長按邏輯 ========
@@ -889,7 +899,8 @@ public class NavigationActivity extends BaseAccessibleActivity {
     private void speakCurrentStep() {
         if (routeSteps.isEmpty() || ttsManager == null) return;
         if (currentStepIndex >= routeSteps.size()) {
-            ttsManager.speak("已是最後一段，即將到達目的地", "Last segment, arriving at destination soon", true);
+            String last = getString(R.string.nav_last_segment);
+            ttsManager.speak(last, last, true);
             return;
         }
 
@@ -904,31 +915,26 @@ public class NavigationActivity extends BaseAccessibleActivity {
 
             RoutePlanner.RouteStep s = routeSteps.get(0);
             String routePhrase = buildGentleStepPhrase(s, 0);
-
-            String routeSentence =
-                    "前方是一段直路，大约"
-                            + routePhrase.replace("我们先", "")
-                            + "。我会在需要转弯时提醒您。";
+            String inner = routePhrase.replace("我哋先", "").replace("我們先", "").replace("我们先", "").trim();
+            if (inner.startsWith("，")) {
+                inner = inner.substring(1).trim();
+            }
+            String routeSentenceZh = getString(R.string.nav_route_straight_segment, inner);
+            String routeSentenceEn = getString(R.string.nav_route_straight_simple_en);
 
             // ✅ 如果是对齐后恢复，不再播 summary
             if (resumeFirstSegmentAfterAlignment) {
 
                 resumeFirstSegmentAfterAlignment = false;
 
-                ttsManager.speakWithId(
-                        routeSentence,
-                        routeSentence,
-                        true,
-                        "FIRST_ROUTE"
-                );
+                ttsManager.speakWithId(routeSentenceZh, routeSentenceEn, true, "FIRST_ROUTE");
 
                 return;
             }
 
             // ✅ 正常第一次进入流程
 
-            String summary = "前往" + destination + "的路线已规划。";
-
+            String summary = getString(R.string.route_summary_planned, destination);
             ttsManager.speak(summary, summary, true);
 
             // ✅ 方向判断
@@ -949,11 +955,9 @@ public class NavigationActivity extends BaseAccessibleActivity {
 
                 if (Math.abs(diff) > 15) {
 
-                    String adjust =
-                            diff > 0 ?
-                                    "请向左调整方向。" :
-                                    "请向右调整方向。";
-
+                    String adjust = diff > 0
+                            ? getString(R.string.nav_align_turn_left)
+                            : getString(R.string.nav_align_turn_right);
                     ttsManager.speak(adjust, adjust, true);
 
                     waitingForAlignment = true;
@@ -962,12 +966,9 @@ public class NavigationActivity extends BaseAccessibleActivity {
             }
 
             // ✅ 方向正确直接播路线
-            ttsManager.speakWithId(
-                    "当前方向正确。" + routeSentence,
-                    "Direction aligned. " + routeSentence,
-                    true,
-                    "FIRST_ROUTE"
-            );
+            String zhAligned = getString(R.string.nav_direction_ok_prefix) + routeSentenceZh;
+            String enAligned = getString(R.string.nav_direction_ok_prefix) + routeSentenceEn;
+            ttsManager.speakWithId(zhAligned, enAligned, true, "FIRST_ROUTE");
 
             return;
         }
@@ -977,13 +978,20 @@ public class NavigationActivity extends BaseAccessibleActivity {
 
         RoutePlanner.RouteStep s = routeSteps.get(currentStepIndex);
         String routePhrase = buildGentleStepPhrase(s, currentStepIndex);
-        String toSpeak = routePhrase;
-        String toSpeakEn = routePhrase;
-        ttsManager.speak(toSpeak, toSpeakEn, true);
+        String enRough = buildEnglishRoughStep(s);
+        ttsManager.speak(routePhrase, enRough, true);
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             isRouteSpeaking = false;
             if (travelDetectionController != null) travelDetectionController.setBlockSpeech(false);
         }, 3000);
+    }
+
+    /** 英文模式下以距離為主的簡要播報（高德步驟文案仍為中文時使用）。 */
+    private String buildEnglishRoughStep(RoutePlanner.RouteStep s) {
+        if (s != null && s.distanceMeters > 0) {
+            return getString(R.string.nav_continue_about_meters, s.distanceMeters);
+        }
+        return getString(R.string.nav_follow_route_generic);
     }
 
     /** 使用 RoutePlanner 返回的真实 instruction，仅做距离模糊（如 298米→约300米）及首段/后续前缀。 */
@@ -1017,7 +1025,8 @@ public class NavigationActivity extends BaseAccessibleActivity {
     private void advanceToNextStep() {
         if (routeSteps.isEmpty() || ttsManager == null) return;
         if (currentStepIndex + 1 >= routeSteps.size()) {
-            ttsManager.speak("已是最後一段，即將到達目的地", "Last segment, arriving at destination soon", true);
+            String last = getString(R.string.nav_last_segment);
+            ttsManager.speak(last, last, true);
             return;
         }
         currentStepIndex++;
@@ -1044,7 +1053,7 @@ public class NavigationActivity extends BaseAccessibleActivity {
                 results
         );
         if (results[0] < TURN_REMIND_DISTANCE && step.instruction != null && !step.instruction.isEmpty()) {
-            ttsManager.speak(step.instruction, step.instruction, true);
+            ttsManager.speak(step.instruction, buildEnglishRoughStep(step), true);
             currentStepIndex++;
         }
     }

@@ -79,38 +79,56 @@ public class WalkAssistManager {
     }
 
     public void speak(String pathState) {
+        speakForLanguage(pathState, "mandarin");
+    }
 
+    /**
+     * 步行輔助播報：與應用語言（粵語 / 普通話 / 英文）一致。
+     */
+    public void speakForLanguage(String pathState, String language) {
         long now = System.currentTimeMillis();
         if (pathState.equals(lastPathState)) return;
         if (now - lastSpeakTime < 1500) return;
 
-        String speechText = "";
-
-        switch (pathState) {
-            case "center_clear":
-                speechText = "前方道路畅通";
-                break;
-            case "move_left":
-                speechText = "中间受阻，请向左慢行";
-                break;
-            case "move_right":
-                speechText = "中间受阻，请向右慢行";
-                break;
-            case "blocked":
-                speechText = "前方受阻，请停下";
-                break;
-            case "crosswalk":
-                speechText = "前方有斑马线";
-                break;
-            case "traffic_light":
-                speechText = "前方红绿灯";
-                break;
-        }
+        String speechText = textForPathState(pathState, language);
 
         if (tts != null && !speechText.isEmpty()) {
             tts.speak(speechText, TextToSpeech.QUEUE_FLUSH, null, null);
             lastSpeakTime = now;
             lastPathState = pathState;
+        }
+    }
+
+    private static String textForPathState(String pathState, String language) {
+        boolean en = "english".equals(language);
+        boolean man = "mandarin".equals(language);
+        switch (pathState) {
+            case "center_clear":
+                if (en) return "Path ahead is clear.";
+                if (man) return "前方道路畅通";
+                return "前方道路暢通";
+            case "move_left":
+                if (en) return "Center blocked, move slowly to the left.";
+                if (man) return "中间受阻，请向左慢行";
+                return "中間受阻，請向左慢行";
+            case "move_right":
+                if (en) return "Center blocked, move slowly to the right.";
+                if (man) return "中间受阻，请向右慢行";
+                return "中間受阻，請向右慢行";
+            case "blocked":
+                if (en) return "Blocked ahead, please stop.";
+                if (man) return "前方受阻，请停下";
+                return "前方受阻，請停下";
+            case "crosswalk":
+                if (en) return "Crosswalk ahead.";
+                if (man) return "前方有斑马线";
+                return "前方有斑馬線";
+            case "traffic_light":
+                if (en) return "Traffic light ahead.";
+                if (man) return "前方红绿灯";
+                return "前方紅綠燈";
+            default:
+                return "";
         }
     }
 
