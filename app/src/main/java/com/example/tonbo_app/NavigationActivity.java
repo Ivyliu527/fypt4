@@ -12,18 +12,23 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.location.Location;
 import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.tts.TextToSpeech;
+import android.telephony.SmsManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.camera.core.ImageProxy;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -36,9 +41,7 @@ import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
-
-import androidx.annotation.NonNull;
-import androidx.camera.core.ImageProxy;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,6 +56,7 @@ public class NavigationActivity extends BaseAccessibleActivity {
     private static final String EXTRA_DESTINATION = "destination";
     private static final String EXTRA_LANGUAGE = "language";
     private static final int REQUEST_LOCATION_FOR_NAV = 200;
+    private static final int REQUEST_EMERGENCY_PERMISSIONS = 0xE001;
 
     private TextView navTitle;
     private TextView navDestination;
@@ -117,6 +121,13 @@ public class NavigationActivity extends BaseAccessibleActivity {
     private WalkAssistManager walkAssistManager;
     private TextToSpeech tts;
     private OverlayView overlayView;
+
+    // 緊急位置分享 UI 與狀態
+    private FloatingActionButton fabEmergencyLocation;
+    private ProgressBar progressEmergencyLocation;
+    private boolean isEmergencyPressing = false;
+    private long emergencyPressStartTime = 0L;
+    private Handler emergencyHandler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -258,6 +269,8 @@ public class NavigationActivity extends BaseAccessibleActivity {
         } catch (Exception e) {
             android.util.Log.e(TAG, "YOLO init failed: " + (e != null ? e.getMessage() : ""));
         }
+
+        initEmergencyLocationButton();
         if (travelDetectionController != null && yoloDetector != null) {
             travelDetectionController.setWalkAssistAnalyzer(this::analyzeWalkAssistFrame);
         }
@@ -628,17 +641,248 @@ public class NavigationActivity extends BaseAccessibleActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode != REQUEST_LOCATION_FOR_NAV || navigationController == null || TextUtils.isEmpty(destination)) return;
-        // 無論同意與否都開始導航：無權限時控制器會進入輔助模式（僅障礙播報）
-        navigationController.startNavigation(destination);
-        if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED && (grantResults.length <= 1 || grantResults[1] != PackageManager.PERMISSION_GRANTED) && ttsManager != null) {
-            ttsManager.speak("未取得位置權限，當前僅提供前方障礙播報", "Location permission denied, only obstacle announcement is available", true);
+
+        if (requestCode == REQUEST_LOCATION_FOR_NAV) {
+            if (navigationController == null || TextUtils.isEmpty(destination)) return;
+            // 無論同意與否都開始導航：無權限時控制器會進入輔助模式（僅障礙播報）
+            navigationController.startNavigation(destination);
+            if (grantResults.length > 0
+                    && grantResults[0] != PackageManager.PERMISSION_GRANTED
+                    && (grantResults.length <= 1 || grantResults[1] != PackageManager.PERMISSION_GRANTED)
+                    && ttsManager != null) {
+                ttsManager.speak("未取得位置權限，當前僅提供前方障礙播報",
+                        "Location permission denied, only obstacle announcement is available",
+                        true);
+            }
+            return;
+        }
+
+        if (requestCode == REQUEST_EMERGENCY_PERMISSIONS) {
+            boolean smsGranted = hasSmsPermission();
+            boolean locGranted = hasLocationPermission();
+
+            if (!smsGranted || !locGranted) {
+                if (ttsManager != null) {
+                    ttsManager.speak(
+                            null,
+                            "Emergency location permission denied.",
+                            true
+                    );
+                }
+            } else {
+                fetchLocationAndSendEmergency();
+            }
         }
     }
 
     @Override
     protected void announcePageTitle() {
         if (ttsManager != null) ttsManager.speak("導航頁，目的地 " + destination, "Navigation, destination " + destination, true);
+    }
+
+    // ======== 緊急位置分享：UI 初始化與長按邏輯 ========
+
+    private void initEmergencyLocationButton() {
+        fabEmergencyLocation = findViewById(R.id.fab_emergency_location);
+        progressEmergencyLocation = findViewById(R.id.progress_emergency_location);
+
+        if (fabEmergencyLocation == null || progressEmergencyLocation == null) {
+            return;
+        }
+
+        progressEmergencyLocation.setMax(3000);
+        progressEmergencyLocation.setProgress(0);
+        progressEmergencyLocation.setVisibility(View.GONE);
+
+        fabEmergencyLocation.setOnTouchListener(new View.OnTouchListener() {
+
+            private final Runnable longPressRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (!isEmergencyPressing) return;
+
+                    long elapsed = System.currentTimeMillis() - emergencyPressStartTime;
+                    if (elapsed >= 3000L) {
+                        // 長按完成，觸發緊急位置分享
+                        isEmergencyPressing = false;
+                        progressEmergencyLocation.setVisibility(View.GONE);
+                        progressEmergencyLocation.setProgress(0);
+
+                        if (ttsManager != null) {
+                            ttsManager.speak(
+                                    null,
+                                    "Emergency location sent.",
+                                    true
+                            );
+                        }
+                        startEmergencyLocationFlow();
+                    }
+                }
+            };
+
+            private final Runnable progressRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (!isEmergencyPressing) return;
+                    long elapsed = System.currentTimeMillis() - emergencyPressStartTime;
+                    if (elapsed < 3000L) {
+                        progressEmergencyLocation.setProgress((int) elapsed);
+                        emergencyHandler.postDelayed(this, 50L);
+                    }
+                }
+            };
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        isEmergencyPressing = true;
+                        emergencyPressStartTime = System.currentTimeMillis();
+                        progressEmergencyLocation.setVisibility(View.VISIBLE);
+                        progressEmergencyLocation.setProgress(0);
+
+                        if (vibrationManager != null) {
+                            vibrationManager.vibrateLongPress();
+                        }
+
+                        if (ttsManager != null) {
+                            ttsManager.speak(
+                                    null,
+                                    "Hold to send emergency location.",
+                                    true
+                            );
+                        }
+
+                        emergencyHandler.post(progressRunnable);
+                        emergencyHandler.postDelayed(longPressRunnable, 3000L);
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        if (isEmergencyPressing) {
+                            isEmergencyPressing = false;
+                            emergencyHandler.removeCallbacks(longPressRunnable);
+                            emergencyHandler.removeCallbacks(progressRunnable);
+                            progressEmergencyLocation.setVisibility(View.GONE);
+                            progressEmergencyLocation.setProgress(0);
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
+    }
+
+    // ======== 緊急位置分享：權限與定位 ========
+
+    private boolean hasSmsPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestEmergencyPermissions() {
+        ActivityCompat.requestPermissions(
+                this,
+                new String[] {
+                        Manifest.permission.SEND_SMS,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                },
+                REQUEST_EMERGENCY_PERMISSIONS
+        );
+    }
+
+    private void startEmergencyLocationFlow() {
+        if (!hasSmsPermission() || !hasLocationPermission()) {
+            if (ttsManager != null) {
+                ttsManager.speak(
+                        null,
+                        "Permissions required for emergency location. Please allow SMS and location.",
+                        true
+                );
+            }
+            requestEmergencyPermissions();
+            return;
+        }
+
+        fetchLocationAndSendEmergency();
+    }
+
+    private void fetchLocationAndSendEmergency() {
+        LatLng latLng = currentLatLng;
+        if (latLng == null) {
+            if (ttsManager != null) {
+                ttsManager.speak(
+                        null,
+                        "Failed to get current location.",
+                        true
+                );
+            }
+            return;
+        }
+
+        double lat = latLng.latitude;
+        double lng = latLng.longitude;
+
+        String batteryText = EmergencyLocationHelper.getBatteryLevelText(this);
+        String message = EmergencyLocationHelper.buildEmergencyMessage(
+                lat,
+                lng,
+                destination,
+                batteryText
+        );
+
+        sendEmergencySms(message);
+    }
+
+    private void sendEmergencySms(String message) {
+        try {
+            // 從「緊急聯絡人」設置中讀取號碼列表（假設由緊急設置頁面統一寫入）
+            // SharedPreferences 名稱與 key 可與緊急設置模塊對齊
+            android.content.SharedPreferences sp =
+                    getSharedPreferences("emergency_settings", Context.MODE_PRIVATE);
+            String raw = sp.getString("emergency_contact_numbers", "");
+
+            if (raw == null) raw = "";
+            String[] parts = raw.split("[,;\\n]");
+            java.util.List<String> phones = new java.util.ArrayList<>();
+            for (String p : parts) {
+                if (p == null) continue;
+                String t = p.trim();
+                if (!t.isEmpty()) phones.add(t);
+            }
+
+            if (phones.isEmpty()) {
+                if (ttsManager != null) {
+                    ttsManager.speak(
+                            null,
+                            "No emergency contacts set.",
+                            true
+                    );
+                }
+                return;
+            }
+
+            SmsManager smsManager = SmsManager.getDefault();
+            for (String phone : phones) {
+                smsManager.sendTextMessage(phone, null, message, null, null);
+            }
+
+            if (ttsManager != null) {
+                ttsManager.speak(
+                        null,
+                        "Emergency location sent.",
+                        true
+                );
+            }
+        } catch (Exception e) {
+            if (ttsManager != null) {
+                ttsManager.speak(
+                        null,
+                        "Failed to send emergency message.",
+                        true
+                );
+            }
+        }
     }
 
     /** 溫柔陪伴式路線播報；第一段時加語音鎖並在播報內容後延遲啟動視頻識別。 */

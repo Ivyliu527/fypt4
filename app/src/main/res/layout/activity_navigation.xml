@@ -149,4 +149,37 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
     </FrameLayout>
+
+    <!-- 緊急位置分享：右下角紅色圓形按鈕 -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_emergency_location"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/emergency_location_feature_coming_soon"
+        android:src="@android:drawable/ic_dialog_alert"
+        android:backgroundTint="@color/emergency_red"
+        android:tint="@android:color/white"
+        android:alpha="0.9"
+        android:clickable="true"
+        android:focusable="true"
+        app:elevation="8dp"
+        app:useCompatPadding="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 長按 3 秒進度圓環（覆蓋在緊急按鈕外圈） -->
+    <ProgressBar
+        android:id="@+id/progress_emergency_location"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_margin="12dp"
+        android:max="3000"
+        android:progress="0"
+        android:indeterminate="false"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

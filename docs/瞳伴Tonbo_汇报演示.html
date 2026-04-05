@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>瞳伴（Tonbo）— 面向视障人士的综合智能辅助应用</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --muted: #8b949e;
+    }
+    html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); }
+    .deck { height: 100%; position: relative; }
+    .slide {
+      display: none;
+      position: absolute; inset: 0;
+      padding: 48px 64px;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    .slide.active { display: flex; opacity: 1; }
+    .slide h1 { font-size: 2.2rem; margin-bottom: 1.5rem; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; }
+    .slide h2 { font-size: 1.4rem; margin: 1.2rem 0 0.6rem; color: var(--muted); }
+    .slide ul { list-style: none; }
+    .slide li { margin: 0.5rem 0; padding-left: 1.2rem; position: relative; line-height: 1.5; }
+    .slide li::before { content: "•"; position: absolute; left: 0; color: var(--accent); }
+    .slide p { margin: 0.5rem 0; line-height: 1.6; }
+    .slide table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.95rem; }
+    .slide th, .slide td { border: 1px solid #30363d; padding: 10px 14px; text-align: left; }
+    .slide th { background: var(--card); color: var(--accent); }
+    .slide .cover-title { font-size: 2.8rem; color: var(--text); border: none; }
+    .slide .cover-sub { font-size: 1.2rem; color: var(--muted); margin-top: 1rem; }
+    .slide .cover-meta { margin-top: 2rem; font-size: 1rem; color: var(--muted); }
+    .slide .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .slide .flow-item { margin: 0.6rem 0; padding: 0.4rem 0; border-left: 3px solid var(--accent); padding-left: 1rem; }
+    .slide .num { position: absolute; top: 24px; right: 32px; font-size: 0.9rem; color: var(--muted); }
+    .slide .progress { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--accent); transition: width 0.3s ease; }
+    .nav-hint { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: var(--muted); z-index: 10; }
+    .fullscreen .nav-hint { display: none; }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <div class="slide active" data-n="1">
+      <span class="num">1 / 20</span>
+      <div class="progress" style="width: 5%;"></div>
+      <h1 class="cover-title">瞳伴（Tonbo）</h1>
+      <p class="cover-sub">面向视障人士的综合智能辅助应用</p>
+      <p class="cover-meta">团队 4 人 · Android 综合辅助平台</p>
+      <p class="cover-meta">让科技成为视障人士的视觉伙伴</p>
+    </div>
+
+    <div class="slide" data-n="2">
+      <span class="num">2 / 20</span>
+      <div class="progress" style="width: 10%;"></div>
+      <h1>汇报内容</h1>
+      <ul>
+        <li>1. 专案目标与问题背景</li>
+        <li>2. 所提供的功能（模块介绍）</li>
+        <li>3. 高阶分析与设计图（使用案例、系统架构、类别图）</li>
+        <li>4. 专案时程及进度摘要</li>
+        <li>5. 创新点与用户流程 · 示范预告 · 致谢与 Q&A</li>
+      </ul>
+    </div>
+
+    <div class="slide" data-n="3">
+      <span class="num">3 / 20</span>
+      <div class="progress" style="width: 15%;"></div>
+      <h1>专案目标</h1>
+      <h2>主要目标</h2>
+      <p>打造一站式辅助应用，帮助视障用户更独立地生活，减少对他人依赖。</p>
+      <h2>功能范围</h2>
+      <ul>
+        <li>环境感知（实时物体检测与语音播报）</li>
+        <li>阅读辅助（OCR 文字识别、港币识别）</li>
+        <li>出行协助（导航 + 可步行路径分析）</li>
+        <li>紧急求助（一键发位置、短信、拨号）</li>
+        <li>语音控制（命令 + 连续对话 + LLM）</li>
+        <li>即时志愿者协助（消息、视讯）</li>
+      </ul>
+      <h2>成功标准</h2>
+      <p>语音优先、尽量少触控；支持粤语、英语、普通话；无视力也可用（TTS、震动、大按钮）。</p>
+    </div>
+
+    <div class="slide" data-n="4">
+      <span class="num">4 / 20</span>
+      <div class="progress" style="width: 20%;"></div>
+      <h1>问题背景：视障人群面临的生活问题</h1>
+      <ul>
+        <li><strong>出行困难</strong>：无法识别路牌、红绿灯、斑马线，易迷路或发生碰撞，独立出行风险高。</li>
+        <li><strong>环境感知缺失</strong>：难以识别周围的人、车、障碍物与光线，影响安全与社交。</li>
+        <li><strong>信息获取障碍</strong>：无法阅读文档、票据、货币面额，日常办事与消费依赖他人。</li>
+        <li><strong>紧急求助不便</strong>：突发情况下一键求助、位置分享、联络家人/999 的能力不足。</li>
+        <li><strong>操作门槛高</strong>：多数 App 依赖视觉介面，视障用户难以独立完成复杂操作。</li>
+      </ul>
+    </div>
+
+    <div class="slide" data-n="5">
+      <span class="num">5 / 20</span>
+      <div class="progress" style="width: 25%;"></div>
+      <h1>核心痛点与我们的应对</h1>
+      <table>
+        <tr><th>痛点</th><th>我们的应对</th></tr>
+        <tr><td>看不见周围有什么</td><td>实时 AI 物体检测 + 语音播报（人/车/位置，左/中/右）</td></tr>
+        <tr><td>不会认路、怕走错</td><td>语音目的地 → 步行路线 → 分段 TTS 导航 + 可步行路径分析</td></tr>
+        <tr><td>读不了文件、认不了钱</td><td>OCR 文字识别 + 港币识别 + 多语言朗读</td></tr>
+        <tr><td>紧急时难以求助</td><td>长按 3 秒紧急按钮 + 选联络人 + 自动发位置/短信/拨号</td></tr>
+        <tr><td>不想一直点屏幕</td><td>语音命令 + 连续对话 + LLM + 手势快捷</td></tr>
+      </table>
+    </div>
+
+    <div class="slide" data-n="6">
+      <span class="num">6 / 20</span>
+      <div class="progress" style="width: 30%;"></div>
+      <h1>App 定位与社会价值</h1>
+      <p><strong>瞳伴</strong> = 面向视障人士的 <strong>综合智能辅助平台</strong>，集环境感知、阅读、出行、紧急、语音、即时协助于一体。</p>
+      <h2>技术支撑</h2>
+      <p>计算机视觉（TFLite、YOLO、ML Kit）+ 多语言语音（TTS、ASR）+ 地图与导航（高德）。</p>
+      <h2>社会价值</h2>
+      <ul>
+        <li>平等参与：独立完成出行、阅读、求助，减少对陪护依赖</li>
+        <li>安全与尊严：实时环境与路面提示、紧急位置分享，提升安全感</li>
+        <li>技术普惠：语音优先、触觉反馈、大按钮，可推广到更多场景</li>
+        <li>社会效益：信息无障碍与智慧城市建设的参考案例</li>
+      </ul>
+    </div>
+
+    <div class="slide" data-n="7">
+      <span class="num">7 / 20</span>
+      <div class="progress" style="width: 35%;"></div>
+      <h1>功能总览 — 七大核心功能</h1>
+      <ul>
+        <li><strong>环境识别</strong>：用摄像头「看见」周围，语音播报物体与光线</li>
+        <li><strong>阅读助手</strong>：OCR 文字识别、港币识别，朗读给用户</li>
+        <li><strong>语音助手</strong>：自然语言控制 App、连续对话、LLM 智能问答</li>
+        <li><strong>寻找物品</strong>：标记物品，用摄像头寻找并语音引导</li>
+        <li><strong>即时协助</strong>：一键联系志愿者、预设消息、视讯通话</li>
+        <li><strong>出行协助</strong>：语音目的地 → 步行路线 → 分段 TTS 导航 + 可步行路径分析</li>
+        <li><strong>手势管理</strong>：为常用功能绑定手势，画手势即打开</li>
+      </ul>
+      <p style="margin-top:1rem;color:var(--muted);">首页统一入口 · 多语言（粤/英/普）· 紧急求助长按入口</p>
+    </div>
+
+    <div class="slide" data-n="8">
+      <span class="num">8 / 20</span>
+      <div class="progress" style="width: 40%;"></div>
+      <h1>核心模块（一）：环境感知、阅读、紧急求助</h1>
+      <h2>环境感知</h2>
+      <p>摄像头 + SSD MobileNet / YOLO（80 类 COCO）· 多帧融合（连续 3 帧才播报）· 人/车优先、左/中/右位置 · 夜间模式 · TTS 播报</p>
+      <h2>文件与货币</h2>
+      <p>Google ML Kit 中英文 OCR、港币识别 · 分按钮操作 · TTS 朗读 · 独立阅读信件/票据/药品说明；购物时确认找零</p>
+      <h2>紧急求助</h2>
+      <p>长按 3 秒防误触 → 选联络人 → 短信 + 位置 + 拨号（含 999）· 电话号逐位数字朗读（粤/英/普）</p>
+    </div>
+
+    <div class="slide" data-n="9">
+      <span class="num">9 / 20</span>
+      <div class="progress" style="width: 45%;"></div>
+      <h1>出行协助 — 定位与价值</h1>
+      <p><strong>作用</strong>：从「说目的地」到「跟着语音走」的全流程，实现「听得懂的导航」。</p>
+      <ul>
+        <li><strong>路线规划</strong>：高德步行 API，获取分段步骤与总距离/时长</li>
+        <li><strong>分段 TTS 导航</strong>：播报「前行 XX 米」「左转」「右转」；接近转弯约 20 米内自动播报下一段</li>
+        <li><strong>偏离重规划</strong>：实时检测偏航，从当前位置重新规划并播报</li>
+        <li><strong>可步行路径分析</strong>：相机 + YOLO 检测前方障碍，分析左/中/右受阻占比，播报「前方畅通」「中间受阻请向左/右慢行」「前方有斑马线」「前方红绿灯」等</li>
+      </ul>
+      <p style="margin-top:1rem;"><strong>意义</strong>：视障用户仅凭语音即可完成从输入目的地到步行导航的全过程，减少碰撞与迷路。</p>
+    </div>
+
+    <div class="slide" data-n="10">
+      <span class="num">10 / 20</span>
+      <div class="progress" style="width: 50%;"></div>
+      <h1>出行协助 — 技术实现</h1>
+      <h2>路线规划</h2>
+      <p>RoutePlanner 调用高德 Web 服务（地理编码 + 步行路线）· NavigationController 周期定位、偏离检测、触发重规划</p>
+      <h2>导航页</h2>
+      <p>NavigationActivity + 高德 MapView（蓝点、已走/未走路线）· TTS 分段播报「前行 XX 米」「左转」等，约 20 米内自动播下一段</p>
+      <h2>语音入口</h2>
+      <p>VoiceCommandManager 解析「我要去 XXX」→ TravelParseResult → StartTravelActivity 填入目的地</p>
+      <h2>可步行路径</h2>
+      <p>TravelDetectionController + CameraX + YOLO 检测行人/车/障碍/斑马线/红绿灯 · WalkAssistManager 左/中/右分析 → 路况短语播报 · OverlayView 绘制检测框</p>
+    </div>
+
+    <div class="slide" data-n="11">
+      <span class="num">11 / 20</span>
+      <div class="progress" style="width: 55%;"></div>
+      <h1>语音命令与智能对话 · 其他功能</h1>
+      <h2>语音命令与智能对话</h2>
+      <p>多语言 ASR（粤/英/普）· 模糊匹配（Levenshtein、LCS、前缀）提高容错 · 「我要去 X」解析，直接填入目的地并启动导航 · LLM（DeepSeek/GLM-4-Flash）生成智能回复；网络不可用时回退关键词匹配 · 连续对话、多轮上下文、语音唤醒/退出</p>
+      <h2>其他功能</h2>
+      <p>即时协助（志愿者、视讯）· 寻找物品（标记 → 摄像头寻找 + 语音引导）· 手势管理（绑定手势）· 系统设定（语速/音调/音量、震动、读屏、多语言 TTS）</p>
+    </div>
+
+    <div class="slide" data-n="12">
+      <span class="num">12 / 20</span>
+      <div class="progress" style="width: 60%;"></div>
+      <h1>使用案例图（高阶）</h1>
+      <p><strong>参与者</strong>：视障用户</p>
+      <h2>主要用例</h2>
+      <ul>
+        <li>1. 识别环境（物体、位置、光线）</li>
+        <li>2. 阅读文档 / 识别货币</li>
+        <li>3. 规划路线并语音导航</li>
+        <li>4. 获取可步行路径提示（畅通 / 向左或右 / 斑马线 / 红绿灯）</li>
+        <li>5. 触发紧急求助（短信 + 位置 + 拨号）</li>
+        <li>6. 语音控制 App（如「打开环境识别」「去 X」）</li>
+        <li>7. 联系志愿者（消息 / 视讯）</li>
+      </ul>
+    </div>
+
+    <div class="slide" data-n="13">
+      <span class="num">13 / 20</span>
+      <div class="progress" style="width: 65%;"></div>
+      <h1>系统架构图（分层）</h1>
+      <table>
+        <tr><th>层级</th><th>职责</th><th>代表组件</th></tr>
+        <tr><td>表现层</td><td>界面、语音播报、震动手感、无障碍</td><td>MainActivity、TravelAssistantActivity、NavigationActivity、BaseAccessibleActivity</td></tr>
+        <tr><td>业务/控制层</td><td>流程编排、状态与权限</td><td>NavigationController、EmergencyManager、VoiceCommandManager、TravelDetectionController</td></tr>
+        <tr><td>能力层</td><td>视觉、语音、定位、网络、地图</td><td>ObjectDetectorHelper、YoloDetector、TTSManager、RoutePlanner、WalkAssistManager、LLMClient</td></tr>
+        <tr><td>数据层</td><td>设定、用户、本地数据</td><td>SharedPreferences、UserManager、本地标记与历史</td></tr>
+      </table>
+    </div>
+
+    <div class="slide" data-n="14">
+      <span class="num">14 / 20</span>
+      <div class="progress" style="width: 70%;"></div>
+      <h1>类别图（简化）</h1>
+      <h2>出行相关</h2>
+      <p>TravelAssistantActivity → StartTravelActivity、NavigationActivity</p>
+      <p>NavigationController → RoutePlanner、LocationService</p>
+      <p>NavigationActivity → WalkAssistManager、TravelDetectionController</p>
+      <h2>语音相关</h2>
+      <p>VoiceCommandManager → TravelParseResult、ExtendedVoiceCommandListener</p>
+    </div>
+
+    <div class="slide" data-n="15">
+      <span class="num">15 / 20</span>
+      <div class="progress" style="width: 75%;"></div>
+      <h1>技术栈</h1>
+      <table>
+        <tr><th>类别</th><th>技术选型</th><th>用途</th></tr>
+        <tr><td>平台</td><td>Android（minSdk 21）、Java 11</td><td>应用主体开发</td></tr>
+        <tr><td>相机</td><td>CameraX</td><td>环境识别、出行路面检测、OCR 取景</td></tr>
+        <tr><td>物体检测</td><td>TensorFlow Lite（SSD + YOLO）</td><td>环境 80 类物体；出行行人/车/障碍/斑马线/红绿灯</td></tr>
+        <tr><td>文字识别</td><td>Google ML Kit（OCR）</td><td>中英文 OCR、港币识别</td></tr>
+        <tr><td>语音</td><td>Android TTS、SpeechRecognizer</td><td>播报与识别；粤/英/普</td></tr>
+        <tr><td>地图与导航</td><td>高德 Web 服务 + 高德 Android 3D 地图 SDK</td><td>路线规划、地图展示、定位与路线绘制</td></tr>
+        <tr><td>网络</td><td>OkHttp、Gson</td><td>高德 API、LLM API</td></tr>
+        <tr><td>AI 对话</td><td>DeepSeek / GLM-4-Flash API</td><td>连续对话与智能回复；离线回退关键词</td></tr>
+      </table>
+    </div>
+
+    <div class="slide" data-n="16">
+      <span class="num">16 / 20</span>
+      <div class="progress" style="width: 80%;"></div>
+      <h1>专案时程及进度摘要</h1>
+      <ul>
+        <li><strong>阶段一</strong>：需求分析、架构设计、UI 骨架</li>
+        <li><strong>阶段二</strong>：环境识别、OCR、紧急求助、系统设定</li>
+        <li><strong>阶段三</strong>：语音命令、出行协助（路线 + 导航 + 可步行路径）</li>
+        <li><strong>阶段四</strong>：LLM 集成、即时协助、测试与优化</li>
+      </ul>
+      <p style="margin-top:1.5rem;"><strong>当前</strong>：核心功能已实现；重点为稳定性与示范准备。</p>
+    </div>
+
+    <div class="slide" data-n="17">
+      <span class="num">17 / 20</span>
+      <div class="progress" style="width: 85%;"></div>
+      <h1>创新点与亮点总结</h1>
+      <ul>
+        <li><strong>「听得懂的出行」全链路</strong>：语音目的地 → 高德步行路线 → 分段 TTS + 转弯提醒 + 偏离重规划 + 可步行路径分析（障碍、斑马线、红绿灯），实现「不看地图也能安全走」的闭环。</li>
+        <li><strong>多帧融合 + 优先级播报</strong>：环境检测连续 3 帧稳定才播报，人/车优先、左中右位置描述，减少误报与信息过载。</li>
+        <li><strong>夜间模式自动适配</strong>：根据检测置信度推断低光，自动降低阈值并播报「夜間模式已開啟」，无需用户操作。</li>
+        <li><strong>语音与出行深度结合</strong>：「我要去天水围」等自然句直接进入路线与导航，降低操作步骤。</li>
+        <li><strong>无障碍贯穿全产品</strong>：大按钮、高对比、震动手感、电话号逐位朗读、三语言统一、TalkBack 兼容。</li>
+      </ul>
+    </div>
+
+    <div class="slide" data-n="18">
+      <span class="num">18 / 20</span>
+      <div class="progress" style="width: 90%;"></div>
+      <h1>用户流程总览</h1>
+      <div class="flow-item"><strong>环境感知</strong>：主頁 → 環境識別 → 相機對準 → 語音播報物體與光線</div>
+      <div class="flow-item"><strong>阅读</strong>：主頁 → 閱讀助手 → 文字/貨幣 → 對準 → 朗讀</div>
+      <div class="flow-item"><strong>出行</strong>：主頁 → 出行協助 → 開始出行 → 語音/文字目的地 → 確認 → 導航頁（路線播報 + 可步行路徑提示）</div>
+      <div class="flow-item"><strong>紧急</strong>：主頁 → 長按緊急按鈕 3 秒 → 選聯絡人 → 發送位置與短信、撥號</div>
+      <div class="flow-item"><strong>语音</strong>：主頁 → 語音助手 → 單次指令或連續對話（含「我要去 X」）</div>
+    </div>
+
+    <div class="slide" data-n="19">
+      <span class="num">19 / 20</span>
+      <div class="progress" style="width: 95%;"></div>
+      <h1>示范预告 — 每人 3 分钟将展示</h1>
+      <ul>
+        <li><strong>成员 1</strong>：环境识别 — 物体 + 位置 TTS（或夜间模式）</li>
+        <li><strong>成员 2</strong>：出行协助 — 「我要去 [地点]」→ 导航页 + 可步行路径 TTS</li>
+        <li><strong>成员 3</strong>：文件/货币阅读 或 紧急求助（长按、选联络人、短信/位置）</li>
+        <li><strong>成员 4</strong>：语音助手（命令 +「去 X」）或 手势快捷</li>
+      </ul>
+      <p style="margin-top:1rem;color:var(--muted);">示范前须完成系统设定与测试（设备、权限、高德 Key、语言等）</p>
+    </div>
+
+    <div class="slide" data-n="20">
+      <span class="num">20 / 20</span>
+      <div class="progress" style="width: 100%;"></div>
+      <h1 class="cover-title">谢谢大家！</h1>
+      <p class="cover-sub">瞳伴（Tonbo）— 让科技成为视障人士的视觉伙伴</p>
+      <p class="cover-meta">团队 4 人 · 感谢指导老师／评委／合作方</p>
+      <p class="cover-meta" style="margin-top:1.5rem;"><strong>接下来</strong>：简短原型示范（每位 3 分钟）</p>
+      <p class="cover-meta"><strong>欢迎提问</strong></p>
+    </div>
+  </div>
+
+  <div class="nav-hint">← → 或 空格 切换 · 点击 或 F 全屏</div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    let idx = 0;
+
+    function show(i) {
+      idx = Math.max(0, Math.min(slides.length - 1, i));
+      slides.forEach((s, k) => s.classList.toggle('active', k === idx));
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(idx + 1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); show(idx - 1); }
+      if (e.key === 'f' || e.key === 'F') { document.documentElement.requestFullscreen?.(); }
+    });
+
+    document.querySelector('.deck').addEventListener('click', e => {
+      if (e.target.closest('.slide')) {
+        const rect = e.target.closest('.deck').getBoundingClientRect();
+        if (e.clientX > rect.left + rect.width / 2) show(idx + 1);
+        else show(idx - 1);
+      }
+    });
+
+    show(0);
+  </script>
+</body>
+</html>
